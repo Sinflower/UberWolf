@@ -174,12 +174,12 @@ public:
 
 		SetWindowSubclass(GetDlgItem(hWnd(), IDC_LABEL_DROP_GAME), dropProc, 0, (DWORD_PTR)hWnd());
 
-		registerSlot(IDC_SELECT_GAME, BN_CLICKED, [this]() { onSelectGameCLicked(); });
+		registerSlot(IDC_SELECT_GAME, BN_CLICKED, [this]() { onSelectGameClicked(); });
 		registerSlot(IDC_PROCESS, BN_CLICKED, [this]() { onProcessClicked(); });
 		registerSlot(IDC_LABEL_DROP_GAME, WM_DROPFILES, [this](void* p) { onDropGame(p); });
 	}
 
-	void onSelectGameCLicked()
+	void onSelectGameClicked()
 	{
 		// When the "Open File" button is clicked
 		WCHAR szFile[MAX_PATH];

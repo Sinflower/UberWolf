@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Windows.h>
+#include <tlhelp32.h>
+#include <map>
 
 #include "Types.h"
 
@@ -36,4 +38,56 @@ static inline std::string ByteToHexString(const uint8_t& byte)
 	char hex[3];
 	sprintf_s(hex, "%02X", byte);
 	return std::string(hex);
+}
+
+
+struct ProcessInfo
+{
+	DWORD pid;
+	DWORD parentPid;
+	std::wstring name;
+	std::wstring parentName;
+};
+
+// Function to get the parent process ID
+static inline ProcessInfo GetProcessInfo(const DWORD& pid)
+{
+	PROCESSENTRY32 processEntry;
+	processEntry.dwSize = sizeof(PROCESSENTRY32);
+
+	HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+
+	if (hSnapshot == INVALID_HANDLE_VALUE)
+		return ProcessInfo{};
+
+	std::map<DWORD, ProcessInfo> processMap;
+
+	if (Process32First(hSnapshot, &processEntry))
+	{
+		do
+		{
+			processMap[processEntry.th32ProcessID] = ProcessInfo{ processEntry.th32ProcessID, processEntry.th32ParentProcessID, processEntry.szExeFile, L""};
+		} while (Process32Next(hSnapshot, &processEntry));
+	}
+
+	CloseHandle(hSnapshot);
+
+	for (auto& process : processMap)
+	{
+		if(process.second.parentPid != 0 && processMap.find(process.second.parentPid) != processMap.end())
+			process.second.parentName = processMap[process.second.parentPid].name;
+	}
+
+	if(processMap.find(pid) != processMap.end())
+		return processMap[pid];
+
+	return ProcessInfo{};
+}
+
+static inline bool IsSubProcess()
+{
+	const DWORD pid = GetCurrentProcessId(); // Get the PID of the current process
+	const ProcessInfo processInfo = GetProcessInfo(pid);
+
+	return (processInfo.name == processInfo.parentName);
 }

@@ -14,23 +14,20 @@ static const tString EXTENSION = TEXT(".wolf");
 
 // TODO: Maybe implement error callbacks or something that notifies the application about errors
 
-UberWolfLib::UberWolfLib(const tStrings& argv, const tString& gameExePath) :
-	m_gameExePath(gameExePath),
-	m_dataFolder(TEXT(""))
+// For parent process calls the first argument is expected to be the game executable path
+UberWolfLib::UberWolfLib(const tStrings& argv) :
+	m_gameExePath(TEXT("")),
+	m_dataFolder(TEXT("")),
+	m_valid(false)
 {
 	if (argv.size() < 1)
 		throw std::runtime_error("UberWolfLib: Invalid arguments count");
 
-	if (!fs::exists(m_gameExePath))
-		throw std::runtime_error("UberWolfLib: Invalid game executable path");
-
-	findDataFolder();
-
 	uint32_t mode = -1;
 	tString path = TEXT("");
-	bool isSubProcess = false;
+	bool isSubProcess = IsSubProcess();
 
-	if (argv.size() >= 3)
+	if (isSubProcess && argv.size() >= 3)
 	{
 		for (std::size_t i = 0; i < argv.size(); i++)
 		{
@@ -41,27 +38,46 @@ UberWolfLib::UberWolfLib(const tStrings& argv, const tString& gameExePath) :
 
 				mode = std::stoi(WStringToString(argv[i + 1]));
 				path = argv[i + 2];
-				isSubProcess = true;
 				break;
 			}
 		}
 	}
 
-	m_wolfPro = WolfPro(m_dataFolder);
 	m_wolfDec = WolfDec(argv[0], mode, isSubProcess);
 
-	// For subprocess calls the mode was passed as an argument
-	// directly call unpack, which in this case will also terminate the process
 	if (isSubProcess)
 	{
+		// For subprocess calls the mode was passed as an argument
+		// directly call unpack, which in this case will also terminate the process
 		m_wolfDec.UnpackArchive(path.c_str());
 		ExitProcess(0);
 	}
+	else
+		InitGame(argv[0]);
 }
 
-UberWolfLib::UberWolfLib(int argc, char* argv[], const tString& gameExePath) :
-	UberWolfLib(argvToList(argc, argv), gameExePath)
+UberWolfLib::UberWolfLib(int argc, char* argv[]) :
+	UberWolfLib(argvToList(argc, argv))
 {
+}
+
+bool UberWolfLib::InitGame(const tString& gameExePath)
+{
+	m_valid = false;
+	m_gameExePath = gameExePath;
+
+	if (!fs::exists(m_gameExePath))
+	{
+		tcerr << TEXT("UberWolfLib: Invalid game executable path: ") << gameExePath << std::endl;
+		return false;
+	}
+
+	if(!findDataFolder()) return false;
+
+	m_wolfPro = WolfPro(m_dataFolder);
+
+	m_valid = true;
+	return m_valid;
 }
 
 UWLExitCode UberWolfLib::UnpackData()
@@ -124,7 +140,7 @@ UWLExitCode UberWolfLib::unpackArchive(const tString& archivePath)
 	if (!fs::exists(archivePath))
 		return UWLExitCode::FILE_NOT_FOUND;
 
-	 if(archivePath.empty())
+	if (archivePath.empty())
 		return UWLExitCode::INVALID_PATH;
 
 	tcout << TEXT("Unpacking: ") << fs::path(archivePath).filename() << TEXT("... ");
@@ -142,7 +158,7 @@ UWLExitCode UberWolfLib::unpackArchive(const tString& archivePath)
 	return result ? UWLExitCode::SUCCESS : UWLExitCode::KEY_MISSING;
 }
 
-void UberWolfLib::findDataFolder()
+bool UberWolfLib::findDataFolder()
 {
 	// Get the folder where the game executable is located
 	tString gameFolder = FS_PATH_TO_TSTRING(fs::path(m_gameExePath).parent_path());
@@ -151,17 +167,18 @@ void UberWolfLib::findDataFolder()
 	if (fs::exists(gameFolder + TEXT("/Data")))
 	{
 		m_dataFolder = gameFolder + TEXT("/Data");
-		return;
+		return true;
 	}
 
 	// Check if data.wolf exists in the game folder
 	if (fs::exists(gameFolder + TEXT("/data.wolf")))
 	{
 		m_dataFolder = gameFolder;
-		return;
+		return true;
 	}
 
-	throw std::runtime_error("UberWolfLib: Could not find data folder");
+	tcerr << TEXT("UberWolfLib: Could not find data folder") << std::endl;
+	return false;
 }
 
 UWLExitCode UberWolfLib::findDxArcKeyFile()

@@ -21,8 +21,12 @@ enum class UWLExitCode
 class UberWolfLib
 {
 public:
-	UberWolfLib(const tStrings& argv, const tString& gameExePath);
-	UberWolfLib(int argc, char* argv[], const tString& gameExePath);
+	UberWolfLib(const tStrings& argv);
+	UberWolfLib(int argc = 0, char* argv[] = nullptr);
+
+	operator bool() const { return m_valid; }
+
+	bool InitGame(const tString& gameExePath);
 
 	UWLExitCode UnpackData();
 	UWLExitCode UnpackArchive(const tString& archivePath);
@@ -31,7 +35,7 @@ public:
 
 private:
 	UWLExitCode unpackArchive(const tString& archivePath);
-	void findDataFolder();
+	bool findDataFolder();
 	UWLExitCode findDxArcKeyFile();
 	UWLExitCode findDxArcKeyInject();
 	void updateConfig(const bool& useOldDxArc, const Key& key);
@@ -41,6 +45,7 @@ private:
 	WolfPro m_wolfPro;
 	tString m_gameExePath;
 	tString m_dataFolder;
+	bool m_valid = false;
 };
 
 

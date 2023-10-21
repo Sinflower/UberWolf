@@ -9,6 +9,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UberWolf", "UberWolf\UberWo
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UberWolfLib", "UberWolfLib\UberWolfLib.vcxproj", "{BFE77E57-9C02-4D34-B3AD-93203A711111}"
+	ProjectSection(ProjectDependencies) = postProject
+		{4FAC1181-7EA2-489A-B069-F53E8F0CA73E} = {4FAC1181-7EA2-489A-B069-F53E8F0CA73E}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KeyHook", "KeyHook\KeyHook.vcxproj", "{4FAC1181-7EA2-489A-B069-F53E8F0CA73E}"
 EndProject

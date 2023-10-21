@@ -6,10 +6,7 @@
 
 int main(int argc, char* argv[])
 {
-	// TODO: This needs to be passed somehow -- ignore for sub process?
-	const tString gameExe = TEXT("");
-
-	UberWolfLib uwl(argc, argv, gameExe);
+	UberWolfLib uwl(argc, argv);
 
 	UWLExitCode uec = uwl.UnpackData();
 
