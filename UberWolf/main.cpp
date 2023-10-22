@@ -6,6 +6,10 @@
 #include <Utils.h>
 
 #include "MainWindow.h"
+#include "ContentDialog.h"
+
+#pragma comment(lib, "Shlwapi.lib")
+#pragma comment(lib, "Comctl32.lib")
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ [[maybe_unused]] HINSTANCE hPrevInstance, _In_ [[maybe_unused]] LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
