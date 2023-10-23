@@ -7,6 +7,7 @@
 enum class UWLExitCode
 {
 	SUCCESS = 0,
+	NOT_INITIALIZED,
 	INVALID_PATH,
 	FILE_NOT_FOUND,
 	KEY_MISSING,
@@ -32,6 +33,10 @@ public:
 	UWLExitCode UnpackArchive(const tString& archivePath);
 	UWLExitCode FindDxArcKey();
 	UWLExitCode FindProtectionKey(std::string& key);
+	UWLExitCode FindProtectionKey(std::wstring& key);
+
+	static std::size_t RegisterLogCallback(const LogCallback& callback);
+	static void UnregisterLogCallback(const std::size_t& idx);
 
 private:
 	UWLExitCode unpackArchive(const tString& archivePath);
@@ -47,5 +52,3 @@ private:
 	tString m_dataFolder;
 	bool m_valid = false;
 };
-
-

@@ -8,6 +8,7 @@
 #include <filesystem>
 
 #include "Utils.h"
+#include "UberLog.h"
 
 namespace fs = std::filesystem;
 
@@ -52,7 +53,7 @@ WolfPro::WolfPro(const tString& dataFolder) :
 	if (!fs::exists(m_dataFolder))
 	{
 		m_dataFolder = TEXT("");
-		tcerr << TEXT("ERROR: Data folder \"") << m_dataFolder << TEXT("\" does not exist, exiting ...") << std::endl;
+		ERROR_LOG << TEXT("ERROR: Data folder \"") << m_dataFolder << TEXT("\" does not exist, exiting ...") << std::endl;
 		return;
 	}
 
@@ -60,7 +61,7 @@ WolfPro::WolfPro(const tString& dataFolder) :
 	if (!fs::is_directory(m_dataFolder))
 	{
 		m_dataFolder = TEXT("");
-		tcerr << TEXT("ERROR: Data folder \"") << m_dataFolder << TEXT("\" is not a directory, exiting ...") << std::endl;
+		ERROR_LOG << TEXT("ERROR: Data folder \"") << m_dataFolder << TEXT("\" is not a directory, exiting ...") << std::endl;
 		return;
 	}
 
@@ -77,7 +78,7 @@ WolfPro::WolfPro(const tString& dataFolder) :
 
 	if (m_dxArcKeyFile.empty())
 	{
-		tcerr << "Unable to find DxArc key file, this does not look like a WolfPro game" << std::endl;
+		ERROR_LOG << "Unable to find DxArc key file, this does not look like a WolfPro game" << std::endl;
 		return;
 	}
 	else
@@ -95,7 +96,7 @@ Key WolfPro::GetProtectionKey()
 
 	if (!validateProtectionKey(key))
 	{
-		tcerr << TEXT("ERROR: Invalid protection key") << std::endl;
+		ERROR_LOG << TEXT("ERROR: Invalid protection key") << std::endl;
 		return Key();
 	}
 
@@ -111,7 +112,7 @@ Key WolfPro::GetDxArcKey()
 
 	if (key.empty())
 	{
-		tcerr << TEXT("ERROR: Unable to find DxArc key") << std::endl;
+		ERROR_LOG << TEXT("ERROR: Unable to find DxArc key") << std::endl;
 		return Key();
 	}
 
@@ -148,7 +149,7 @@ Key WolfPro::findDxArcKey(const tString& filePath)
 	uint32_t fileSize;
 
 #ifdef PRINT_DEBUG
-	tcout << TEXT("Searching for DxArc key in: ") << filePath << TEXT("... ") << std::endl;
+	INFO_LOG << TEXT("Searching for DxArc key in: ") << filePath << TEXT("... ") << std::endl;
 #endif
 
 	if (!readFile(filePath, bytes, fileSize)) return key;
@@ -185,7 +186,7 @@ Key WolfPro::findProtectionKey(const tString& filePath)
 	std::vector<uint8_t> bytes;
 
 #ifdef PRINT_DEBUG
-	tcout << TEXT("Searching for protection key in: ") << filePath << TEXT("... ") << std::endl;
+	INFO_LOG << TEXT("Searching for protection key in: ") << filePath << TEXT("... ") << std::endl;
 #endif
 
 	if (!readFile(filePath, bytes, fileSize)) return key;
@@ -226,7 +227,7 @@ Key WolfPro::findProtectionKey(const tString& filePath)
 
 	if (keyLen + ProtKey::KEY_OFFSET >= fileSize)
 	{
-		std::cerr << "ERROR: Invalid key length, exiting ..." << std::endl;
+		ERROR_LOG << L"ERROR: Invalid key length, exiting ..." << std::endl;
 		return key;
 	}
 
@@ -259,7 +260,7 @@ bool WolfPro::readFile(const tString& filePath, std::vector<uint8_t>& bytes, uin
 
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
-		tcerr << TEXT("ERROR: Unable to open file \"") << filePath << TEXT("\".") << std::endl;
+		ERROR_LOG << TEXT("ERROR: Unable to open file \"") << filePath << TEXT("\".") << std::endl;
 		return false;
 	}
 
@@ -267,7 +268,7 @@ bool WolfPro::readFile(const tString& filePath, std::vector<uint8_t>& bytes, uin
 
 	if (fileSize == INVALID_FILE_SIZE)
 	{
-		tcerr << TEXT("ERROR: Unable to get file size for \"") << filePath << TEXT("\".") << std::endl;
+		ERROR_LOG << TEXT("ERROR: Unable to get file size for \"") << filePath << TEXT("\".") << std::endl;
 		CloseHandle(hFile);
 		return false;
 	}
@@ -280,7 +281,7 @@ bool WolfPro::readFile(const tString& filePath, std::vector<uint8_t>& bytes, uin
 
 	if (!bResult)
 	{
-		tcerr << TEXT("ERROR: Unable to read file \"") << filePath << TEXT("\".") << std::endl;
+		ERROR_LOG << TEXT("ERROR: Unable to read file \"") << filePath << TEXT("\".") << std::endl;
 		return false;
 	}
 

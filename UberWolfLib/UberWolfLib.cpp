@@ -3,6 +3,7 @@
 #include "WolfKeyFinder.h"
 #include "WolfPro.h"
 #include "Utils.h"
+#include "UberLog.h"
 
 #include <fstream>
 #include <filesystem>
@@ -52,8 +53,8 @@ UberWolfLib::UberWolfLib(const tStrings& argv) :
 		m_wolfDec.UnpackArchive(path.c_str());
 		ExitProcess(0);
 	}
-	else
-		InitGame(argv[0]);
+	else if(argv.size() >= 2)
+		InitGame(argv[1]);
 }
 
 UberWolfLib::UberWolfLib(int argc, char* argv[]) :
@@ -68,11 +69,11 @@ bool UberWolfLib::InitGame(const tString& gameExePath)
 
 	if (!fs::exists(m_gameExePath))
 	{
-		tcerr << TEXT("UberWolfLib: Invalid game executable path: ") << gameExePath << std::endl;
+		ERROR_LOG << TEXT("UberWolfLib: Invalid game executable path: ") << gameExePath << std::endl;
 		return false;
 	}
 
-	if(!findDataFolder()) return false;
+	if (!findDataFolder()) return false;
 
 	m_wolfPro = WolfPro(m_dataFolder);
 
@@ -82,6 +83,9 @@ bool UberWolfLib::InitGame(const tString& gameExePath)
 
 UWLExitCode UberWolfLib::UnpackData()
 {
+	if(!m_valid)
+		return UWLExitCode::NOT_INITIALIZED;
+
 	for (const auto& dirEntry : fs::directory_iterator(m_dataFolder))
 	{
 		if (dirEntry.path().extension() == ".wolf")
@@ -102,6 +106,9 @@ UWLExitCode UberWolfLib::UnpackArchive(const tString& archivePath)
 
 UWLExitCode UberWolfLib::FindDxArcKey()
 {
+	if(!m_valid)
+		return UWLExitCode::NOT_INITIALIZED;
+
 	if (findDxArcKeyFile() == UWLExitCode::SUCCESS)
 		return UWLExitCode::SUCCESS;
 
@@ -110,6 +117,9 @@ UWLExitCode UberWolfLib::FindDxArcKey()
 
 UWLExitCode UberWolfLib::FindProtectionKey(std::string& key)
 {
+	if(!m_valid)
+		return UWLExitCode::NOT_INITIALIZED;
+
 	if (!m_wolfPro.IsWolfPro())
 		return UWLExitCode::NOT_WOLF_PRO;
 
@@ -134,6 +144,26 @@ UWLExitCode UberWolfLib::FindProtectionKey(std::string& key)
 	return UWLExitCode::SUCCESS;
 }
 
+UWLExitCode UberWolfLib::FindProtectionKey(std::wstring& key)
+{
+	std::string sKey;
+	UWLExitCode uec = FindProtectionKey(sKey);
+	if (uec != UWLExitCode::SUCCESS) return uec;
+
+	key = StringToWString(sKey);
+	return UWLExitCode::SUCCESS;
+}
+
+std::size_t UberWolfLib::RegisterLogCallback(const LogCallback& callback)
+{
+	return uberLog::AddLogCallback(callback);
+}
+
+void UberWolfLib::UnregisterLogCallback(const std::size_t& idx)
+{
+	uberLog::RemoveLogCallback(idx);
+}
+
 UWLExitCode UberWolfLib::unpackArchive(const tString& archivePath)
 {
 	// Make sure the file exists
@@ -143,7 +173,7 @@ UWLExitCode UberWolfLib::unpackArchive(const tString& archivePath)
 	if (archivePath.empty())
 		return UWLExitCode::INVALID_PATH;
 
-	tcout << TEXT("Unpacking: ") << fs::path(archivePath).filename() << TEXT("... ");
+	INFO_LOG << TEXT("Unpacking: ") << fs::path(archivePath).filename() << TEXT("... ");
 	bool result = m_wolfDec.UnpackArchive(archivePath.c_str());
 
 	if (!result)
@@ -154,7 +184,7 @@ UWLExitCode UberWolfLib::unpackArchive(const tString& archivePath)
 			result = m_wolfDec.UnpackArchive(archivePath.c_str());
 	}
 
-	tcout << (result ? TEXT("Done") : TEXT("Failed")) << std::endl;
+	INFO_LOG << (result ? TEXT("Done") : TEXT("Failed")) << std::endl;
 	return result ? UWLExitCode::SUCCESS : UWLExitCode::KEY_MISSING;
 }
 
@@ -177,7 +207,7 @@ bool UberWolfLib::findDataFolder()
 		return true;
 	}
 
-	tcerr << TEXT("UberWolfLib: Could not find data folder") << std::endl;
+	ERROR_LOG << TEXT("UberWolfLib: Could not find data folder") << std::endl;
 	return false;
 }
 

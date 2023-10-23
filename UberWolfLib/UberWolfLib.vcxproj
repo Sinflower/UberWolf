@@ -207,6 +207,7 @@
     <ClInclude Include="..\3rdParty\DXLib\Huffman.h" />
     <ClInclude Include="..\3rdParty\nlohmann\json.hpp" />
     <ClInclude Include="Defines.h" />
+    <ClInclude Include="UberLog.h" />
     <ClInclude Include="SyeLog.h" />
     <ClInclude Include="Types.h" />
     <ClInclude Include="UberWolfLib.h" />
