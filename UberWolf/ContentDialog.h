@@ -5,6 +5,9 @@
 #include <Windows.h>
 #include <Shlwapi.h> // For Path functions
 #include <shlobj.h> // For Shell functions
+#include <mutex>
+
+#include <UberWolfLib.h>
 
 #include "resource.h"
 #include "WindowBase.h"
@@ -29,14 +32,29 @@ static inline bool OpenFile(HWND hwndParent, LPTSTR lpstrFile, LPCTSTR lpstrFilt
 	return GetOpenFileName(&ofn) == TRUE;
 }
 
+static inline std::wstring ReplaceAll(const std::wstring& str, const std::wstring& from, const std::wstring& to)
+{
+	std::wstring result = str;
+	size_t startPos = 0;
+	while ((startPos = result.find(from, startPos)) != std::wstring::npos)
+	{
+		result.replace(startPos, from.length(), to);
+		startPos += to.length();
+	}
+
+	return result;
+}
+
 class ContentDialog : public WindowBase
 {
 public:
 	ContentDialog(const HINSTANCE hInstance, const HWND hWndParent) :
 		WindowBase(hInstance),
-		m_hWndParent(hWndParent)
+		m_hWndParent(hWndParent),
+		m_mutex()
 	{
-		setHandle(CreateDialogParamW(m_hInstance, MAKEINTRESOURCE(IDD_CONTENT), m_hWndParent, wndProc, 0));
+		m_logIndex = UberWolfLib::RegisterLogCallback([this](const std::wstring& entry, const bool& addNewline) { addLogEntry(entry, addNewline); });
+		setHandle(CreateDialogParamW(m_hInstance, MAKEINTRESOURCE(IDD_CONTENT1), m_hWndParent, wndProc, 0));
 		ShowWindow(hWnd(), SW_SHOW);
 
 		// Resize the main window to match the size of the embedded dialog
@@ -54,9 +72,14 @@ public:
 		registerSlot(IDC_LABEL_DROP_GAME, WM_DROPFILES, [this](void* p) { onDropGame(p); });
 	}
 
+	~ContentDialog()
+	{
+		UberWolfLib::UnregisterLogCallback(m_logIndex);
+	}
+
+	// When the "Select Game" button is clicked
 	void onSelectGameClicked()
 	{
-		// When the "Open File" button is clicked
 		WCHAR szFile[MAX_PATH];
 		szFile[0] = '\0';
 
@@ -103,6 +126,32 @@ public:
 			MessageBox(hWnd(), L"Could not find data folder or data.wolf file.", L"Error", MB_OK | MB_ICONERROR);
 			return;
 		}
+
+		UberWolfLib uwl;
+		uwl.InitGame(szFile);
+		std::wstring protKey;
+		UWLExitCode result = uwl.FindProtectionKey(protKey);
+		if (result != UWLExitCode::SUCCESS)
+		{
+			if (result == UWLExitCode::NOT_WOLF_PRO)
+				protKey = L"Not Protected";
+			else
+			{
+				MessageBox(hWnd(), L"Could not find protection key.", L"Error", MB_OK | MB_ICONERROR);
+				return;
+			}
+		}
+
+		// Set the text of the protection key edit control to be the key
+		SetDlgItemText(hWnd(), IDC_PROTECTION_KEY, protKey.c_str());
+
+		result = uwl.UnpackData();
+
+		if (result != UWLExitCode::SUCCESS)
+		{
+			MessageBox(hWnd(), L"Could not unpack all data files.", L"Error", MB_OK | MB_ICONERROR);
+			return;
+		}
 	}
 
 	void onDropGame(void* p)
@@ -121,6 +170,24 @@ public:
 	}
 
 private:
+	void addLogEntry(const std::wstring& entry, const bool& addNewline = true)
+	{
+		// Lock the mutex
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		// Add an entry to the log list box
+		//SendDlgItemMessage(hWnd(), IDC_LOG, LB_ADDSTRING, 0, (LPARAM)entry.c_str());
+
+		// Add a new line to the log edit control
+		std::wstring msg = entry;
+		msg = ReplaceAll(msg, L"\r\n", L"\n");
+		msg = ReplaceAll(msg, L"\n", L"\r\n");
+		if (addNewline)
+			msg += L"\r\n";
+
+		SendDlgItemMessage(hWnd(), IDC_LOG, EM_REPLACESEL, FALSE, (LPARAM)msg.c_str());
+	}
+
 	static INT_PTR CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		// Check which message was passed in
@@ -161,4 +228,6 @@ private:
 
 private:
 	HWND m_hWndParent;
+	std::mutex m_mutex;
+	int32_t m_logIndex = -1;
 };
