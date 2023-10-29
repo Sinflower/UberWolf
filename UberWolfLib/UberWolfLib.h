@@ -8,6 +8,7 @@ enum class UWLExitCode
 {
 	SUCCESS = 0,
 	NOT_INITIALIZED,
+	WOLF_DEC_NOT_INITIALIZED,
 	INVALID_PATH,
 	FILE_NOT_FOUND,
 	KEY_MISSING,
@@ -44,6 +45,8 @@ private:
 	UWLExitCode findDxArcKeyFile();
 	UWLExitCode findDxArcKeyInject();
 	void updateConfig(const bool& useOldDxArc, const Key& key);
+	bool findGameFromArchive(const tString& archivePath);
+	bool copyDllFromResource(const tString& outDir) const;
 
 private:
 	WolfDec m_wolfDec;

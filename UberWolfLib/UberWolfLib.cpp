@@ -4,6 +4,7 @@
 #include "WolfPro.h"
 #include "Utils.h"
 #include "UberLog.h"
+#include "resource.h"
 
 #include <fstream>
 #include <filesystem>
@@ -12,6 +13,13 @@
 namespace fs = std::filesystem;
 
 static const tString EXTENSION = TEXT(".wolf");
+
+static const tStrings GAME_EXE_NAMES = {
+	TEXT("Game.exe"),
+	TEXT("GamePro.exe")
+};
+
+static const tString DATA_FOLDER_NAME = TEXT("Data");
 
 // TODO: Maybe implement error callbacks or something that notifies the application about errors
 
@@ -53,7 +61,7 @@ UberWolfLib::UberWolfLib(const tStrings& argv) :
 		m_wolfDec.UnpackArchive(path.c_str());
 		ExitProcess(0);
 	}
-	else if(argv.size() >= 2)
+	else if (argv.size() >= 2)
 		InitGame(argv[1]);
 }
 
@@ -65,13 +73,14 @@ UberWolfLib::UberWolfLib(int argc, char* argv[]) :
 bool UberWolfLib::InitGame(const tString& gameExePath)
 {
 	m_valid = false;
-	m_gameExePath = gameExePath;
 
-	if (!fs::exists(m_gameExePath))
+	if (!fs::exists(gameExePath))
 	{
 		ERROR_LOG << TEXT("UberWolfLib: Invalid game executable path: ") << gameExePath << std::endl;
 		return false;
 	}
+
+	m_gameExePath = gameExePath;
 
 	if (!findDataFolder()) return false;
 
@@ -83,7 +92,7 @@ bool UberWolfLib::InitGame(const tString& gameExePath)
 
 UWLExitCode UberWolfLib::UnpackData()
 {
-	if(!m_valid)
+	if (!m_valid)
 		return UWLExitCode::NOT_INITIALIZED;
 
 	for (const auto& dirEntry : fs::directory_iterator(m_dataFolder))
@@ -106,7 +115,7 @@ UWLExitCode UberWolfLib::UnpackArchive(const tString& archivePath)
 
 UWLExitCode UberWolfLib::FindDxArcKey()
 {
-	if(!m_valid)
+	if (!m_valid)
 		return UWLExitCode::NOT_INITIALIZED;
 
 	if (findDxArcKeyFile() == UWLExitCode::SUCCESS)
@@ -117,7 +126,7 @@ UWLExitCode UberWolfLib::FindDxArcKey()
 
 UWLExitCode UberWolfLib::FindProtectionKey(std::string& key)
 {
-	if(!m_valid)
+	if (!m_valid)
 		return UWLExitCode::NOT_INITIALIZED;
 
 	if (!m_wolfPro.IsWolfPro())
@@ -173,11 +182,20 @@ UWLExitCode UberWolfLib::unpackArchive(const tString& archivePath)
 	if (archivePath.empty())
 		return UWLExitCode::INVALID_PATH;
 
+	if (!m_wolfDec)
+		return UWLExitCode::WOLF_DEC_NOT_INITIALIZED;
+
 	INFO_LOG << TEXT("Unpacking: ") << fs::path(archivePath).filename() << TEXT("... ");
 	bool result = m_wolfDec.UnpackArchive(archivePath.c_str());
 
 	if (!result)
 	{
+		if (!m_valid)
+		{
+			if (!findGameFromArchive(archivePath))
+				return UWLExitCode::NOT_INITIALIZED;
+		}
+
 		UWLExitCode uec = FindDxArcKey();
 
 		if (uec == UWLExitCode::SUCCESS)
@@ -194,9 +212,9 @@ bool UberWolfLib::findDataFolder()
 	tString gameFolder = FS_PATH_TO_TSTRING(fs::path(m_gameExePath).parent_path());
 
 	// Check if the data folder exists
-	if (fs::exists(gameFolder + TEXT("/Data")))
+	if (fs::exists(gameFolder + TEXT("/") + DATA_FOLDER_NAME))
 	{
-		m_dataFolder = gameFolder + TEXT("/Data");
+		m_dataFolder = gameFolder + TEXT("/") + DATA_FOLDER_NAME;
 		return true;
 	}
 
@@ -279,4 +297,70 @@ void UberWolfLib::updateConfig(const bool& useOldDxArc, const Key& key)
 	// Write the config file
 	std::ofstream f(WolfDec::CONFIG_FILE_NAME);
 	f << data.dump(4);
+}
+
+bool UberWolfLib::findGameFromArchive(const tString& archivePath)
+{
+	// Get the folder containing the archive
+	tString searchFolder = FS_PATH_TO_TSTRING(fs::path(archivePath).parent_path());
+
+	// Check if the name of the search folder is the data folder, if search for the game executable in the parent folder
+	if (fs::path(searchFolder).filename() == DATA_FOLDER_NAME)
+		searchFolder = FS_PATH_TO_TSTRING(fs::path(searchFolder).parent_path());
+
+	INFO_LOG << TEXT("Searching for game executable in: ") << searchFolder << std::endl;
+
+	// Check if the game executable exists in the search folder
+	for (const auto& gameExeName : GAME_EXE_NAMES)
+	{
+		const tString gameExePath = searchFolder + TEXT("/") + gameExeName;
+		if (fs::exists(gameExePath))
+		{
+			INFO_LOG << TEXT("Found game executable: ") << gameExeName << std::endl;
+			return InitGame(gameExePath);
+		}
+	}
+
+	INFO_LOG << TEXT("Could not find the game executable") << std::endl;
+
+	return false;
+}
+
+bool UberWolfLib::copyDllFromResource(const tString& outDir) const
+{
+	INFO_LOG << TEXT("Copying resource...") << std::endl;
+
+	const HRSRC hResource = FindResource(NULL, MAKEINTRESOURCE(IDR_KEY_HOOK), RT_RCDATA);
+	if (hResource == NULL)
+	{
+		ERROR_LOG << TEXT("UberWolfLib: Failed to find resource") << std::endl;
+		return false;
+	}
+
+	const HGLOBAL hResData = LoadResource(NULL, hResource);
+	if (hResData == NULL)
+	{
+		ERROR_LOG << TEXT("UberWolfLib: Failed to load resource") << std::endl;
+		return false;
+	}
+
+	const LPVOID lpResourceData = LockResource(hResData);
+	const DWORD dwResourceSize = SizeofResource(NULL, hResource);
+
+	const tString dllPath = outDir + TEXT("/") + WolfKeyFinder::DLL_NAME;
+
+	HANDLE hFile = CreateFile(dllPath.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile == INVALID_HANDLE_VALUE)
+	{
+		ERROR_LOG << TEXT("UberWolfLib: Failed to create file") << std::endl;
+		return false;
+	}
+
+	DWORD bytesWritten = 0;
+	WriteFile(hFile, lpResourceData, dwResourceSize, &bytesWritten, NULL);
+
+	CloseHandle(hFile);
+	INFO_LOG << TEXT("UberWolfLib: Resource written to file") << std::endl;
+
+	return true;
 }
