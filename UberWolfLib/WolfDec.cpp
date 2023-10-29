@@ -41,7 +41,8 @@ const tStrings IGNORE_WOLF_FILES = {
 WolfDec::WolfDec(const std::wstring& progName, const uint32_t& mode, const bool& isSubProcess) :
 	m_progName(progName),
 	m_mode(mode),
-	m_isSubProcess(isSubProcess)
+	m_isSubProcess(isSubProcess),
+	m_valid(true)
 {
 	loadConfig();
 }

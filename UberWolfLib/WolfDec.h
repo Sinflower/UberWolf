@@ -53,6 +53,8 @@ public:
 	WolfDec(const std::wstring& progName, const uint32_t& mode = -1, const bool& isSubProcess = false);
 	~WolfDec();
 
+	operator bool() const { return m_valid; }
+
 	bool IsModeSet() const { return m_mode != -1; }
 
 	bool UnpackArchive(const TCHAR* pFilePath);
@@ -69,5 +71,6 @@ private:
 	DecryptModes m_additionalModes = {};
 	std::wstring m_progName;
 	bool m_isSubProcess = false;
+	bool m_valid = false;
 };
 
