@@ -18,6 +18,8 @@ public:
 		m_useOldDxArc = useOldDxArc;
 	}
 
+	static const tString DLL_NAME;
+
 private:
 private:
 	tString m_exePath;

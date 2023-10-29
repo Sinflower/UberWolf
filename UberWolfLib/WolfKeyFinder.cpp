@@ -19,7 +19,7 @@
 
 namespace fs = std::filesystem;
 
-static const TCHAR DLL_NAME[] = TEXT("KeyHook.dll");
+const tString WolfKeyFinder::DLL_NAME = TEXT("KeyHook.dll");
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -84,7 +84,7 @@ bool WolfKeyFinder::Inject()
 	TCHAR szBuffer[1024];
 	TCHAR* pszFilePart = nullptr;
 
-	if (!GetFullPathName(DLL_NAME, ARRAYSIZE(szBuffer), szBuffer, &pszFilePart))
+	if (!GetFullPathName(DLL_NAME.c_str(), ARRAYSIZE(szBuffer), szBuffer, &pszFilePart))
 	{
 		tcerr << __func__ << TEXT(": Error: ") << DLL_NAME << TEXT(" is not a valid path name...") << std::endl;
 		return false;
