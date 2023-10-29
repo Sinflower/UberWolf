@@ -104,6 +104,10 @@
       </SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <ResourceCompile>
+      <ResourceOutputFileName>$(SolutionDir)build\$(Platform)\$(Configuration)\%(Filename).res</ResourceOutputFileName>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -127,6 +131,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <ResourceCompile>
+      <ResourceOutputFileName>$(SolutionDir)build\$(Platform)\$(Configuration)\%(Filename).res</ResourceOutputFileName>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -146,6 +153,10 @@
       </SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <ResourceCompile>
+      <ResourceOutputFileName>$(SolutionDir)build\$(Platform)\$(Configuration)\%(Filename).res</ResourceOutputFileName>
+      <PreprocessorDefinitions>_DEBUG;_WIN64;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -169,6 +180,10 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <ResourceCompile>
+      <ResourceOutputFileName>$(SolutionDir)build\$(Platform)\$(Configuration)\%(Filename).res</ResourceOutputFileName>
+      <PreprocessorDefinitions>_WIN64;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\3rdParty\Detours\src\creatwth.cpp" />
@@ -207,6 +222,7 @@
     <ClInclude Include="..\3rdParty\DXLib\Huffman.h" />
     <ClInclude Include="..\3rdParty\nlohmann\json.hpp" />
     <ClInclude Include="Defines.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="UberLog.h" />
     <ClInclude Include="SyeLog.h" />
     <ClInclude Include="Types.h" />
@@ -215,6 +231,9 @@
     <ClInclude Include="WolfDec.h" />
     <ClInclude Include="WolfKeyFinder.h" />
     <ClInclude Include="WolfPro.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="UberWolfLib.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
