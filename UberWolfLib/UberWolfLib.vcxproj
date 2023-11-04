@@ -124,6 +124,7 @@
       <AdditionalIncludeDirectories>..\3rdParty\Detours\src;..\3rdParty\Detours\logging;..\3rdParty;</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DebugInformationFormat>None</DebugInformationFormat>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -174,6 +175,7 @@
       <AdditionalIncludeDirectories>..\3rdParty\Detours\src;..\3rdParty\Detours\logging;..\3rdParty;</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DebugInformationFormat>None</DebugInformationFormat>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>
