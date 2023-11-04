@@ -118,6 +118,8 @@ UWLExitCode UberWolfLib::FindDxArcKey()
 	if (!m_valid)
 		return UWLExitCode::NOT_INITIALIZED;
 
+	INFO_LOG << TEXT("Searching for decryption key ...") << std::endl;
+
 	if (findDxArcKeyFile() == UWLExitCode::SUCCESS)
 		return UWLExitCode::SUCCESS;
 
@@ -163,6 +165,11 @@ UWLExitCode UberWolfLib::FindProtectionKey(std::wstring& key)
 	return UWLExitCode::SUCCESS;
 }
 
+void UberWolfLib::ResetWolfDec()
+{
+	m_wolfDec.Reset();
+}
+
 std::size_t UberWolfLib::RegisterLogCallback(const LogCallback& callback)
 {
 	return uberLog::AddLogCallback(callback);
@@ -185,8 +192,22 @@ UWLExitCode UberWolfLib::unpackArchive(const tString& archivePath)
 	if (!m_wolfDec)
 		return UWLExitCode::WOLF_DEC_NOT_INITIALIZED;
 
-	INFO_LOG << TEXT("Unpacking: ") << fs::path(archivePath).filename() << TEXT("... ");
-	bool result = m_wolfDec.UnpackArchive(archivePath.c_str());
+	const tString fileName = fs::path(archivePath).filename();
+
+	if(!m_wolfDec.IsValidFile(archivePath))
+		return UWLExitCode::SUCCESS;
+
+	if (m_wolfDec.IsAlreadyUnpacked(archivePath))
+	{
+		INFO_LOG << fileName << (" is already unpacked, skipping") << std::endl;
+		return UWLExitCode::SUCCESS;
+	}
+
+	INFO_LOG << TEXT("Unpacking: ") << fileName << TEXT("... ");
+
+	bool result = m_wolfDec.UnpackArchive(archivePath);
+
+	INFO_LOG << (result ? TEXT("Done") : TEXT("Failed")) << std::endl;
 
 	if (!result)
 	{
@@ -199,10 +220,9 @@ UWLExitCode UberWolfLib::unpackArchive(const tString& archivePath)
 		UWLExitCode uec = FindDxArcKey();
 
 		if (uec == UWLExitCode::SUCCESS)
-			result = m_wolfDec.UnpackArchive(archivePath.c_str());
+			return unpackArchive(archivePath);
 	}
 
-	INFO_LOG << (result ? TEXT("Done") : TEXT("Failed")) << std::endl;
 	return result ? UWLExitCode::SUCCESS : UWLExitCode::KEY_MISSING;
 }
 
@@ -234,27 +254,38 @@ UWLExitCode UberWolfLib::findDxArcKeyFile()
 	if (!m_wolfPro.IsWolfPro())
 		return UWLExitCode::NOT_WOLF_PRO;
 
+	INFO_LOG << TEXT("WolfPro game detected, trying to get key from Game.dat ... ") << std::endl;
+
 	const Key key = m_wolfPro.GetDxArcKey();
 
 	if (key.empty())
+	{
+		INFO_LOG << TEXT("Failed to find the key in Game.dat") << std::endl;
 		return UWLExitCode::KEY_DETECT_FAILED;
+	}
 
 	m_wolfDec.AddKey("UNKNOWN_PRO", false, key);
 	updateConfig(false, key);
+	INFO_LOG << TEXT("Found the decryption key, restarting extraction") << std::endl;
 
 	return UWLExitCode::SUCCESS;
 }
 
 UWLExitCode UberWolfLib::findDxArcKeyInject()
 {
+	INFO_LOG << TEXT("Trying to get key using injection ... ") << std::flush;
 	WolfKeyFinder wkf(m_gameExePath);
 
 	std::vector<BYTE> key;
 	if (!wkf.Inject())
+	{
+		INFO_LOG << TEXT("Failed") << std::endl;
 		return UWLExitCode::KEY_DETECT_FAILED;
+	}
 
 	m_wolfDec.AddKey("UNKNOWN", wkf.UseOldDxArc(), wkf.GetKey());
 	updateConfig(wkf.UseOldDxArc(), wkf.GetKey());
+	INFO_LOG << TEXT("Found") << std::endl;
 
 	return UWLExitCode::SUCCESS;
 }

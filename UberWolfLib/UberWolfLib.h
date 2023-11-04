@@ -36,6 +36,8 @@ public:
 	UWLExitCode FindProtectionKey(std::string& key);
 	UWLExitCode FindProtectionKey(std::wstring& key);
 
+	void ResetWolfDec();
+
 	static std::size_t RegisterLogCallback(const LogCallback& callback);
 	static void UnregisterLogCallback(const std::size_t& idx);
 

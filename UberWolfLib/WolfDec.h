@@ -46,7 +46,7 @@ using DecryptModes = std::vector<DecryptMode>;
 class WolfDec
 {
 public:
-	inline static const std::string CONFIG_FILE_NAME = "WolfDecConfig.json";
+	inline static const std::string CONFIG_FILE_NAME = "UberWolfConfig.json";
 
 public:
 	WolfDec() : WolfDec(L"") {}
@@ -57,14 +57,20 @@ public:
 
 	bool IsModeSet() const { return m_mode != -1; }
 
-	bool UnpackArchive(const TCHAR* pFilePath);
+	bool IsValidFile(const tString& filePath) const;
+
+	bool IsAlreadyUnpacked(const tString& filePath) const;
+
+	bool UnpackArchive(const tString& filePath);
 
 	void AddKey(const std::string& name, const bool& useOldDxArc, const Key& key);
 
+	void Reset() { m_mode = -1; }
+
 private:
 	void loadConfig();
-	bool detectMode(const TCHAR* pFilePath);
-	bool runProcess(const TCHAR* pFilePath, const uint32_t& mode);
+	bool detectMode(const tString& filePath);
+	bool runProcess(const tString& filePath, const uint32_t& mode) const;
 
 private:
 	uint32_t m_mode = -1;

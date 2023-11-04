@@ -126,6 +126,7 @@ Key WolfPro::GetDxArcKey()
 bool WolfPro::RecheckProtFileState()
 {
 	m_protKeyFile = TEXT("");
+	m_needsUnpacking = false;
 
 	// Check if the data folder contains the protection key file
 	const tString protKeyFile = m_dataFolder + TEXT("/") + ProtKey::PROTECTION_KEY_FILE;

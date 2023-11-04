@@ -16,6 +16,7 @@
 #include <fstream>
 
 #include "Utils.h"
+#include "UberLog.h"
 
 namespace fs = std::filesystem;
 
@@ -51,34 +52,47 @@ WolfDec::~WolfDec()
 {
 }
 
-bool WolfDec::UnpackArchive(const TCHAR* pFilePath)
+bool WolfDec::IsValidFile(const tString& filePath) const
 {
-	TCHAR fullPath[MAX_PATH];
-	TCHAR filePath[MAX_PATH];
-	TCHAR directoryPath[MAX_PATH];
-	TCHAR fileName[MAX_PATH];
-	bool failed = true;
+	return (std::find(IGNORE_WOLF_FILES.begin(), IGNORE_WOLF_FILES.end(), FS_PATH_TO_TSTRING(fs::path(filePath).filename())) == IGNORE_WOLF_FILES.end());
+}
 
-	ConvertFullPath__(pFilePath, fullPath);
-	AnalysisFileNameAndDirPath(fullPath, filePath, directoryPath);
-	AnalysisFileNameAndExeName(filePath, fileName, NULL);
+bool WolfDec::IsAlreadyUnpacked(const tString& filePath) const
+{
+	const fs::path fp = fs::path(filePath);
 
-	tString outDir = tString(directoryPath) + TEXT("/") + tString(fileName);
+	const tString directoryPath = fp.parent_path();
+	const tString fileName = fp.stem();
+	const tString outDir = directoryPath + TEXT("/") + fileName;
+
+	return (fs::exists(outDir) && !fs::is_empty(outDir));
+}
+
+bool WolfDec::UnpackArchive(const tString& filePath)
+{
+	TCHAR pFullPath[MAX_PATH];
+	const fs::path fp = fs::path(filePath);
+	const tString cwd = fs::current_path();
+
+	const tString directoryPath = fp.parent_path();
+	const tString fileName = fp.stem();
+
+	ConvertFullPath__(filePath.c_str(), pFullPath);
 
 	// Check if the basename of the file is in the ignore list
-	if (std::find(IGNORE_WOLF_FILES.begin(), IGNORE_WOLF_FILES.end(), FS_PATH_TO_TSTRING(fs::path(pFilePath).filename())) != IGNORE_WOLF_FILES.end())
+	if (!IsValidFile(filePath))
 		return true;
 
 	// Check if the file is already unpacked, i.e., if the directory exists and is not empty
-	if (fs::exists(outDir) && !fs::is_empty(outDir))
+	if (IsAlreadyUnpacked(filePath))
 		return true;
 
 	if (m_mode == -1)
-		return detectMode(pFilePath);
+		return detectMode(filePath);
 
 	if (m_mode >= (DEFAULT_DECRYPT_MODES.size() + m_additionalModes.size()))
 	{
-		std::cerr << "Specified Mode: " << m_mode << " out of range" << std::endl;
+		ERROR_LOG << TEXT("Specified Mode: ") << m_mode << TEXT(" out of range") << std::endl;
 		if (m_isSubProcess)
 			ExitProcess(1);
 		else
@@ -87,22 +101,22 @@ bool WolfDec::UnpackArchive(const TCHAR* pFilePath)
 
 	const DecryptMode curMode = (m_mode < DEFAULT_DECRYPT_MODES.size() ? DEFAULT_DECRYPT_MODES.at(m_mode) : m_additionalModes.at(m_mode - DEFAULT_DECRYPT_MODES.size()));
 
-	SetCurrentDirectory(directoryPath);
+	fs::current_path(directoryPath);
+	fs::create_directory(fileName);
+	fs::current_path(fileName);
 
-	CreateDirectory(fileName, NULL);
-
-	SetCurrentDirectory(fileName);
-
-	failed = curMode.decFunc(fullPath, TEXT(""), curMode.key.data()) < 0;
+	const bool failed = curMode.decFunc(pFullPath, TEXT(""), curMode.key.data()) < 0;
 
 	if (failed)
 	{
-		SetCurrentDirectory(directoryPath);
-		RemoveDirectory(fileName);
+		fs::current_path(directoryPath);
+		fs::remove_all(fileName);
 	}
 
 	if (m_isSubProcess)
 		ExitProcess(failed);
+
+	fs::current_path(cwd);
 
 	return !failed;
 }
@@ -169,7 +183,7 @@ void WolfDec::loadConfig()
 	}
 }
 
-bool WolfDec::detectMode(const TCHAR* pFilePath)
+bool WolfDec::detectMode(const tString& filePath)
 {
 	bool success = false;
 
@@ -177,7 +191,7 @@ bool WolfDec::detectMode(const TCHAR* pFilePath)
 	{
 		for (uint32_t i = 0; i < DEFAULT_DECRYPT_MODES.size(); i++)
 		{
-			success = runProcess(pFilePath, i);
+			success = runProcess(filePath, i);
 			if (success)
 			{
 				m_mode = i;
@@ -187,7 +201,7 @@ bool WolfDec::detectMode(const TCHAR* pFilePath)
 
 		for (uint32_t i = 0; i < m_additionalModes.size(); i++)
 		{
-			success = runProcess(pFilePath, static_cast<uint32_t>(DEFAULT_DECRYPT_MODES.size() + i));
+			success = runProcess(filePath, static_cast<uint32_t>(DEFAULT_DECRYPT_MODES.size() + i));
 			if (success)
 			{
 				m_mode = static_cast<uint32_t>(DEFAULT_DECRYPT_MODES.size() + i);
@@ -196,12 +210,12 @@ bool WolfDec::detectMode(const TCHAR* pFilePath)
 		}
 	}
 	else
-		success = runProcess(pFilePath, m_mode);
+		success = runProcess(filePath, m_mode);
 
 	return success;
 }
 
-bool WolfDec::runProcess(const TCHAR* pFilePath, const uint32_t& mode)
+bool WolfDec::runProcess(const tString& filePath, const uint32_t& mode) const
 {
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
@@ -210,11 +224,11 @@ bool WolfDec::runProcess(const TCHAR* pFilePath, const uint32_t& mode)
 	si.cb = sizeof(si);
 	ZeroMemory(&pi, sizeof(pi));
 
-	const std::wstring wstr = m_progName + L" -m " + std::to_wstring(mode) + L" \"" + std::wstring(pFilePath) + L"\"";
+	const std::wstring wstr = m_progName + L" -m " + std::to_wstring(mode) + L" \"" + std::wstring(filePath) + L"\"";
 
 	if (!CreateProcess(NULL, const_cast<LPWSTR>(wstr.c_str()), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
 	{
-		std::cerr << "CreateProcess() failed: " << GetLastError() << std::endl;
+		ERROR_LOG << TEXT("CreateProcess() failed: ") << GetLastError() << std::endl;
 		return false;
 	}
 
@@ -225,7 +239,7 @@ bool WolfDec::runProcess(const TCHAR* pFilePath, const uint32_t& mode)
 
 	DWORD ec;
 	if (FALSE == GetExitCodeProcess(pi.hProcess, &ec))
-		std::cerr << "GetExitCodeProcess() failed: " << GetLastError() << std::endl;
+		ERROR_LOG << TEXT("GetExitCodeProcess() failed: ") << GetLastError() << std::endl;
 	else
 		success = (ec == 0);
 
