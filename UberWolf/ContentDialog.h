@@ -127,6 +127,9 @@ public:
 			return;
 		}
 
+		// Disable the "Process" button
+		EnableWindow(GetDlgItem(hWnd(), IDC_PROCESS), FALSE);
+
 		UberWolfLib uwl;
 		uwl.InitGame(szFile);
 		std::wstring protKey;
@@ -135,6 +138,7 @@ public:
 		if (result != UWLExitCode::SUCCESS)
 		{
 			MessageBox(hWnd(), L"Could not unpack all data files.", L"Error", MB_OK | MB_ICONERROR);
+			EnableWindow(GetDlgItem(hWnd(), IDC_PROCESS), TRUE);
 			return;
 		}
 
@@ -146,12 +150,16 @@ public:
 			else
 			{
 				MessageBox(hWnd(), L"Could not find protection key.", L"Error", MB_OK | MB_ICONERROR);
+				EnableWindow(GetDlgItem(hWnd(), IDC_PROCESS), TRUE);
 				return;
 			}
 		}
 
 		// Set the text of the protection key edit control to be the key
 		SetDlgItemText(hWnd(), IDC_PROTECTION_KEY, protKey.c_str());
+
+		// Enable the "Process" button
+		EnableWindow(GetDlgItem(hWnd(), IDC_PROCESS), TRUE);
 	}
 
 	// When a file is dropped onto the "Drop File" label
