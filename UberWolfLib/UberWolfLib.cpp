@@ -273,19 +273,28 @@ UWLExitCode UberWolfLib::findDxArcKeyFile()
 
 UWLExitCode UberWolfLib::findDxArcKeyInject()
 {
-	INFO_LOG << TEXT("Trying to get key using injection ... ") << std::flush;
+	INFO_LOG << TEXT("Trying to get key using injection ... ") << std::endl;
 	WolfKeyFinder wkf(m_gameExePath);
 
-	std::vector<BYTE> key;
-	if (!wkf.Inject())
+	const tString tmpPath = FS_PATH_TO_TSTRING(fs::temp_directory_path());
+
+	// Copy the dll into the temp directory
+	if (!copyDllFromResource(tmpPath))
 	{
-		INFO_LOG << TEXT("Failed") << std::endl;
+		return UWLExitCode::KEY_DETECT_FAILED;
+	}
+
+	INFO_LOG << TEXT("Executing game and injecting DLL ... ") << std::endl;
+	std::vector<BYTE> key;
+	if (!wkf.Inject(tmpPath))
+	{
+		INFO_LOG << TEXT("Injecting the DLL failed, stopping") << std::endl;
 		return UWLExitCode::KEY_DETECT_FAILED;
 	}
 
 	m_wolfDec.AddKey("UNKNOWN", wkf.UseOldDxArc(), wkf.GetKey());
 	updateConfig(wkf.UseOldDxArc(), wkf.GetKey());
-	INFO_LOG << TEXT("Found") << std::endl;
+	INFO_LOG << TEXT("Found the decryption key, restarting extraction") << std::endl;
 
 	return UWLExitCode::SUCCESS;
 }
@@ -359,7 +368,7 @@ bool UberWolfLib::findGameFromArchive(const tString& archivePath)
 
 bool UberWolfLib::copyDllFromResource(const tString& outDir) const
 {
-	INFO_LOG << TEXT("Copying resource...") << std::endl;
+	INFO_LOG << TEXT("Copying DLL from resource to ") << outDir << TEXT(" ...") << std::endl;
 
 	const HRSRC hResource = FindResource(NULL, MAKEINTRESOURCE(IDR_KEY_HOOK), RT_RCDATA);
 	if (hResource == NULL)
@@ -391,7 +400,7 @@ bool UberWolfLib::copyDllFromResource(const tString& outDir) const
 	WriteFile(hFile, lpResourceData, dwResourceSize, &bytesWritten, NULL);
 
 	CloseHandle(hFile);
-	INFO_LOG << TEXT("UberWolfLib: Resource written to file") << std::endl;
+	INFO_LOG << TEXT("DLL copied successfully") << std::endl;
 
 	return true;
 }

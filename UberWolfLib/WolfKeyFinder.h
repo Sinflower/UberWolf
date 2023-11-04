@@ -6,8 +6,9 @@ class WolfKeyFinder
 {
 public:
 	WolfKeyFinder(const tString& m_exePath);
+	~WolfKeyFinder();
 
-	bool Inject();
+	bool Inject(const tString& dllFolder);
 
 	const Key& GetKey() const { return m_key; }
 	const bool& UseOldDxArc() const { return m_useOldDxArc; }

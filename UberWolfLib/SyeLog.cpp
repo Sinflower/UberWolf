@@ -27,6 +27,15 @@ typedef LONG* PLONG_PTR;
 typedef LONG LONG_PTR;
 #endif
 
+#include "UberLog.h"
+#include "Utils.h"
+
+// TODO:
+//  - Rename this
+//  - Remove the exit(1) from MyErrExit
+//  - Rename the MyErrExit function
+//  - Replace printf logging with UberLog
+
 typedef struct _CLIENT : OVERLAPPED
 {
 	HANDLE          hPipe;
@@ -45,6 +54,7 @@ BOOL LogMessageV(BYTE nSeverity, const char* pszMsg, ...);
 VOID AcceptAndCreatePipeConnection(PCLIENT pClient, HANDLE hCompletionPort);
 
 std::vector<SyeLog::KeyCallback> g_keyCallbacks;
+bool g_initialized = false;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -52,9 +62,7 @@ VOID MyErrExit(PCSTR pszMsg)
 {
 	DWORD error = GetLastError();
 
-	LogMessageV(SYELOG_SEVERITY_FATAL, "Error %d in %s.", error, pszMsg);
-	fprintf(stderr, "SYELOGD: Error %ld in %s.\n", error, pszMsg);
-	fflush(stderr);
+	ERROR_LOG << TEXT("SYELOG: Error ") << error << TEXT(" in ") << StringToWString(pszMsg) << std::endl;
 	exit(1);
 }
 
@@ -322,8 +330,10 @@ BOOL CreateWorkers(HANDLE hCompletionPort)
 //
 namespace SyeLog
 {
-	bool init()
+	void init()
 	{
+		if(g_initialized) return;
+
 		HANDLE hCompletionPort;
 		BOOL fNeedHelp = FALSE;
 
@@ -337,7 +347,9 @@ namespace SyeLog
 		CreateWorkers(hCompletionPort);
 		CreatePipeConnection(hCompletionPort);
 
-		return true;
+		g_initialized = true;
+
+		return;
 	}
 
 	void registerKeyCallback(KeyCallback callback)
@@ -345,6 +357,10 @@ namespace SyeLog
 		g_keyCallbacks.push_back(callback);
 	}
 
+	void clearKeyCallbacks()
+	{
+		g_keyCallbacks.clear();
+	}
 }
 
 //

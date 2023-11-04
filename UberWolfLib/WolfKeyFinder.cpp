@@ -16,6 +16,7 @@
 
 #include "SyeLog.h"
 #include "Utils.h"
+#include "UberLog.h"
 
 namespace fs = std::filesystem;
 
@@ -52,7 +53,7 @@ static BOOL CALLBACK ExportCallback([[maybe_unused]] _In_opt_ PVOID pContext, _I
 //////////////////////////////////////////////////////////////////////////////
 
 
-//////////////////////////////////////////////////////////////////////// main.
+////////////////////////////////////////////////////////////////////////
 //
 WolfKeyFinder::WolfKeyFinder(const tString& exePath)
 	: m_exePath(exePath)
@@ -61,41 +62,43 @@ WolfKeyFinder::WolfKeyFinder(const tString& exePath)
 	SyeLog::registerKeyCallback([this](Key& key, const bool& useOldDxArc) { KeyCallback(key, useOldDxArc); });
 }
 
-bool WolfKeyFinder::Inject()
+WolfKeyFinder::~WolfKeyFinder()
 {
+	SyeLog::clearKeyCallbacks();
+}
+
+bool WolfKeyFinder::Inject(const tString& dllFolder)
+{
+	tString dllPath = dllFolder + TEXT("/") + DLL_NAME;
 	// Make sure the exe exists
 	if (!fs::exists(m_exePath))
 	{
-		tcerr << __func__ << TEXT(": Error: ") << m_exePath << TEXT(" does not exist.") << std::endl;
+		ERROR_LOG << TEXT("Error: ") << m_exePath << TEXT(" does not exist.") << std::endl;
 		return false;
 	}
 
 	// Make sure the dll exists
-	if (!fs::exists(DLL_NAME))
+	if (!fs::exists(dllPath))
 	{
-		tcerr << __func__ << TEXT(": Error: ") << DLL_NAME << TEXT(" does not exist.") << std::endl;
+		ERROR_LOG << TEXT("Error: ") << dllPath << TEXT(" does not exist.") << std::endl;
 		return false;
 	}
-
-
-	/////////////////////////////////////////////////////////// Validate DLL
-	//
 
 	TCHAR szBuffer[1024];
 	TCHAR* pszFilePart = nullptr;
 
-	if (!GetFullPathName(DLL_NAME.c_str(), ARRAYSIZE(szBuffer), szBuffer, &pszFilePart))
+	if (!GetFullPathName(dllPath.c_str(), ARRAYSIZE(szBuffer), szBuffer, &pszFilePart))
 	{
-		tcerr << __func__ << TEXT(": Error: ") << DLL_NAME << TEXT(" is not a valid path name...") << std::endl;
+		ERROR_LOG << TEXT("Error: ") << dllPath << TEXT(" is not a valid path name...") << std::endl;
 		return false;
 	}
 
-	tString dllPath = szBuffer;
+	dllPath = szBuffer;
 
 	HMODULE hDll = LoadLibraryEx(dllPath.c_str(), NULL, DONT_RESOLVE_DLL_REFERENCES);
 	if (hDll == NULL)
 	{
-		tcerr << __func__ << TEXT(": Error: ") << dllPath << TEXT(" failed to load (error ") << GetLastError() << TEXT(").") << std::endl;
+		ERROR_LOG << TEXT("Error: ") << dllPath << TEXT(" failed to load (error ") << GetLastError() << TEXT(").") << std::endl;
 		return false;
 	}
 
@@ -107,12 +110,9 @@ bool WolfKeyFinder::Inject()
 
 	if (!ec.fHasOrdinal1)
 	{
-		tcerr << __func__ << TEXT(": Error: ") << dllPath << TEXT(" does not export ordinal #1.") << std::endl;
-		tcerr << TEXT("             See help entry DetourCreateProcessWithDllEx in Detours.chm.") << std::endl;
+		ERROR_LOG << TEXT("Error: ") << dllPath << TEXT(" does not export ordinal #1.") << std::endl;
 		return false;
 	}
-
-	//////////////////////////////////////////////////////////////////////////
 
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
@@ -122,8 +122,8 @@ bool WolfKeyFinder::Inject()
 	si.cb = sizeof(si);
 
 #ifdef PRINT_DEBUG
-	tcout << __func__ << TEXT(": Starting: '") << m_exePath << TEXT("'") << std::endl;
-	tcout << __func__ << TEXT(":   with '") << dllPath << TEXT("'") << std::endl;
+	INFO_LOG << TEXT(": Starting: '") << m_exePath << TEXT("'") << std::endl;
+	INFO_LOG << TEXT(":   with '") << dllPath << TEXT("'") << std::endl;
 #endif
 
 	DWORD dwFlags = CREATE_DEFAULT_ERROR_MODE | CREATE_SUSPENDED;
@@ -141,14 +141,14 @@ bool WolfKeyFinder::Inject()
 	if (!DetourCreateProcessWithDlls(szBuffer, NULL, NULL, NULL, TRUE, dwFlags, NULL, NULL, &si, &pi, 1, &lpszDllPath, NULL))
 	{
 		DWORD dwError = GetLastError();
-		tcerr << __func__ << TEXT(": DetourCreateProcessWithDllEx failed: ") << dwError << std::endl;
+		ERROR_LOG << TEXT("DetourCreateProcessWithDlls failed: ") << dwError << std::endl;
 
 		if (dwError == ERROR_INVALID_HANDLE)
 		{
 #if DETOURS_64BIT
-			tcerr << __func__ << TEXT(": Can't detour a 32-bit target process from a 64-bit parent process.") << std::endl;
+			ERROR_LOG << TEXT("Can't detour a 32-bit target process from a 64-bit parent process.") << std::endl;
 #else
-			tcerr << __func__ << TEXT(": Can't detour a 64-bit target process from a 32-bit parent process.") << std::endl;
+			ERROR_LOG << TEXT("Can't detour a 64-bit target process from a 32-bit parent process.") << std::endl;
 #endif
 		}
 
@@ -162,7 +162,7 @@ bool WolfKeyFinder::Inject()
 	DWORD dwResult = 0;
 	if (!GetExitCodeProcess(pi.hProcess, &dwResult))
 	{
-		tcerr << __func__ << TEXT(": GetExitCodeProcess failed: ") << GetLastError() << std::endl;
+		ERROR_LOG << TEXT("GetExitCodeProcess failed: ") << GetLastError() << std::endl;
 		return false;
 	}
 
@@ -170,4 +170,4 @@ bool WolfKeyFinder::Inject()
 }
 
 //
-///////////////////////////////////////////////////////////////// End of File.
+/////////////////////////////////////////////////////////////////
