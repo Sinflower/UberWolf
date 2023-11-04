@@ -24,7 +24,6 @@ public:
 
 	bool InitInstance(int nCmdShow)
 	{
-
 		setHandle(CreateWindowW(m_szWindowClass, m_szTitle, WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, m_hInstance, nullptr));
 
 		if (!hWnd()) return false;
@@ -52,7 +51,7 @@ private:
 		wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 		wcex.lpszMenuName = nullptr;
 		wcex.lpszClassName = m_szWindowClass;
-		wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+		wcex.hIconSm = NULL;
 
 		RegisterClassExW(&wcex);
 	}

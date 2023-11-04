@@ -54,7 +54,7 @@ public:
 		m_mutex()
 	{
 		m_logIndex = UberWolfLib::RegisterLogCallback([this](const std::wstring& entry, const bool& addNewline) { addLogEntry(entry, addNewline); });
-		setHandle(CreateDialogParamW(m_hInstance, MAKEINTRESOURCE(IDD_CONTENT1), m_hWndParent, wndProc, 0));
+		setHandle(CreateDialogParamW(m_hInstance, MAKEINTRESOURCE(IDD_CONTENT), m_hWndParent, wndProc, 0));
 		ShowWindow(hWnd(), SW_SHOW);
 
 		// Resize the main window to match the size of the embedded dialog
@@ -65,11 +65,11 @@ public:
 
 		SetWindowPos(m_hWndParent, NULL, 0, 0, dialogWidth, dialogHeight, SWP_NOMOVE | SWP_NOZORDER);
 
-		SetWindowSubclass(GetDlgItem(hWnd(), IDC_LABEL_DROP_GAME), dropProc, 0, (DWORD_PTR)hWnd());
+		SetWindowSubclass(GetDlgItem(hWnd(), IDC_LABEL_DROP_FILE), dropProc, 0, (DWORD_PTR)hWnd());
 
 		registerSlot(IDC_SELECT_GAME, BN_CLICKED, [this]() { onSelectGameClicked(); });
 		registerSlot(IDC_PROCESS, BN_CLICKED, [this]() { onProcessClicked(); });
-		registerSlot(IDC_LABEL_DROP_GAME, WM_DROPFILES, [this](void* p) { onDropGame(p); });
+		registerSlot(IDC_LABEL_DROP_FILE, WM_DROPFILES, [this](void* p) { onDropFile(p); });
 	}
 
 	~ContentDialog()
@@ -130,7 +130,15 @@ public:
 		UberWolfLib uwl;
 		uwl.InitGame(szFile);
 		std::wstring protKey;
-		UWLExitCode result = uwl.FindProtectionKey(protKey);
+		UWLExitCode result = uwl.UnpackData();
+
+		if (result != UWLExitCode::SUCCESS)
+		{
+			MessageBox(hWnd(), L"Could not unpack all data files.", L"Error", MB_OK | MB_ICONERROR);
+			return;
+		}
+
+		result = uwl.FindProtectionKey(protKey);
 		if (result != UWLExitCode::SUCCESS)
 		{
 			if (result == UWLExitCode::NOT_WOLF_PRO)
@@ -144,29 +152,48 @@ public:
 
 		// Set the text of the protection key edit control to be the key
 		SetDlgItemText(hWnd(), IDC_PROTECTION_KEY, protKey.c_str());
-
-		result = uwl.UnpackData();
-
-		if (result != UWLExitCode::SUCCESS)
-		{
-			MessageBox(hWnd(), L"Could not unpack all data files.", L"Error", MB_OK | MB_ICONERROR);
-			return;
-		}
 	}
 
-	void onDropGame(void* p)
+	// When a file is dropped onto the "Drop File" label
+	void onDropFile(void* p)
 	{
-		// When a file is dropped onto the "Drop Game" label
-		WCHAR szFile[MAX_PATH];
-		szFile[0] = '\0';
-
 		// Get the file path from the dropped file
 		HDROP hDrop = reinterpret_cast<HDROP>(p);
-		DragQueryFile(hDrop, 0, szFile, MAX_PATH);
+
+		// Get the number of files dropt onto the label
+		int32_t dropCnt = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
+
+		tStrings files;
+
+		for (int32_t i = 0; i < dropCnt; i++)
+		{
+			// Get the file path
+			TCHAR szFile[MAX_PATH];
+			szFile[0] = '\0';
+
+			DragQueryFile(hDrop, i, szFile, MAX_PATH);
+
+			files.push_back(szFile);
+		}
+
 		DragFinish(hDrop);
 
-		// Set the text of the edit control to be the path
-		SetDlgItemText(hWnd(), IDC_GAME_LOCATION, szFile);
+		if(files.size() == 0)
+			return;
+
+		// If only one file is dropped, and it is an executable, set the text of the edit control
+		if(files.size() == 1 && files[0].find(L".exe") != std::wstring::npos)
+		{
+			SetDlgItemText(hWnd(), IDC_GAME_LOCATION, files[0].c_str());
+			return;
+		}
+
+		UberWolfLib uwl;
+		for (const tString& file : files)
+		{
+			uwl.ResetWolfDec();
+			uwl.UnpackArchive(file);
+		}
 	}
 
 private:
