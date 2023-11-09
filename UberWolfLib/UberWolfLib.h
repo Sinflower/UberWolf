@@ -56,4 +56,5 @@ private:
 	tString m_gameExePath;
 	tString m_dataFolder;
 	bool m_valid = false;
+	bool m_dataAsFile = false;
 };

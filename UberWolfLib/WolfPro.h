@@ -9,7 +9,7 @@ class WolfPro
 {
 public:
 	WolfPro() = default;
-	WolfPro(const tString& dataFolder);
+	WolfPro(const tString& dataFolder, const bool& dataInBaseFolder = false);
 	~WolfPro() = default;
 
 	const bool& NeedsUnpacking() const { return m_needsUnpacking; }
@@ -32,5 +32,6 @@ private:
 	tString m_dxArcKeyFile;
 	bool m_needsUnpacking = false;
 	bool m_isWolfPro = false;
+	bool m_dataInBaseFolder = false;
 };
 

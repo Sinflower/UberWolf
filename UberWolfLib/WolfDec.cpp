@@ -17,6 +17,7 @@
 
 #include "Utils.h"
 #include "UberLog.h"
+#include "WolfUtils.h"
 
 namespace fs = std::filesystem;
 
@@ -29,14 +30,6 @@ const DecryptModes DEFAULT_DECRYPT_MODES = {
 	{"Wolf RPG v3.14", &DXArchive::DecodeArchive, std::vector<unsigned char>{ 0x31, 0xF9, 0x01, 0x36, 0xA3, 0xE3, 0x8D, 0x3C, 0x7B, 0xC3, 0x7D, 0x25, 0xAD, 0x63, 0x28, 0x19, 0x1B, 0xF7, 0x8E, 0x6C, 0xC4, 0xE5, 0xE2, 0x76, 0x82, 0xEA, 0x4F, 0xED, 0x61, 0xDA, 0xE0, 0x44, 0x5B, 0xB6, 0x46, 0x3B, 0x06, 0xD5, 0xCE, 0xB6, 0x78, 0x58, 0xD0, 0x7C, 0x82, 0x00 } },
 	{"One Way Heroics", &DXArchive::DecodeArchive, "nGui9('&1=@3#a" },
 	{"One Way Heroics Plus", &DXArchive::DecodeArchive, "Ph=X3^]o2A(,1=@3#a" }
-};
-
-const tStrings IGNORE_WOLF_FILES = {
-	TEXT("Game.wolf"),
-	TEXT("List.wolf"),
-	TEXT("Data2.wolf"),
-	TEXT("GameFile.wolf"),
-	TEXT("BasicData2.wolf")
 };
 
 WolfDec::WolfDec(const std::wstring& progName, const uint32_t& mode, const bool& isSubProcess) :
@@ -54,7 +47,8 @@ WolfDec::~WolfDec()
 
 bool WolfDec::IsValidFile(const tString& filePath) const
 {
-	return (std::find(IGNORE_WOLF_FILES.begin(), IGNORE_WOLF_FILES.end(), FS_PATH_TO_TSTRING(fs::path(filePath).filename())) == IGNORE_WOLF_FILES.end());
+	const tStrings specialFiles = GetSpecialFiles();
+	return (std::find(specialFiles.begin(), specialFiles.end(), FS_PATH_TO_TSTRING(fs::path(filePath).filename())) == specialFiles.end());
 }
 
 bool WolfDec::IsAlreadyUnpacked(const tString& filePath) const

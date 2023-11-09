@@ -5,14 +5,13 @@
 #include "Utils.h"
 #include "UberLog.h"
 #include "resource.h"
+#include "WolfUtils.h"
 
 #include <fstream>
 #include <filesystem>
 #include <nlohmann/json.hpp>
 
 namespace fs = std::filesystem;
-
-static const tString EXTENSION = TEXT(".wolf");
 
 static const tStrings GAME_EXE_NAMES = {
 	TEXT("Game.exe"),
@@ -84,7 +83,7 @@ bool UberWolfLib::InitGame(const tString& gameExePath)
 
 	if (!findDataFolder()) return false;
 
-	m_wolfPro = WolfPro(m_dataFolder);
+	m_wolfPro = WolfPro(m_dataFolder, m_dataAsFile);
 
 	m_valid = true;
 	return m_valid;
@@ -97,7 +96,7 @@ UWLExitCode UberWolfLib::UnpackData()
 
 	for (const auto& dirEntry : fs::directory_iterator(m_dataFolder))
 	{
-		if (dirEntry.path().extension() == ".wolf")
+		if (IsWolfExtension(dirEntry.path().extension()))
 		{
 			tString target = FS_PATH_TO_TSTRING(dirEntry.path());
 			UWLExitCode uec = unpackArchive(target);
@@ -139,7 +138,13 @@ UWLExitCode UberWolfLib::FindProtectionKey(std::string& key)
 
 	if (m_wolfPro.NeedsUnpacking())
 	{
-		const tString target = m_dataFolder + TEXT("/") + m_wolfPro.GetProtKeyArchiveName() + EXTENSION;
+		const tString target = FindExistingWolfFile(m_dataFolder + TEXT("/") + m_wolfPro.GetProtKeyArchiveName());
+		if (target.empty())
+		{
+			ERROR_LOG << TEXT("UberWolfLib: Could not find protection file: ") << m_wolfPro.GetProtKeyArchiveName() << std::endl;
+			return UWLExitCode::FILE_NOT_FOUND;
+		}
+
 		if (unpackArchive(target) != UWLExitCode::SUCCESS) return UWLExitCode::UNPACK_FAILED;
 	}
 
@@ -228,20 +233,23 @@ UWLExitCode UberWolfLib::unpackArchive(const tString& archivePath)
 
 bool UberWolfLib::findDataFolder()
 {
+	m_dataAsFile = false;
+
 	// Get the folder where the game executable is located
 	tString gameFolder = FS_PATH_TO_TSTRING(fs::path(m_gameExePath).parent_path());
+
+	// First check if data.EXT exists in the game folder -- because after unpacking the data folder will exist but contain the wrong files
+	if (ExistsWolfDataFile(gameFolder))
+	{
+		m_dataAsFile = true;
+		m_dataFolder = gameFolder;
+		return true;
+	}
 
 	// Check if the data folder exists
 	if (fs::exists(gameFolder + TEXT("/") + DATA_FOLDER_NAME))
 	{
 		m_dataFolder = gameFolder + TEXT("/") + DATA_FOLDER_NAME;
-		return true;
-	}
-
-	// Check if data.wolf exists in the game folder
-	if (fs::exists(gameFolder + TEXT("/data.wolf")))
-	{
-		m_dataFolder = gameFolder;
 		return true;
 	}
 

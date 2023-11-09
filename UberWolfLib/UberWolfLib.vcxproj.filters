@@ -96,6 +96,12 @@
     <ClCompile Include="..\3rdParty\DXLib\Huffman.cpp">
       <Filter>3rdParty\DXLib</Filter>
     </ClCompile>
+    <ClCompile Include="UberLog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WolfUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WolfKeyFinder.h">
@@ -159,6 +165,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

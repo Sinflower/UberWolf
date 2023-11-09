@@ -9,6 +9,7 @@
 
 #include "Utils.h"
 #include "UberLog.h"
+#include "WolfUtils.h"
 
 namespace fs = std::filesystem;
 
@@ -34,20 +35,13 @@ namespace DxArcKey
 	static const uint32_t MIN_FILESIZE = 0x5CB8;
 	static const uint32_t SHIFT = 12;
 	static const std::size_t XOR_START_OFFSET = 20;
-
-	static const tStrings DX_ARC_KEY_FILES = {
-		TEXT("Game.wolf"),
-		TEXT("List.wolf"),
-		TEXT("Data2.wolf"),
-		TEXT("GameFile.wolf"),
-		TEXT("BasicData2.wolf")
-	};
 }
 
-WolfPro::WolfPro(const tString& dataFolder) :
+WolfPro::WolfPro(const tString& dataFolder, const bool& dataInBaseFolder) :
 	m_dataFolder(dataFolder),
 	m_protKeyFile(TEXT("")),
-	m_dxArcKeyFile(TEXT(""))
+	m_dxArcKeyFile(TEXT("")),
+	m_dataInBaseFolder(dataInBaseFolder)
 {
 	// Check if the data folder exists
 	if (!fs::exists(m_dataFolder))
@@ -65,8 +59,10 @@ WolfPro::WolfPro(const tString& dataFolder) :
 		return;
 	}
 
+	const tStrings keyFiles = GetSpecialFiles();
+
 	// Check if the data folder contains any of the DxArc key files	
-	for (const tString& file : DxArcKey::DX_ARC_KEY_FILES)
+	for (const tString& file : keyFiles)
 	{
 		const tString filePath = m_dataFolder + TEXT("/") + file;
 		if (fs::exists(filePath))
@@ -128,8 +124,13 @@ bool WolfPro::RecheckProtFileState()
 	m_protKeyFile = TEXT("");
 	m_needsUnpacking = false;
 
+	tString protKeyFile;
 	// Check if the data folder contains the protection key file
-	const tString protKeyFile = m_dataFolder + TEXT("/") + ProtKey::PROTECTION_KEY_FILE;
+	if(m_dataInBaseFolder)
+		protKeyFile = m_dataFolder + TEXT("/") + GetWolfDataFolder() + TEXT("/") + ProtKey::PROTECTION_KEY_FILE;
+	else
+		protKeyFile = m_dataFolder + TEXT("/") + ProtKey::PROTECTION_KEY_FILE;
+
 	if (fs::exists(protKeyFile))
 		m_protKeyFile = protKeyFile;
 	else

@@ -208,10 +208,12 @@
     <ClCompile Include="..\3rdParty\DXLib\FileLib.cpp" />
     <ClCompile Include="..\3rdParty\DXLib\Huffman.cpp" />
     <ClCompile Include="SyeLog.cpp" />
+    <ClCompile Include="UberLog.cpp" />
     <ClCompile Include="UberWolfLib.cpp" />
     <ClCompile Include="WolfDec.cpp" />
     <ClCompile Include="WolfKeyFinder.cpp" />
     <ClCompile Include="WolfPro.cpp" />
+    <ClCompile Include="WolfUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\3rdParty\Detours\logging\syelog.h" />
@@ -235,6 +237,7 @@
     <ClInclude Include="WolfDec.h" />
     <ClInclude Include="WolfKeyFinder.h" />
     <ClInclude Include="WolfPro.h" />
+    <ClInclude Include="WolfUtils.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="UberWolfLib.rc" />
