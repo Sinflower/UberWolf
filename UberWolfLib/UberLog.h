@@ -6,7 +6,7 @@
 
 namespace uberLog
 {
-	static LogCallbacks s_logCallbacks = LogCallbacks();
+	extern LogCallbacks s_logCallbacks;
 }
 
 class UberLog
@@ -34,7 +34,7 @@ public:
 
 private:
 	tOstream& m_oStream;
-	static inline std::mutex s_mtx;
+	static std::mutex s_mtx;
 };
 
 class UberLogBuffer
@@ -88,8 +88,8 @@ UberLogBuffer operator<<(UberLog& log, T&& msg)
 
 namespace uberLog
 {
-	static UberLog s_info(tcout);
-	static UberLog s_error(tcerr);
+	extern UberLog s_info; 
+	extern UberLog s_error;
 
 	static inline std::size_t AddLogCallback(const LogCallback& callback)
 	{
