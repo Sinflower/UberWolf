@@ -160,8 +160,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ConfigManager.h" />
     <ClInclude Include="ContentDialog.h" />
     <ClInclude Include="MainWindow.h" />
+    <ClInclude Include="OptionDialog.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SlotWrapper.h" />
     <ClInclude Include="targetver.h" />

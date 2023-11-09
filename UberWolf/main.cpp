@@ -28,6 +28,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ [[maybe_unused]] HINSTA
 		return -1;
 
 	ContentDialog contentDialog(hInstance, mainWindow.GetHandle());
+	contentDialog.SetupLog();
 
 	HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_UBERWOLF));
 

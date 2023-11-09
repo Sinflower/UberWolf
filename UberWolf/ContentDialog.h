@@ -6,11 +6,16 @@
 #include <Shlwapi.h> // For Path functions
 #include <shlobj.h> // For Shell functions
 #include <mutex>
+#include <filesystem>
 
 #include <UberWolfLib.h>
 
 #include "resource.h"
 #include "WindowBase.h"
+#include "OptionDialog.h"
+#include "WolfUtils.h"
+
+namespace fs = std::filesystem;
 
 // Function to open a file selection dialog
 static inline bool OpenFile(HWND hwndParent, LPTSTR lpstrFile, LPCTSTR lpstrFilter, LPCTSTR lpstrTitle)
@@ -49,11 +54,10 @@ class ContentDialog : public WindowBase
 {
 public:
 	ContentDialog(const HINSTANCE hInstance, const HWND hWndParent) :
-		WindowBase(hInstance),
-		m_hWndParent(hWndParent),
+		WindowBase(hInstance, hWndParent),
+		m_optionsDialog(hInstance, nullptr),
 		m_mutex()
 	{
-		m_logIndex = UberWolfLib::RegisterLogCallback([this](const std::wstring& entry, const bool& addNewline) { addLogEntry(entry, addNewline); });
 		setHandle(CreateDialogParamW(m_hInstance, MAKEINTRESOURCE(IDD_CONTENT), m_hWndParent, wndProc, 0));
 		ShowWindow(hWnd(), SW_SHOW);
 
@@ -67,14 +71,28 @@ public:
 
 		SetWindowSubclass(GetDlgItem(hWnd(), IDC_LABEL_DROP_FILE), dropProc, 0, (DWORD_PTR)hWnd());
 
+		registerSlot(IDC_OPTIONS, BN_CLICKED, [this]() { onOptionsClicked(); });
 		registerSlot(IDC_SELECT_GAME, BN_CLICKED, [this]() { onSelectGameClicked(); });
 		registerSlot(IDC_PROCESS, BN_CLICKED, [this]() { onProcessClicked(); });
 		registerSlot(IDC_LABEL_DROP_FILE, WM_DROPFILES, [this](void* p) { onDropFile(p); });
+
+		m_optionsDialog.SetParent(hWnd());
 	}
 
 	~ContentDialog()
 	{
-		UberWolfLib::UnregisterLogCallback(m_logIndex);
+		if(m_logIndex != -1)
+			UberWolfLib::UnregisterLogCallback(m_logIndex);
+	}
+
+	void SetupLog()
+	{
+		m_logIndex = UberWolfLib::RegisterLogCallback([this](const std::wstring& entry, const bool& addNewline) { addLogEntry(entry, addNewline); });
+	}
+
+	void onOptionsClicked()
+	{
+		m_optionsDialog.Show();
 	}
 
 	// When the "Select Game" button is clicked
@@ -104,24 +122,20 @@ public:
 			return;
 		}
 
+		fs::path exePath = szFile;
+
 		// Make sure that the file exists
-		if (GetFileAttributes(szFile) == INVALID_FILE_ATTRIBUTES)
+		if(!fs::exists(exePath))
 		{
 			MessageBox(hWnd(), L"File does not exist.", L"Error", MB_OK | MB_ICONERROR);
 			return;
 		}
 
+		const fs::path basePath = exePath.parent_path();
+		const tString dataPath = FS_PATH_TO_TSTRING(basePath) + TEXT("/") + GetWolfDataFolder();
+
 		// Check if the data folder or data.wolf file exist
-		WCHAR szDataFolder[MAX_PATH];
-		wcscpy_s(szDataFolder, szFile);
-		PathRemoveFileSpec(szDataFolder);
-		PathAppend(szDataFolder, L"data");
-
-		WCHAR szDataWolf[MAX_PATH];
-		wcscpy_s(szDataWolf, szDataFolder);
-		PathAppend(szDataWolf, L"data.wolf");
-
-		if (GetFileAttributes(szDataFolder) == INVALID_FILE_ATTRIBUTES && GetFileAttributes(szDataWolf) == INVALID_FILE_ATTRIBUTES)
+		if(!fs::exists(dataPath) && !ExistsWolfDataFile(basePath))
 		{
 			MessageBox(hWnd(), L"Could not find data folder or data.wolf file.", L"Error", MB_OK | MB_ICONERROR);
 			return;
@@ -186,11 +200,11 @@ public:
 
 		DragFinish(hDrop);
 
-		if(files.size() == 0)
+		if (files.size() == 0)
 			return;
 
 		// If only one file is dropped, and it is an executable, set the text of the edit control
-		if(files.size() == 1 && files[0].find(L".exe") != std::wstring::npos)
+		if (files.size() == 1 && files[0].find(L".exe") != std::wstring::npos)
 		{
 			SetDlgItemText(hWnd(), IDC_GAME_LOCATION, files[0].c_str());
 			return;
@@ -210,9 +224,6 @@ private:
 		// Lock the mutex
 		std::lock_guard<std::mutex> lock(m_mutex);
 
-		// Add an entry to the log list box
-		//SendDlgItemMessage(hWnd(), IDC_LOG, LB_ADDSTRING, 0, (LPARAM)entry.c_str());
-
 		// Add a new line to the log edit control
 		std::wstring msg = entry;
 		msg = ReplaceAll(msg, L"\r\n", L"\n");
@@ -220,6 +231,7 @@ private:
 		if (addNewline)
 			msg += L"\r\n";
 
+		// TODO: This appends the text at the current position of the cursor, which can be moved by the user. This is not ideal.
 		SendDlgItemMessage(hWnd(), IDC_LOG, EM_REPLACESEL, FALSE, (LPARAM)msg.c_str());
 	}
 
@@ -262,7 +274,7 @@ private:
 
 
 private:
-	HWND m_hWndParent;
+	OptionDialog m_optionsDialog;
 	std::mutex m_mutex;
 	int32_t m_logIndex = -1;
 };

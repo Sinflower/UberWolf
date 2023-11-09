@@ -6,16 +6,20 @@
 #include <cstdint>
 #include <map>
 #include <vector>
+#include <functional>
 
 #include "SlotWrapper.h"
+#include "ConfigManager.h"
 
 std::map<HWND, class WindowBase*> g_windowMap;
 
 class WindowBase
 {
+	using GetCheckBoxStateFnc = std::function<bool()>;
 public:
-	WindowBase(const HINSTANCE hInstance) :
+	WindowBase(const HINSTANCE hInstance, const HWND hWndParent = nullptr) :
 		m_hInstance(hInstance),
+		m_hWndParent(hWndParent),
 		m_hWnd(nullptr)
 	{
 	}
@@ -53,11 +57,30 @@ public:
 
 	const HWND GetHandle() const { return m_hWnd; }
 
+	void SetHandle(const HWND hWnd)
+	{
+		setHandle(hWnd);
+	}
+
+	bool GetCheckBoxState(const int32_t& id)
+	{
+		if (m_checkBoxStateMap.count(id) > 0)
+			return m_checkBoxStateMap[id]();
+
+		return false;
+	}
+
 protected:
 	void setHandle(const HWND hWnd)
 	{
 		m_hWnd = hWnd;
 		g_windowMap[m_hWnd] = this;
+	}
+
+	void unsetHandle()
+	{
+		g_windowMap.erase(m_hWnd);
+		m_hWnd = nullptr;
 	}
 
 	void registerSlot(const int32_t& id, const int32_t& code, SlotWrapper::noParam nP)
@@ -74,6 +97,11 @@ protected:
 			m_slotMap[id] = std::map<int32_t, SlotPtr>();
 
 		m_slotMap[id][code] = std::make_shared<SlotWrapper>(oP);
+	}
+
+	void registerCheckBoxState(const int32_t& id, const GetCheckBoxStateFnc& fnc)
+	{
+		m_checkBoxStateMap[id] = fnc;
 	}
 
 	HWND hWnd() const { return m_hWnd; }
@@ -97,10 +125,12 @@ private:
 	}
 
 protected:
-	HINSTANCE m_hInstance;
+	HINSTANCE m_hInstance = nullptr;
+	HWND m_hWndParent = nullptr;
 
 private:
-	HWND m_hWnd;
+	HWND m_hWnd = nullptr;
 	std::map<int32_t, std::map<int32_t, SlotPtr>> m_slotMap;
 	std::vector<std::thread> m_threadList;
+	std::map<int32_t, GetCheckBoxStateFnc> m_checkBoxStateMap;
 };
