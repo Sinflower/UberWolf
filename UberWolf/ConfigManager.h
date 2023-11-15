@@ -4,12 +4,15 @@
 #include <KnownFolders.h>
 #include <ShlObj.h>
 #include <filesystem>
+#include <fstream>
+
+#include <nlohmann/json.hpp>
 
 namespace fs = std::filesystem;
 
 class ConfigManager
 {
-	inline static const std::wstring CONFIG_FOLDER_NAME = L"";
+	inline static const std::wstring CONFIG_FOLDER_NAME = L"UberWolf";
 	inline static const std::wstring CONFIG_FILE_NAME = L"config.json";
 
 public:
@@ -22,6 +25,22 @@ public:
 	ConfigManager(ConfigManager const&) = delete;
 	void operator=(ConfigManager const&) = delete;
 
+	template<typename T>
+	void SetValue(const int32_t& winID, const uint32_t resID, const T& value)
+	{
+		m_config[std::to_string(winID)][std::to_string(resID)] = value;
+	}
+
+	template<typename T>
+	T GetValue(const int32_t& winID, const uint32_t resID, const T& defaultValue) const
+	{
+		// Check if the value exists
+		if (m_config.find(std::to_string(winID)) == m_config.end() || m_config[std::to_string(winID)].find(std::to_string(resID)) == m_config[std::to_string(winID)].end())
+			return defaultValue;
+
+		return m_config[std::to_string(winID)][std::to_string(resID)].get<T>();
+	}
+
 private:
 	ConfigManager()
 	{
@@ -33,10 +52,13 @@ private:
 		}
 
 		CoTaskMemFree(pPath);
+
+		loadConfig();
 	}
 
 	~ConfigManager()
 	{
+		saveConfig();
 	}
 
 	void loadConfig()
@@ -50,8 +72,13 @@ private:
 			return;
 
 		// Check if the config file exists
-		if(!fs::exists(m_configFile))
+		if (!fs::exists(m_configFile))
 			return;
+
+		// Load the config file
+		std::ifstream file(m_configFile);
+		file >> m_config;
+		file.close();
 	}
 
 	void saveConfig()
@@ -63,10 +90,15 @@ private:
 		// Check if the config folder exists
 		if (!fs::exists(m_configFolder))
 			fs::create_directory(m_configFolder);
-	
+
+		// Save the config file
+		std::ofstream file(m_configFile);
+		file << m_config.dump(4);
+		file.close();
 	}
 
 private:
 	std::wstring m_configFolder = L"";
 	std::wstring m_configFile = L"";
+	nlohmann::json m_config;
 };

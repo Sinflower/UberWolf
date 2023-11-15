@@ -16,11 +16,13 @@ std::map<HWND, class WindowBase*> g_windowMap;
 class WindowBase
 {
 	using GetCheckBoxStateFnc = std::function<bool()>;
+	static int32_t s_idCounter;
 public:
 	WindowBase(const HINSTANCE hInstance, const HWND hWndParent = nullptr) :
 		m_hInstance(hInstance),
 		m_hWndParent(hWndParent),
-		m_hWnd(nullptr)
+		m_hWnd(nullptr),
+		m_id(s_idCounter++)
 	{
 	}
 
@@ -104,6 +106,18 @@ protected:
 		m_checkBoxStateMap[id] = fnc;
 	}
 
+	template<typename T>
+	void updateSaveValue(const uint32_t& resID, const T& value)
+	{
+		ConfigManager::GetInstance().SetValue(m_id, resID, value);
+	}
+
+	template<typename T>
+	T getSaveValue(const uint32_t& resID, const T& defaultValue) const
+	{
+		return ConfigManager::GetInstance().GetValue(m_id, resID, defaultValue);
+	}
+
 	HWND hWnd() const { return m_hWnd; }
 
 private:
@@ -133,4 +147,7 @@ private:
 	std::map<int32_t, std::map<int32_t, SlotPtr>> m_slotMap;
 	std::vector<std::thread> m_threadList;
 	std::map<int32_t, GetCheckBoxStateFnc> m_checkBoxStateMap;
+	int32_t m_id = -1;
 };
+
+int32_t WindowBase::s_idCounter = 0;

@@ -20,6 +20,9 @@ public:
 
 		registerCheckBoxState(IDC_CHECK_OVERWRITE, [this]() { return m_overwrite; });
 		registerCheckBoxState(IDC_CHECK_USE_INJECT, [this]() { return m_useInject; });
+
+		m_overwrite = getSaveValue<bool>(IDC_CHECK_OVERWRITE, false);
+		m_useInject = getSaveValue<bool>(IDC_CHECK_USE_INJECT, false);
 	}
 
 	~OptionDialog()
@@ -55,11 +58,13 @@ public:
 	void onOverwriteClicked()
 	{
 		m_overwrite = IsDlgButtonChecked(hWnd(), IDC_CHECK_OVERWRITE);
+		updateSaveValue<bool>(IDC_CHECK_OVERWRITE, m_overwrite);
 	}
-	
+
 	void onUseInjectClicked()
 	{
 		m_useInject = IsDlgButtonChecked(hWnd(), IDC_CHECK_USE_INJECT);
+		updateSaveValue<bool>(IDC_CHECK_USE_INJECT, m_useInject);
 	}
 
 	static INT_PTR CALLBACK dlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
