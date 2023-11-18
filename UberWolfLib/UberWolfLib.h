@@ -22,11 +22,23 @@ enum class UWLExitCode
 
 class UberWolfLib
 {
+	struct Config
+	{
+		bool useInject = false;
+		bool override = false;
+	};
+
 public:
 	UberWolfLib(const tStrings& argv);
 	UberWolfLib(int argc = 0, char* argv[] = nullptr);
 
 	operator bool() const { return m_valid; }
+
+	void Configure(const bool& override = false, const bool& useInject = false)
+	{
+		m_config.override = override;
+		m_config.useInject = useInject;
+	}
 
 	bool InitGame(const tString& gameExePath);
 
@@ -57,4 +69,5 @@ private:
 	tString m_dataFolder;
 	bool m_valid = false;
 	bool m_dataAsFile = false;
+	Config m_config = {};
 };

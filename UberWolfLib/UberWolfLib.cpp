@@ -34,6 +34,7 @@ UberWolfLib::UberWolfLib(const tStrings& argv) :
 	uint32_t mode = -1;
 	tString path = TEXT("");
 	bool isSubProcess = IsSubProcess();
+	bool override = false;
 
 	if (isSubProcess && argv.size() >= 3)
 	{
@@ -46,6 +47,9 @@ UberWolfLib::UberWolfLib(const tStrings& argv) :
 
 				mode = std::stoi(WStringToString(argv[i + 1]));
 				path = argv[i + 2];
+
+				if (argv.size() > i + 3)
+					override = (argv[i + 3] == TEXT("-o"));
 				break;
 			}
 		}
@@ -57,7 +61,7 @@ UberWolfLib::UberWolfLib(const tStrings& argv) :
 	{
 		// For subprocess calls the mode was passed as an argument
 		// directly call unpack, which in this case will also terminate the process
-		m_wolfDec.UnpackArchive(path.c_str());
+		m_wolfDec.UnpackArchive(path.c_str(), override);
 		ExitProcess(0);
 	}
 	else if (argv.size() >= 2)
@@ -122,7 +126,10 @@ UWLExitCode UberWolfLib::FindDxArcKey()
 	if (findDxArcKeyFile() == UWLExitCode::SUCCESS)
 		return UWLExitCode::SUCCESS;
 
-	return findDxArcKeyInject();
+	if (m_config.useInject)
+		return findDxArcKeyInject();
+
+	return UWLExitCode::KEY_DETECT_FAILED;
 }
 
 UWLExitCode UberWolfLib::FindProtectionKey(std::string& key)
@@ -199,10 +206,10 @@ UWLExitCode UberWolfLib::unpackArchive(const tString& archivePath)
 
 	const tString fileName = fs::path(archivePath).filename();
 
-	if(!m_wolfDec.IsValidFile(archivePath))
+	if (!m_wolfDec.IsValidFile(archivePath))
 		return UWLExitCode::SUCCESS;
 
-	if (m_wolfDec.IsAlreadyUnpacked(archivePath))
+	if (!m_config.override && m_wolfDec.IsAlreadyUnpacked(archivePath))
 	{
 		INFO_LOG << fileName << (" is already unpacked, skipping") << std::endl;
 		return UWLExitCode::SUCCESS;
@@ -210,7 +217,7 @@ UWLExitCode UberWolfLib::unpackArchive(const tString& archivePath)
 
 	INFO_LOG << TEXT("Unpacking: ") << fileName << TEXT("... ");
 
-	bool result = m_wolfDec.UnpackArchive(archivePath);
+	bool result = m_wolfDec.UnpackArchive(archivePath, m_config.override);
 
 	INFO_LOG << (result ? TEXT("Done") : TEXT("Failed")) << std::endl;
 

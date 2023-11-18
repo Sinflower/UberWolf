@@ -62,7 +62,7 @@ bool WolfDec::IsAlreadyUnpacked(const tString& filePath) const
 	return (fs::exists(outDir) && !fs::is_empty(outDir));
 }
 
-bool WolfDec::UnpackArchive(const tString& filePath)
+bool WolfDec::UnpackArchive(const tString& filePath, const bool& override)
 {
 	TCHAR pFullPath[MAX_PATH];
 	const fs::path fp = fs::path(filePath);
@@ -78,11 +78,11 @@ bool WolfDec::UnpackArchive(const tString& filePath)
 		return true;
 
 	// Check if the file is already unpacked, i.e., if the directory exists and is not empty
-	if (IsAlreadyUnpacked(filePath))
+	if (!override && IsAlreadyUnpacked(filePath))
 		return true;
 
 	if (m_mode == -1)
-		return detectMode(filePath);
+		return detectMode(filePath, override);
 
 	if (m_mode >= (DEFAULT_DECRYPT_MODES.size() + m_additionalModes.size()))
 	{
@@ -177,7 +177,7 @@ void WolfDec::loadConfig()
 	}
 }
 
-bool WolfDec::detectMode(const tString& filePath)
+bool WolfDec::detectMode(const tString& filePath, const bool& override)
 {
 	bool success = false;
 
@@ -185,7 +185,7 @@ bool WolfDec::detectMode(const tString& filePath)
 	{
 		for (uint32_t i = 0; i < DEFAULT_DECRYPT_MODES.size(); i++)
 		{
-			success = runProcess(filePath, i);
+			success = runProcess(filePath, i, override);
 			if (success)
 			{
 				m_mode = i;
@@ -195,7 +195,7 @@ bool WolfDec::detectMode(const tString& filePath)
 
 		for (uint32_t i = 0; i < m_additionalModes.size(); i++)
 		{
-			success = runProcess(filePath, static_cast<uint32_t>(DEFAULT_DECRYPT_MODES.size() + i));
+			success = runProcess(filePath, static_cast<uint32_t>(DEFAULT_DECRYPT_MODES.size() + i), override);
 			if (success)
 			{
 				m_mode = static_cast<uint32_t>(DEFAULT_DECRYPT_MODES.size() + i);
@@ -209,7 +209,7 @@ bool WolfDec::detectMode(const tString& filePath)
 	return success;
 }
 
-bool WolfDec::runProcess(const tString& filePath, const uint32_t& mode) const
+bool WolfDec::runProcess(const tString& filePath, const uint32_t& mode, const bool& override) const
 {
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
@@ -218,7 +218,7 @@ bool WolfDec::runProcess(const tString& filePath, const uint32_t& mode) const
 	si.cb = sizeof(si);
 	ZeroMemory(&pi, sizeof(pi));
 
-	const std::wstring wstr = m_progName + L" -m " + std::to_wstring(mode) + L" \"" + std::wstring(filePath) + L"\"";
+	const std::wstring wstr = m_progName + L" -m " + std::to_wstring(mode) + L" \"" + std::wstring(filePath) + L"\"" + (override ? L" -o" : L"");
 
 	if (!CreateProcess(NULL, const_cast<LPWSTR>(wstr.c_str()), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
 	{

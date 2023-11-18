@@ -61,7 +61,7 @@ public:
 
 	bool IsAlreadyUnpacked(const tString& filePath) const;
 
-	bool UnpackArchive(const tString& filePath);
+	bool UnpackArchive(const tString& filePath, const bool& override = false);
 
 	void AddKey(const std::string& name, const bool& useOldDxArc, const Key& key);
 
@@ -69,8 +69,8 @@ public:
 
 private:
 	void loadConfig();
-	bool detectMode(const tString& filePath);
-	bool runProcess(const tString& filePath, const uint32_t& mode) const;
+	bool detectMode(const tString& filePath, const bool& override = false);
+	bool runProcess(const tString& filePath, const uint32_t& mode, const bool& override = false) const;
 
 private:
 	uint32_t m_mode = -1;
