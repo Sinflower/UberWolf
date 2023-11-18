@@ -145,6 +145,7 @@ public:
 		EnableWindow(GetDlgItem(hWnd(), IDC_PROCESS), FALSE);
 
 		UberWolfLib uwl;
+		uwl.Configure(m_optionsDialog.Overwrite(), m_optionsDialog.UseInject());
 		uwl.InitGame(szFile);
 		std::wstring protKey;
 		UWLExitCode result = uwl.UnpackData();
@@ -211,6 +212,8 @@ public:
 		}
 
 		UberWolfLib uwl;
+		uwl.Configure(m_optionsDialog.Overwrite(), m_optionsDialog.UseInject());
+
 		for (const tString& file : files)
 		{
 			uwl.ResetWolfDec();

@@ -29,6 +29,16 @@ public:
 	{
 	}
 
+	const bool& UseInject() const
+	{
+		return m_useInject;
+	}
+
+	const bool& Overwrite() const
+	{
+		return m_overwrite;
+	}
+
 	void SetParent(const HWND& hWndParent)
 	{
 		m_hWndParent = hWndParent;
