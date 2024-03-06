@@ -199,6 +199,8 @@ bool WolfPro::RemoveProtection()
 	// Remove protection from CommonEvents.dat
 	removeProtection(ProtKey::COM_EVENT, BasicDataFiles::COM_EVENT);
 
+	INFO_LOG << TEXT("Unprotected files can be found in: ") << m_unprotectedFolder << std::endl;
+
 	return true;
 }
 

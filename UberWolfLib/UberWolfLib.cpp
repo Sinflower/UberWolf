@@ -164,6 +164,8 @@ UWLExitCode UberWolfLib::FindProtectionKey(std::string& key)
 	for (const uint8_t& byte : keyVec)
 		key += static_cast<char>(byte);
 
+	m_wolfPro.RemoveProtection();
+
 	return UWLExitCode::SUCCESS;
 }
 
