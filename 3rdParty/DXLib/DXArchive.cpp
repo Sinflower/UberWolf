@@ -1276,7 +1276,7 @@ int DXArchive::DirectoryDecode( u8 *NameP, u8 *DirP, u8 *FileP, DARC_HEAD *Head,
 
 				// ファイル属性を付ける
 				pName = GetOriginalFileName(NameP + File->NameAddress);
-				SetFileAttributes( pName, ( u32 )File->Attributes ) ;
+				SetFileAttributes(pName, (u32)File->Attributes & ~(FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN));
 				delete[] pName;
 			}
 		}
