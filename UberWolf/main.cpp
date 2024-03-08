@@ -18,7 +18,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ [[maybe_unused]] HINSTA
 	// directly call the unpack function and then terminate the process
 	if (IsSubProcess())
 	{
-		UberWolfLib();
+		[[maybe_unused]] UberWolfLib uwl;
 		return 0;
 	}
 
