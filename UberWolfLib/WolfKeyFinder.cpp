@@ -1,7 +1,9 @@
 #include "WolfKeyFinder.h"
 
-#include <detours.h>
 #include <windows.h>
+
+// Needs to be included after windows.h
+#include <detours.h>
 
 #pragma warning(push)
 #if _MSC_VER > 1400
