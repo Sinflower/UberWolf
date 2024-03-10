@@ -2,10 +2,10 @@
 
 namespace uberLog
 {
-	LogCallbacks s_logCallbacks = LogCallbacks();
-	UberLog s_info = UberLog(tcout);
-	UberLog s_error = UberLog(tcerr);
-}
+LogCallbacks s_logCallbacks = LogCallbacks();
+UberLog s_info              = UberLog(tcout);
+UberLog s_error             = UberLog(tcerr);
+} // namespace uberLog
 
 /*
 template<typename T>

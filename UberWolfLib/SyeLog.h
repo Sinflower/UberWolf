@@ -6,10 +6,9 @@
 
 namespace SyeLog
 {
-	using KeyCallback = std::function<void(Key& key, const bool& useOldDxArc)>;
+using KeyCallback = std::function<void(Key& key, const bool& useOldDxArc)>;
 
-	void init();
-	void registerKeyCallback(KeyCallback callback);
-	void clearKeyCallbacks();
-}
-
+void init();
+void registerKeyCallback(KeyCallback callback);
+void clearKeyCallbacks();
+} // namespace SyeLog

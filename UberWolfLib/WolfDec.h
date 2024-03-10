@@ -1,10 +1,10 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
+#include <iterator>
 #include <string>
 #include <tchar.h>
-#include <iterator>
+#include <vector>
 
 #include "Types.h"
 
@@ -27,7 +27,6 @@ struct DecryptMode
 		this->key.push_back(0x00); // The key needs to end with 0x00 so the parser knows when to stop
 	}
 
-
 	DecryptMode(const std::string& name, const DecryptFunction& decFunc, const std::vector<unsigned char> key) :
 		name(name),
 		decFunc(decFunc)
@@ -42,20 +41,26 @@ struct DecryptMode
 
 using DecryptModes = std::vector<DecryptMode>;
 
-
 class WolfDec
 {
 public:
 	inline static const std::string CONFIG_FILE_NAME = "UberWolfConfig.json";
 
 public:
-	WolfDec() : WolfDec(L"") {}
+	WolfDec() :
+		WolfDec(L"") {}
 	WolfDec(const std::wstring& progName, const uint32_t& mode = -1, const bool& isSubProcess = false);
 	~WolfDec();
 
-	operator bool() const { return m_valid; }
+	operator bool() const
+	{
+		return m_valid;
+	}
 
-	bool IsModeSet() const { return m_mode != -1; }
+	bool IsModeSet() const
+	{
+		return m_mode != -1;
+	}
 
 	bool IsValidFile(const tString& filePath) const;
 
@@ -65,7 +70,10 @@ public:
 
 	void AddKey(const std::string& name, const bool& useOldDxArc, const Key& key);
 
-	void Reset() { m_mode = -1; }
+	void Reset()
+	{
+		m_mode = -1;
+	}
 
 private:
 	void loadConfig();
@@ -73,10 +81,9 @@ private:
 	bool runProcess(const tString& filePath, const uint32_t& mode, const bool& override = false) const;
 
 private:
-	uint32_t m_mode = -1;
+	uint32_t m_mode                = -1;
 	DecryptModes m_additionalModes = {};
 	std::wstring m_progName;
 	bool m_isSubProcess = false;
-	bool m_valid = false;
+	bool m_valid        = false;
 };
-

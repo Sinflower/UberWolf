@@ -6,13 +6,13 @@
 
 namespace uberLog
 {
-	extern LogCallbacks s_logCallbacks;
+extern LogCallbacks s_logCallbacks;
 }
 
 class UberLog
 {
 public:
-	using SType = tOstream & (tOstream&);
+	using SType = tOstream&(tOstream&);
 
 public:
 	UberLog(tOstream& oStream) :
@@ -28,7 +28,6 @@ public:
 		for (auto& callback : uberLog::s_logCallbacks)
 			callback(msg.str(), false);
 
-
 		msg.flush();
 	}
 
@@ -40,9 +39,9 @@ private:
 class UberLogBuffer
 {
 public:
-	UberLogBuffer(const UberLogBuffer&) = delete;
+	UberLogBuffer(const UberLogBuffer&)            = delete;
 	UberLogBuffer& operator=(const UberLogBuffer&) = delete;
-	UberLogBuffer& operator=(UberLogBuffer&&) = delete;
+	UberLogBuffer& operator=(UberLogBuffer&&)      = delete;
 
 	UberLogBuffer(UberLog* pLogger) :
 		m_stream(),
@@ -88,23 +87,22 @@ UberLogBuffer operator<<(UberLog& log, T&& msg)
 
 namespace uberLog
 {
-	extern UberLog s_info; 
-	extern UberLog s_error;
+extern UberLog s_info;
+extern UberLog s_error;
 
-	static inline std::size_t AddLogCallback(const LogCallback& callback)
-	{
-		const std::size_t idx = s_logCallbacks.size();
-		s_logCallbacks.push_back(callback);
-		return idx;
-	}
-
-	static inline void RemoveLogCallback(const std::size_t& id)
-	{
-		if(id >= 0 && id < s_logCallbacks.size())
-			s_logCallbacks.erase(s_logCallbacks.begin() + id);
-	}
+static inline std::size_t AddLogCallback(const LogCallback& callback)
+{
+	const std::size_t idx = s_logCallbacks.size();
+	s_logCallbacks.push_back(callback);
+	return idx;
 }
 
+static inline void RemoveLogCallback(const std::size_t& id)
+{
+	if (id >= 0 && id < s_logCallbacks.size())
+		s_logCallbacks.erase(s_logCallbacks.begin() + id);
+}
+} // namespace uberLog
 
 #define INFO_LOG  uberLog::s_info
 #define ERROR_LOG uberLog::s_error

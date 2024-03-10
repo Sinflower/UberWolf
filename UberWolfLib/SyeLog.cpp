@@ -8,13 +8,13 @@
 //
 //  Copyright (c) Microsoft Corporation.  All rights reserved.
 //
-#include <windows.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stddef.h>
+#include <windows.h>
 #pragma warning(push)
 #if _MSC_VER > 1400
-#pragma warning(disable:6102 6103) // /analyze warnings
+#pragma warning(disable : 6102 6103) // /analyze warnings
 #endif
 #include <strsafe.h>
 #pragma warning(pop)
@@ -38,17 +38,17 @@ typedef LONG LONG_PTR;
 
 typedef struct _CLIENT : OVERLAPPED
 {
-	HANDLE          hPipe;
-	BOOL            fAwaitingAccept;
-	PVOID           Zero;
-	SYELOG_MESSAGE  Message;
-} CLIENT, * PCLIENT;
+	HANDLE hPipe;
+	BOOL fAwaitingAccept;
+	PVOID Zero;
+	SYELOG_MESSAGE Message;
+} CLIENT, *PCLIENT;
 
 //////////////////////////////////////////////////////////////////////////////
 //
-LONG        s_nActiveClients = 0;
-LONGLONG    s_llStartTime = 0;
-LONGLONG    s_llLastTime = 0;
+LONG s_nActiveClients  = 0;
+LONGLONG s_llStartTime = 0;
+LONGLONG s_llLastTime  = 0;
 
 BOOL LogMessageV(BYTE nSeverity, const char* pszMsg, ...);
 VOID AcceptAndCreatePipeConnection(PCLIENT pClient, HANDLE hCompletionPort);
@@ -98,10 +98,10 @@ PCLIENT CreatePipeConnection(HANDLE hCompletionPort)
 {
 	HANDLE hPipe = CreateNamedPipe(SYELOG_PIPE_NAME,           // pipe name
 								   PIPE_ACCESS_INBOUND |       // read-only access
-								   FILE_FLAG_OVERLAPPED,       // overlapped mode
+									   FILE_FLAG_OVERLAPPED,   // overlapped mode
 								   PIPE_TYPE_MESSAGE |         // message-type pipe
-								   PIPE_READMODE_MESSAGE |     // message read mode
-								   PIPE_WAIT,                   // blocking mode
+									   PIPE_READMODE_MESSAGE | // message read mode
+									   PIPE_WAIT,              // blocking mode
 								   PIPE_UNLIMITED_INSTANCES,   // unlimited instances
 								   0,                          // output buffer size
 								   0,                          // input buffer size
@@ -118,7 +118,7 @@ PCLIENT CreatePipeConnection(HANDLE hCompletionPort)
 		MyErrExit("GlobalAlloc pClient");
 
 	ZeroMemory(pClient, sizeof(*pClient));
-	pClient->hPipe = hPipe;
+	pClient->hPipe           = hPipe;
 	pClient->fAwaitingAccept = TRUE;
 
 	// Associate file with our complietion port.
@@ -129,8 +129,8 @@ PCLIENT CreatePipeConnection(HANDLE hCompletionPort)
 	if (!ConnectNamedPipe(hPipe, pClient))
 	{
 		DWORD dwLastErr = GetLastError();
-		//Handle race between multiple client connections
-		//example: multi thread or client request at alomst same time.
+		// Handle race between multiple client connections
+		// example: multi thread or client request at alomst same time.
 		if (ERROR_PIPE_CONNECTED == dwLastErr)
 			AcceptAndCreatePipeConnection(pClient, hCompletionPort);
 		else if (dwLastErr != ERROR_IO_PENDING && dwLastErr != ERROR_PIPE_LISTENING)
@@ -147,7 +147,7 @@ VOID AcceptAndCreatePipeConnection(PCLIENT pClient, HANDLE hCompletionPort)
 	DWORD nBytes = 0;
 	InterlockedIncrement(&s_nActiveClients);
 	pClient->fAwaitingAccept = FALSE;
-	BOOL b = ReadFile(pClient->hPipe, &pClient->Message, sizeof(pClient->Message), &nBytes, pClient);
+	BOOL b                   = ReadFile(pClient->hPipe, &pClient->Message, sizeof(pClient->Message), &nBytes, pClient);
 
 	if (!b)
 	{
@@ -256,9 +256,9 @@ DWORD WINAPI WorkerThread(LPVOID pvVoid)
 	for (BOOL fKeepLooping = TRUE; fKeepLooping;)
 	{
 		pClient = NULL;
-		lpo = NULL;
-		nBytes = 0;
-		b = GetQueuedCompletionStatus(hCompletionPort, &nBytes, (PULONG_PTR)&pClient, &lpo, INFINITE);
+		lpo     = NULL;
+		nBytes  = 0;
+		b       = GetQueuedCompletionStatus(hCompletionPort, &nBytes, (PULONG_PTR)&pClient, &lpo, INFINITE);
 
 		if (!b || lpo == NULL)
 		{
@@ -330,38 +330,38 @@ BOOL CreateWorkers(HANDLE hCompletionPort)
 //
 namespace SyeLog
 {
-	void init()
-	{
-		if(g_initialized) return;
+void init()
+{
+	if (g_initialized) return;
 
-		HANDLE hCompletionPort;
-		BOOL fNeedHelp = FALSE;
+	HANDLE hCompletionPort;
+	BOOL fNeedHelp = FALSE;
 
-		// Create the completion port.
-		hCompletionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);
-		if (hCompletionPort == NULL)
-			MyErrExit("CreateIoCompletionPort");
+	// Create the completion port.
+	hCompletionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);
+	if (hCompletionPort == NULL)
+		MyErrExit("CreateIoCompletionPort");
 
-		// Create completion port worker threads.
-		//
-		CreateWorkers(hCompletionPort);
-		CreatePipeConnection(hCompletionPort);
+	// Create completion port worker threads.
+	//
+	CreateWorkers(hCompletionPort);
+	CreatePipeConnection(hCompletionPort);
 
-		g_initialized = true;
+	g_initialized = true;
 
-		return;
-	}
-
-	void registerKeyCallback(KeyCallback callback)
-	{
-		g_keyCallbacks.push_back(callback);
-	}
-
-	void clearKeyCallbacks()
-	{
-		g_keyCallbacks.clear();
-	}
+	return;
 }
+
+void registerKeyCallback(KeyCallback callback)
+{
+	g_keyCallbacks.push_back(callback);
+}
+
+void clearKeyCallbacks()
+{
+	g_keyCallbacks.clear();
+}
+} // namespace SyeLog
 
 //
 //////////////////////////////////////////////////////////////////////////////

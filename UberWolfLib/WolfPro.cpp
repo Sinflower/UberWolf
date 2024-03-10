@@ -4,6 +4,7 @@
 
 #include <array>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <iostream>
 
@@ -65,7 +66,7 @@ WolfPro::WolfPro(const tString& dataFolder, const bool& dataInBaseFolder) :
 	if (!fs::exists(m_dataFolder))
 	{
 		m_dataFolder = TEXT("");
-		ERROR_LOG << TEXT("ERROR: Data folder \"") << m_dataFolder << TEXT("\" does not exist, exiting ...") << std::endl;
+		ERROR_LOG << std::format(TEXT("ERROR: Data folder \"{}\" does not exist, exiting ..."), m_dataFolder) << std::endl;
 		return;
 	}
 
@@ -73,7 +74,7 @@ WolfPro::WolfPro(const tString& dataFolder, const bool& dataInBaseFolder) :
 	if (!fs::is_directory(m_dataFolder))
 	{
 		m_dataFolder = TEXT("");
-		ERROR_LOG << TEXT("ERROR: Data folder \"") << m_dataFolder << TEXT("\" is not a directory, exiting ...") << std::endl;
+		ERROR_LOG << std::format(TEXT("ERROR: Data folder \"{}\" is not a directory, exiting ..."), m_dataFolder) << std::endl;
 		return;
 	}
 
@@ -92,7 +93,7 @@ WolfPro::WolfPro(const tString& dataFolder, const bool& dataInBaseFolder) :
 
 	if (m_dxArcKeyFile.empty())
 	{
-		ERROR_LOG << "Unable to find DxArc key file, this does not look like a WolfPro game" << std::endl;
+		ERROR_LOG << TEXT("WARNING: Unable to find DxArc key file, this does not look like a WolfPro game") << std::endl;
 		return;
 	}
 	else
@@ -184,7 +185,7 @@ bool WolfPro::RemoveProtection()
 	{
 		if (!fs::create_directory(m_unprotectedFolder))
 		{
-			ERROR_LOG << TEXT("ERROR: Unable to create unprotected folder (" << m_unprotectedFolder << ")") << std::endl;
+			ERROR_LOG << std::format(TEXT("ERROR: Unable to create unprotected folder ({})"), m_unprotectedFolder) << std::endl;
 			return false;
 		}
 	}
@@ -199,7 +200,7 @@ bool WolfPro::RemoveProtection()
 	// Remove protection from CommonEvents.dat
 	removeProtection(ProtKey::COM_EVENT, BasicDataFiles::COM_EVENT);
 
-	INFO_LOG << TEXT("Unprotected files can be found in: ") << m_unprotectedFolder << std::endl;
+	INFO_LOG << std::format(TEXT("Unprotected files can be found in: {}"), m_unprotectedFolder) << std::endl;
 
 	return true;
 }
@@ -213,7 +214,7 @@ Key WolfPro::findDxArcKey(const tString& filePath) const
 	uint32_t fileSize;
 
 #ifdef PRINT_DEBUG
-	INFO_LOG << TEXT("Searching for DxArc key in: ") << filePath << TEXT("... ") << std::endl;
+	INFO_LOG << std::format(TEXT("Searching for DxArc key in: {} ... "), filePath) << std::endl;
 #endif
 
 	if (!readFile(filePath, bytes, fileSize)) return key;
@@ -230,7 +231,7 @@ Key WolfPro::findDxArcKey(const tString& filePath) const
 	uint32_t offset = DxArcKey::KEY_START_OFFSET;
 
 #ifdef PRINT_DEBUG
-	INFO_LOG << TEXT("Key Length: ") << static_cast<uint32_t>(keyLen) << std::endl;
+	INFO_LOG << std::format(TEXT("Key Length: {}"), static_cast<uint32_t>(keyLen)) << std::endl;
 #endif
 
 	for (uint8_t i = 0; i < keyLen; i++)
@@ -245,7 +246,7 @@ Key WolfPro::findDxArcKey(const tString& filePath) const
 Key WolfPro::findProtectionKey(const tString& filePath) const
 {
 #ifdef PRINT_DEBUG
-	INFO_LOG << TEXT("Searching for protection key in: ") << filePath << TEXT("... ") << std::endl;
+	INFO_LOG << std::format(TEXT("Searching for protection key in: {} ..."), filePath) << std::endl;
 #endif
 
 	Key key;
@@ -260,12 +261,12 @@ Key WolfPro::findProtectionKey(const tString& filePath) const
 	const uint32_t keyLen = *reinterpret_cast<uint32_t*>(&bytes[ProtKey::KEY_LEN_OFFSET]);
 
 #ifdef PRINT_DEBUG
-	INFO_LOG << TEXT("Key Length: ") << keyLen << std::endl;
+	INFO_LOG << std::format(TEXT("Key Length: {}"), keyLen) << std::endl;
 #endif
 
 	if (keyLen + ProtKey::KEY_OFFSET >= bytes.size())
 	{
-		ERROR_LOG << L"ERROR: Invalid key length, exiting ..." << std::endl;
+		ERROR_LOG << TEXT("ERROR: Invalid key length, exiting ...") << std::endl;
 		return key;
 	}
 
@@ -298,7 +299,7 @@ bool WolfPro::readFile(const tString& filePath, std::vector<uint8_t>& bytes, uin
 
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
-		ERROR_LOG << TEXT("ERROR: Unable to open file \"") << filePath << TEXT("\".") << std::endl;
+		ERROR_LOG << std::format(TEXT("ERROR: Unable to open file \"{}\"."), filePath) << std::endl;
 		return false;
 	}
 
@@ -306,7 +307,7 @@ bool WolfPro::readFile(const tString& filePath, std::vector<uint8_t>& bytes, uin
 
 	if (fileSize == INVALID_FILE_SIZE)
 	{
-		ERROR_LOG << TEXT("ERROR: Unable to get file size for \"") << filePath << TEXT("\".") << std::endl;
+		ERROR_LOG << std::format(TEXT("ERROR: Unable to get file size for \"{}\"."), filePath) << std::endl;
 		CloseHandle(hFile);
 		return false;
 	}
@@ -319,7 +320,7 @@ bool WolfPro::readFile(const tString& filePath, std::vector<uint8_t>& bytes, uin
 
 	if (!bResult)
 	{
-		ERROR_LOG << TEXT("ERROR: Unable to read file \"") << filePath << TEXT("\".") << std::endl;
+		ERROR_LOG << std::format(TEXT("ERROR: Unable to read file \"{}\"."), filePath) << std::endl;
 		return false;
 	}
 
@@ -332,7 +333,7 @@ bool WolfPro::writeFile(const tString& filePath, std::vector<uint8_t>& bytes) co
 
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
-		ERROR_LOG << TEXT("ERROR: Unable to open file \"") << filePath << TEXT("\".") << std::endl;
+		ERROR_LOG << std::format(TEXT("ERROR: Unable to open file \"{}\"."), filePath) << std::endl;
 		return false;
 	}
 
@@ -343,7 +344,7 @@ bool WolfPro::writeFile(const tString& filePath, std::vector<uint8_t>& bytes) co
 
 	if (!bResult)
 	{
-		ERROR_LOG << TEXT("ERROR: Unable to write file \"") << filePath << TEXT("\".") << std::endl;
+		ERROR_LOG << std::format(TEXT("ERROR: Unable to write file \"{}\"."), filePath) << std::endl;
 		return false;
 	}
 
@@ -357,7 +358,7 @@ std::vector<uint8_t> WolfPro::decrypt(const tString& filePath, const std::array<
 	std::vector<uint8_t> bytes;
 
 #ifdef PRINT_DEBUG
-	INFO_LOG << TEXT("Decrypting: ") << filePath << TEXT("... ") << std::endl;
+	INFO_LOG << std::format(TEXT("Decrypting: {} ..."), filePath) << std::endl;
 #endif
 
 	if (!readFile(filePath, bytes, fileSize)) return bytes;
@@ -366,11 +367,11 @@ std::vector<uint8_t> WolfPro::decrypt(const tString& filePath, const std::array<
 		seeds[i] = bytes[seedIdx[i]];
 
 #ifdef PRINT_DEBUG
-	INFO_LOG << TEXT("Seeds: ") << std::hex << std::flush;
+	INFO_LOG << TEXT("Seeds: ") << std::flush;
 	for (const uint8_t& seed : seeds)
-		INFO_LOG << TEXT("0x") << static_cast<uint32_t>(seed) << TEXT(" ") << std::flush;
+		INFO_LOG << std::format(TEXT("{:#x} "), static_cast<uint32_t>(seed)) << std::flush;
 
-	INFO_LOG << std::dec << std::endl;
+	INFO_LOG << std::endl;
 #endif
 
 	for (std::size_t i = 0; i < seeds.size(); i++)
@@ -394,7 +395,7 @@ std::vector<uint8_t> WolfPro::decrypt(const tString& filePath, const std::array<
 
 void WolfPro::removeProtection(const tString& fileName, const BasicDataFiles& bdf) const
 {
-	INFO_LOG << TEXT("Removing protection from: ") << fileName << TEXT("... ") << std::flush;
+	INFO_LOG << std::format(TEXT("Removing protection from: {} ... "), fileName) << std::flush;
 	std::vector<uint8_t> bytes;
 	uint32_t projectSeed;
 	const tString filePath = m_basicDataFolder + TEXT("/") + fileName;
@@ -418,7 +419,7 @@ void WolfPro::removeProtection(const tString& fileName, const BasicDataFiles& bd
 		else
 		{
 			INFO_LOG << TEXT("Failed") << std::endl;
-			ERROR_LOG << TEXT("ERROR: Unable to find file \"") << filePath << TEXT("\".") << std::endl;
+			ERROR_LOG << std::format(TEXT("ERROR: Unable to find file \"{}\"."), filePath) << std::endl;
 			return;
 		}
 	}
@@ -432,7 +433,7 @@ void WolfPro::removeProtection(const tString& fileName, const BasicDataFiles& bd
 		else
 		{
 			INFO_LOG << TEXT("Failed") << std::endl;
-			ERROR_LOG << TEXT("ERROR: Unable to find file \"") << filePath << TEXT("\".") << std::endl;
+			ERROR_LOG << std::format(TEXT("ERROR: Unable to find file \"{}\"."), filePath) << std::endl;
 			return;
 		}
 	}
@@ -446,7 +447,7 @@ std::vector<uint8_t> WolfPro::removeProtectionFromProject(const tString& filePat
 	uint32_t fileSize;
 
 #ifdef PRINT_DEBUG
-	INFO_LOG << TEXT("Decrypting: ") << filePath << TEXT("... ") << std::endl;
+	INFO_LOG << std::format(TEXT("Decrypting: {} ..."), filePath) << std::endl;
 #endif
 
 	if (!readFile(filePath, bytes, fileSize)) return bytes;

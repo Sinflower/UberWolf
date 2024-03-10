@@ -1,14 +1,15 @@
 #include "UberWolfLib.h"
+#include "UberLog.h"
+#include "Utils.h"
 #include "WolfDec.h"
 #include "WolfKeyFinder.h"
 #include "WolfPro.h"
-#include "Utils.h"
-#include "UberLog.h"
-#include "resource.h"
 #include "WolfUtils.h"
+#include "resource.h"
 
-#include <fstream>
 #include <filesystem>
+#include <format>
+#include <fstream>
 #include <nlohmann/json.hpp>
 
 namespace fs = std::filesystem;
@@ -31,10 +32,10 @@ UberWolfLib::UberWolfLib(const tStrings& argv) :
 	if (argv.size() < 1)
 		throw std::runtime_error("UberWolfLib: Invalid arguments count");
 
-	uint32_t mode = -1;
-	tString path = TEXT("");
+	uint32_t mode     = -1;
+	tString path      = TEXT("");
 	bool isSubProcess = IsSubProcess();
-	bool override = false;
+	bool override     = false;
 
 	if (isSubProcess && argv.size() >= 3)
 	{
@@ -79,7 +80,7 @@ bool UberWolfLib::InitGame(const tString& gameExePath)
 
 	if (!fs::exists(gameExePath))
 	{
-		ERROR_LOG << TEXT("UberWolfLib: Invalid game executable path: ") << gameExePath << std::endl;
+		ERROR_LOG << std::format(TEXT("UberWolfLib: Invalid game executable path: {}"), gameExePath) << std::endl;
 		return false;
 	}
 
@@ -102,7 +103,7 @@ UWLExitCode UberWolfLib::UnpackData()
 	{
 		if (IsWolfExtension(dirEntry.path().extension()))
 		{
-			tString target = FS_PATH_TO_TSTRING(dirEntry.path());
+			tString target  = FS_PATH_TO_TSTRING(dirEntry.path());
 			UWLExitCode uec = unpackArchive(target);
 			if (uec != UWLExitCode::SUCCESS) return uec;
 		}
@@ -148,13 +149,12 @@ UWLExitCode UberWolfLib::FindProtectionKey(std::string& key)
 		const tString target = FindExistingWolfFile(m_dataFolder + TEXT("/") + m_wolfPro.GetProtKeyArchiveName());
 		if (target.empty())
 		{
-			ERROR_LOG << TEXT("UberWolfLib: Could not find protection file: ") << m_wolfPro.GetProtKeyArchiveName() << std::endl;
+			ERROR_LOG << std::format(TEXT("UberWolfLib: Could not find protection file: {}"), m_wolfPro.GetProtKeyArchiveName()) << std::endl;
 			return UWLExitCode::FILE_NOT_FOUND;
 		}
 
 		if (unpackArchive(target) != UWLExitCode::SUCCESS) return UWLExitCode::UNPACK_FAILED;
 	}
-
 
 	Key keyVec = m_wolfPro.GetProtectionKey();
 	if (keyVec.empty())
@@ -213,11 +213,11 @@ UWLExitCode UberWolfLib::unpackArchive(const tString& archivePath)
 
 	if (!m_config.override && m_wolfDec.IsAlreadyUnpacked(archivePath))
 	{
-		INFO_LOG << fileName << (" is already unpacked, skipping") << std::endl;
+		INFO_LOG << std::format(TEXT("{} is already unpacked, skipping"), fileName) << std::endl;
 		return UWLExitCode::SUCCESS;
 	}
 
-	INFO_LOG << TEXT("Unpacking: ") << fileName << TEXT("... ");
+	INFO_LOG << std::format(TEXT("Unpacking: {} ... "), fileName);
 
 	bool result = m_wolfDec.UnpackArchive(archivePath, m_config.override);
 
@@ -332,9 +332,9 @@ void UberWolfLib::updateConfig(const bool& useOldDxArc, const Key& key)
 		data["keys"] = nlohmann::json::object();
 	}
 
-	uint32_t cnt = 0;
+	uint32_t cnt                = 0;
 	const std::string NAME_BASE = "UNKNOWN_";
-	std::string name = NAME_BASE + std::to_string(cnt);
+	std::string name            = NAME_BASE + std::to_string(cnt);
 
 	// Check if a key with the name already exists
 	while (data["keys"].contains(name))
@@ -344,7 +344,7 @@ void UberWolfLib::updateConfig(const bool& useOldDxArc, const Key& key)
 	}
 
 	// Add the key to the config
-	data["keys"][name] = nlohmann::json::object();
+	data["keys"][name]         = nlohmann::json::object();
 	data["keys"][name]["mode"] = (useOldDxArc ? "VER6" : "VER8");
 	// Write the key as an array of 0x prefixed hex strings
 	data["keys"][name]["key"] = nlohmann::json::array();
@@ -373,7 +373,7 @@ bool UberWolfLib::findGameFromArchive(const tString& archivePath)
 		const tString gameExePath = searchFolder + TEXT("/") + gameExeName;
 		if (fs::exists(gameExePath))
 		{
-			INFO_LOG << TEXT("Found game executable: ") << gameExeName << std::endl;
+			INFO_LOG << std::format(TEXT("Found game executable: {}"), gameExeName) << std::endl;
 			return InitGame(gameExePath);
 		}
 	}
@@ -385,7 +385,7 @@ bool UberWolfLib::findGameFromArchive(const tString& archivePath)
 
 bool UberWolfLib::copyDllFromResource(const tString& outDir) const
 {
-	INFO_LOG << TEXT("Copying DLL from resource to ") << outDir << TEXT(" ...") << std::endl;
+	INFO_LOG << std::format(TEXT("Copying DLL from resource to {} ..."), outDir) << std::endl;
 
 	const HRSRC hResource = FindResource(NULL, MAKEINTRESOURCE(IDR_KEY_HOOK), RT_RCDATA);
 	if (hResource == NULL)
@@ -402,7 +402,7 @@ bool UberWolfLib::copyDllFromResource(const tString& outDir) const
 	}
 
 	const LPVOID lpResourceData = LockResource(hResData);
-	const DWORD dwResourceSize = SizeofResource(NULL, hResource);
+	const DWORD dwResourceSize  = SizeofResource(NULL, hResource);
 
 	const tString dllPath = outDir + TEXT("/") + WolfKeyFinder::DLL_NAME;
 

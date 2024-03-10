@@ -30,10 +30,10 @@ static tStrings g_specialFiles = {};
 
 tStrings GetSpecialFiles()
 {
-	if(!g_specialFiles.empty()) return g_specialFiles;
+	if (!g_specialFiles.empty()) return g_specialFiles;
 
 	// Create a list of each special file with each possible extension
-for (const tString& s : SPECIAL_FILES)
+	for (const tString& s : SPECIAL_FILES)
 	{
 		for (const tString& e : POSSIBLE_EXTENSIONS)
 			g_specialFiles.push_back(s + e);
