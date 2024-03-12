@@ -1,6 +1,7 @@
+﻿extensions: .cpp .h
 /*
- *  File: targetver.h
- *  Copyright (c) 2023 Sinflower
+ *  File: %FileName%
+ *  Copyright (c) %CreationYear% Sinflower
  *
  *  MIT License
  *
@@ -23,10 +24,3 @@
  *  SOFTWARE.
  *
  */
-
-#pragma once
-
-// // Including SDKDDKVer.h defines the highest available Windows platform.
-// If you wish to build your application for a previous Windows platform, include WinSDKVer.h and
-// set the _WIN32_WINNT macro to the platform you wish to support before including SDKDDKVer.h.
-#include <SDKDDKVer.h>
