@@ -1,10 +1,10 @@
 #pragma once
 
-#include <string>
 #include <KnownFolders.h>
 #include <ShlObj.h>
 #include <filesystem>
 #include <fstream>
+#include <string>
 
 #include <nlohmann/json.hpp>
 
@@ -13,7 +13,7 @@ namespace fs = std::filesystem;
 class ConfigManager
 {
 	inline static const std::wstring CONFIG_FOLDER_NAME = L"UberWolf";
-	inline static const std::wstring CONFIG_FILE_NAME = L"config.json";
+	inline static const std::wstring CONFIG_FILE_NAME   = L"config.json";
 
 public:
 	static ConfigManager& GetInstance()
@@ -22,13 +22,19 @@ public:
 		return instance;
 	}
 
-	ConfigManager(ConfigManager const&) = delete;
+	ConfigManager(ConfigManager const&)  = delete;
 	void operator=(ConfigManager const&) = delete;
 
 	template<typename T>
 	void SetValue(const int32_t& winID, const uint32_t resID, const T& value)
 	{
 		m_config[std::to_string(winID)][std::to_string(resID)] = value;
+	}
+
+	template<typename T>
+	void SetValue(const int32_t& winID, const std::string& res, const T& value)
+	{
+		m_config[std::to_string(winID)][res] = value;
 	}
 
 	template<typename T>
@@ -41,6 +47,16 @@ public:
 		return m_config[std::to_string(winID)][std::to_string(resID)].get<T>();
 	}
 
+	template<typename T>
+	T GetValue(const int32_t& winID, const std::string& res, const T& defaultValue) const
+	{
+		// Check if the value exists
+		if (m_config.find(std::to_string(winID)) == m_config.end() || m_config[std::to_string(winID)].find(res) == m_config[std::to_string(winID)].end())
+			return defaultValue;
+
+		return m_config[std::to_string(winID)][res].get<T>();
+	}
+
 private:
 	ConfigManager()
 	{
@@ -48,7 +64,7 @@ private:
 		if (SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, NULL, &pPath) == S_OK)
 		{
 			m_configFolder = std::filesystem::path(pPath).wstring() + std::wstring(L"/") + CONFIG_FOLDER_NAME + std::wstring(L"/");
-			m_configFile = m_configFolder + CONFIG_FILE_NAME;
+			m_configFile   = m_configFolder + CONFIG_FILE_NAME;
 		}
 
 		CoTaskMemFree(pPath);
@@ -99,6 +115,6 @@ private:
 
 private:
 	std::wstring m_configFolder = L"";
-	std::wstring m_configFile = L"";
+	std::wstring m_configFile   = L"";
 	nlohmann::json m_config;
 };

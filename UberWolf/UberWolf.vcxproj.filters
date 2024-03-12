@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Resource Files\langs">
+      <UniqueIdentifier>{ffcbee0b-a5d5-4b37-98bc-6d1a9fbb696f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -39,6 +42,9 @@
     <ClInclude Include="ConfigManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Localizer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -54,5 +60,10 @@
     <Image Include="UberWolf.ico">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="lang\en.json">
+      <Filter>Resource Files\langs</Filter>
+    </None>
   </ItemGroup>
 </Project>

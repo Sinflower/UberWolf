@@ -7,14 +7,17 @@
 class SlotWrapper
 {
 public:
-	using noParam = std::function<void()>;
+	using noParam  = std::function<void()>;
 	using oneParam = std::function<void(void*)>;
 	using twoParam = std::function<void(void*, void*)>;
 
 public:
-	SlotWrapper(const noParam& nP) : m_noParam(nP) { }
-	SlotWrapper(const oneParam& oP) : m_oneParam(oP) { }
-	SlotWrapper(const twoParam& tP) : m_twoParam(tP) { }
+	SlotWrapper(const noParam& nP) :
+		m_noParam(nP) {}
+	SlotWrapper(const oneParam& oP) :
+		m_oneParam(oP) {}
+	SlotWrapper(const twoParam& tP) :
+		m_twoParam(tP) {}
 
 	std::thread operator()() const
 	{
@@ -34,16 +37,28 @@ public:
 
 	std::thread operator()(void* p1, void* p2) const
 	{
-		if (m_twoParam) 
+		if (m_twoParam)
 			return std::thread(m_twoParam, p1, p2);
 
 		return std::thread();
 	}
 
-private:
+	bool HasNoParam() const
+	{
+		return m_noParam != nullptr;
+	}
+	bool HasOneParam() const
+	{
+		return m_oneParam != nullptr;
+	}
+	bool HasTwoParam() const
+	{
+		return m_twoParam != nullptr;
+	}
 
 private:
-	noParam m_noParam = nullptr;
+private:
+	noParam m_noParam   = nullptr;
 	oneParam m_oneParam = nullptr;
 	twoParam m_twoParam = nullptr;
 };

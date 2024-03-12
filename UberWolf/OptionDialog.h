@@ -1,12 +1,15 @@
 #pragma once
 
-#include "resource.h"
+#include "Localizer.h"
 #include "WindowBase.h"
-
-#include "UberLog.h"
+#include "resource.h"
 
 class OptionDialog : public WindowBase
 {
+	static const int32_t CHECKBOX_WIDTH = 20;
+	static const int32_t TEXT_HEIGH     = 20;
+	static const int32_t STATIC_WIDTH   = 50;
+
 public:
 	OptionDialog() = delete;
 
@@ -55,6 +58,23 @@ public:
 		unsetHandle();
 	}
 
+	void AdjustSizes()
+	{
+		int32_t maxWidth = 0;
+		maxWidth         = max(maxWidth, adjustCheckBox(IDC_CHECK_OVERWRITE));
+		maxWidth         = max(maxWidth, adjustCheckBox(IDC_CHECK_USE_INJECT));
+
+		// Add the static width for the dialog
+		maxWidth += STATIC_WIDTH;
+
+		// Adjust the dialog size to fit the new text
+		RECT rc;
+		GetWindowRect(hWnd(), &rc);
+		int32_t minWidth = rc.right - rc.left;
+		SetWindowPos(hWnd(), nullptr, 0, 0, max(minWidth, maxWidth), rc.bottom - rc.top, SWP_NOMOVE | SWP_NOZORDER);
+	}
+
+private:
 	void onOKClicked()
 	{
 		Hide(true);
@@ -77,23 +97,37 @@ public:
 		updateSaveValue<bool>(IDC_CHECK_USE_INJECT, m_useInject);
 	}
 
+	int32_t adjustCheckBox(const int32_t& id)
+	{
+		// Get the handle of the checkbox
+		HWND hCheckBox = GetDlgItem(hWnd(), id);
+		// Get the width of the caption text
+		int32_t width = GetCaptionTextWidth(hCheckBox);
+		// Set the new width of the checkbox
+		SetWindowPos(hCheckBox, nullptr, 0, 0, width + CHECKBOX_WIDTH, TEXT_HEIGH, SWP_NOMOVE | SWP_NOZORDER);
+		// Return the new width
+		return width + CHECKBOX_WIDTH;
+	}
+
 	static INT_PTR CALLBACK dlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		// Check which message was passed in
 		switch (uMsg)
 		{
 			case WM_COMMAND:
-				if (g_windowMap[hWnd])
-				{
-					if (g_windowMap[hWnd]->ProcessCommand(wParam))
-						return TRUE;
-				}
+				if (WindowBase::ProcessCommand(hWnd, wParam))
+					return TRUE;
 				break;
 			case WM_INITDIALOG:
 				WindowBase* pWnd = reinterpret_cast<WindowBase*>(lParam);
 				SendDlgItemMessage(hWnd, IDC_CHECK_OVERWRITE, BM_SETCHECK, pWnd->GetCheckBoxState(IDC_CHECK_OVERWRITE), 0);
 				SendDlgItemMessage(hWnd, IDC_CHECK_USE_INJECT, BM_SETCHECK, pWnd->GetCheckBoxState(IDC_CHECK_USE_INJECT), 0);
+
+				SendDlgItemMessage(hWnd, IDC_CHECK_OVERWRITE, WM_SETTEXT, 0, (LPARAM)LOCW("overwrite_label"));
+				SendDlgItemMessage(hWnd, IDC_CHECK_USE_INJECT, WM_SETTEXT, 0, (LPARAM)LOCW("use_dll_label"));
+
 				pWnd->SetHandle(hWnd);
+				pWnd->AdjustSizes();
 				return TRUE;
 		}
 

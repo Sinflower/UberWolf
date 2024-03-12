@@ -4,19 +4,20 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <vector>
-#include <functional>
 
-#include "SlotWrapper.h"
 #include "ConfigManager.h"
-
-std::map<HWND, class WindowBase*> g_windowMap;
+#include "SlotWrapper.h"
 
 class WindowBase
 {
 	using GetCheckBoxStateFnc = std::function<bool()>;
 	static int32_t s_idCounter;
+	static std::map<HWND, class WindowBase*> s_windowMap;
+	static std::vector<class WindowBase*> s_localizedWindowList;
+
 public:
 	WindowBase(const HINSTANCE hInstance, const HWND hWndParent = nullptr) :
 		m_hInstance(hInstance),
@@ -30,7 +31,7 @@ public:
 	{
 		if (m_hWnd)
 		{
-			g_windowMap.erase(m_hWnd);
+			s_windowMap.erase(m_hWnd);
 			DestroyWindow(m_hWnd);
 		}
 
@@ -41,23 +42,10 @@ public:
 		}
 	}
 
-	bool ProcessMessage(const uint32_t& id, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
+	const HWND GetHandle() const
 	{
-		if (msg == WM_COMMAND)
-			return ProcessCommand(wParam);
-
-		return callSlot(id, msg, wParam);
+		return m_hWnd;
 	}
-
-	bool ProcessCommand(const WPARAM& command)
-	{
-		int wmId = LOWORD(command);
-		int wmEvent = HIWORD(command);
-
-		return callSlot(wmId, wmEvent);
-	}
-
-	const HWND GetHandle() const { return m_hWnd; }
 
 	void SetHandle(const HWND hWnd)
 	{
@@ -72,17 +60,81 @@ public:
 		return false;
 	}
 
+	virtual void AdjustSizes()
+	{
+	}
+
+	static int32_t GetCaptionTextWidth(const HWND& hWnd)
+	{
+		wchar_t text[BUFSIZ];
+		GetWindowText(hWnd, text, BUFSIZ);
+		return GetTextWidth(hWnd, text);
+	}
+
+	static int32_t GetTextWidth(const HWND& hWnd, const wchar_t* pText)
+	{
+		RECT rc;
+		HDC hdc        = GetDC(hWnd);
+		HFONT hFont    = (HFONT)SendMessage(hWnd, WM_GETFONT, 0, 0);
+		HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+
+		GetClientRect(hWnd, &rc);
+		DrawText(hdc, pText, -1, &rc, DT_CALCRECT | DT_SINGLELINE | DT_NOPREFIX);
+		SelectObject(hdc, hOldFont);
+		ReleaseDC(hWnd, hdc);
+
+		return rc.right - rc.left;
+	}
+
+	static bool ProcessCommand(const HWND& hWnd, const WPARAM& wParam)
+	{
+		if (s_windowMap.count(hWnd) == 0)
+			return false;
+
+		return s_windowMap[hWnd]->processCommand(wParam);
+	}
+
+	static bool ProcessMessage(const HWND& hWnd, const uint32_t& id, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
+	{
+		if (s_windowMap.count(hWnd) == 0)
+			return false;
+
+		return s_windowMap[hWnd]->processMessage(id, msg, wParam, lParam);
+	}
+
+	static void SignalLocalizationUpdate()
+	{
+		for (auto& pWin : s_localizedWindowList)
+			pWin->updateLocalization();
+	}
+
 protected:
 	void setHandle(const HWND hWnd)
 	{
-		m_hWnd = hWnd;
-		g_windowMap[m_hWnd] = this;
+		m_hWnd              = hWnd;
+		s_windowMap[m_hWnd] = this;
 	}
 
 	void unsetHandle()
 	{
-		g_windowMap.erase(m_hWnd);
+		s_windowMap.erase(m_hWnd);
 		m_hWnd = nullptr;
+	}
+
+	bool processMessage(const uint32_t& id, const UINT& msg, const WPARAM& wParam, const LPARAM& lParam)
+	{
+		if (msg == WM_COMMAND)
+			return processCommand(wParam);
+
+		return callSlot(id, msg, wParam);
+	}
+
+	bool processCommand(const WPARAM& command)
+	{
+		int wmId    = LOWORD(command);
+		int wmEvent = HIWORD(command);
+
+		return callSlot(wmId, wmEvent);
 	}
 
 	void registerSlot(const int32_t& id, const int32_t& code, SlotWrapper::noParam nP)
@@ -106,10 +158,21 @@ protected:
 		m_checkBoxStateMap[id] = fnc;
 	}
 
+	void registerLocalizedWindow()
+	{
+		s_localizedWindowList.push_back(this);
+	}
+
 	template<typename T>
 	void updateSaveValue(const uint32_t& resID, const T& value)
 	{
 		ConfigManager::GetInstance().SetValue(m_id, resID, value);
+	}
+
+	template<typename T>
+	void updateSaveValue(const std::string& res, const T& value)
+	{
+		ConfigManager::GetInstance().SetValue(m_id, res, value);
 	}
 
 	template<typename T>
@@ -118,7 +181,20 @@ protected:
 		return ConfigManager::GetInstance().GetValue(m_id, resID, defaultValue);
 	}
 
-	HWND hWnd() const { return m_hWnd; }
+	template<typename T>
+	T getSaveValue(const std::string& res, const T& defaultValue) const
+	{
+		return ConfigManager::GetInstance().GetValue(m_id, res, defaultValue);
+	}
+
+	virtual void updateLocalization()
+	{
+	}
+
+	HWND hWnd() const
+	{
+		return m_hWnd;
+	}
 
 private:
 	bool callSlot(const int32_t& id, const int32_t& code, const WPARAM& wParam = -1)
@@ -128,9 +204,14 @@ private:
 			if (m_slotMap[id].count(code) > 0)
 			{
 				if (wParam == -1)
-					m_threadList.push_back(m_slotMap[id][code]->operator()());
+				{
+					if (m_slotMap[id][code]->HasNoParam())
+						m_threadList.push_back(m_slotMap[id][code]->operator()());
+					else
+						m_threadList.push_back(m_slotMap[id][code]->operator()(reinterpret_cast<void*>(id)));
+				}
 				else
-					m_threadList.push_back(m_slotMap[id][code]->operator()((void*)wParam));
+					m_threadList.push_back(m_slotMap[id][code]->operator()(reinterpret_cast<void*>(wParam)));
 				return true;
 			}
 		}
@@ -140,7 +221,7 @@ private:
 
 protected:
 	HINSTANCE m_hInstance = nullptr;
-	HWND m_hWndParent = nullptr;
+	HWND m_hWndParent     = nullptr;
 
 private:
 	HWND m_hWnd = nullptr;
@@ -151,3 +232,5 @@ private:
 };
 
 int32_t WindowBase::s_idCounter = 0;
+std::map<HWND, class WindowBase*> WindowBase::s_windowMap;
+std::vector<class WindowBase*> WindowBase::s_localizedWindowList;

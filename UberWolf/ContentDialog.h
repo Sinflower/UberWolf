@@ -2,18 +2,19 @@
 
 // Exclude rarely-used stuff from Windows headers
 #define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
 #include <Shlwapi.h> // For Path functions
-#include <shlobj.h> // For Shell functions
-#include <mutex>
+#include <Windows.h>
 #include <filesystem>
+#include <mutex>
+#include <shlobj.h> // For Shell functions
 
 #include <UberWolfLib.h>
 
-#include "resource.h"
-#include "WindowBase.h"
+#include "Localizer.h"
 #include "OptionDialog.h"
+#include "WindowBase.h"
 #include "WolfUtils.h"
+#include "resource.h"
 
 namespace fs = std::filesystem;
 
@@ -22,17 +23,17 @@ static inline bool OpenFile(HWND hwndParent, LPTSTR lpstrFile, LPCTSTR lpstrFilt
 {
 	OPENFILENAME ofn;
 	ZeroMemory(&ofn, sizeof(ofn));
-	ofn.lStructSize = sizeof(ofn);
-	ofn.hwndOwner = hwndParent;
-	ofn.lpstrFile = lpstrFile;
-	ofn.nMaxFile = MAX_PATH;
-	ofn.lpstrFilter = lpstrFilter;
-	ofn.nFilterIndex = 1;
-	ofn.lpstrFileTitle = NULL;
-	ofn.nMaxFileTitle = 0;
+	ofn.lStructSize     = sizeof(ofn);
+	ofn.hwndOwner       = hwndParent;
+	ofn.lpstrFile       = lpstrFile;
+	ofn.nMaxFile        = MAX_PATH;
+	ofn.lpstrFilter     = lpstrFilter;
+	ofn.nFilterIndex    = 1;
+	ofn.lpstrFileTitle  = NULL;
+	ofn.nMaxFileTitle   = 0;
 	ofn.lpstrInitialDir = NULL;
-	ofn.lpstrTitle = lpstrTitle;
-	ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+	ofn.lpstrTitle      = lpstrTitle;
+	ofn.Flags           = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
 
 	return GetOpenFileName(&ofn) == TRUE;
 }
@@ -40,7 +41,7 @@ static inline bool OpenFile(HWND hwndParent, LPTSTR lpstrFile, LPCTSTR lpstrFilt
 static inline std::wstring ReplaceAll(const std::wstring& str, const std::wstring& from, const std::wstring& to)
 {
 	std::wstring result = str;
-	size_t startPos = 0;
+	size_t startPos     = 0;
 	while ((startPos = result.find(from, startPos)) != std::wstring::npos)
 	{
 		result.replace(startPos, from.length(), to);
@@ -59,13 +60,14 @@ public:
 		m_mutex()
 	{
 		setHandle(CreateDialogParamW(m_hInstance, MAKEINTRESOURCE(IDD_CONTENT), m_hWndParent, wndProc, 0));
+		registerLocalizedWindow();
 		ShowWindow(hWnd(), SW_SHOW);
 
 		// Resize the main window to match the size of the embedded dialog
 		RECT rectDialog;
 		GetWindowRect(hWnd(), &rectDialog);
-		int32_t dialogWidth = rectDialog.right - rectDialog.left + 16; // I just gave up and added static values until it looked right
-		int32_t dialogHeight = rectDialog.bottom - rectDialog.top + 40; // ... See above
+		int32_t dialogWidth  = rectDialog.right - rectDialog.left + 16; // I just gave up and added static values until it looked right
+		int32_t dialogHeight = rectDialog.bottom - rectDialog.top + 59; // ... See above
 
 		SetWindowPos(m_hWndParent, NULL, 0, 0, dialogWidth, dialogHeight, SWP_NOMOVE | SWP_NOZORDER);
 
@@ -77,17 +79,81 @@ public:
 		registerSlot(IDC_LABEL_DROP_FILE, WM_DROPFILES, [this](void* p) { onDropFile(p); });
 
 		m_optionsDialog.SetParent(hWnd());
+
+		// Register the Localizer GetValueW method as the query function for UberWolfLib
+		UberWolfLib::RegisterLocQueryFunc([](const std::string& s) -> const tString& { return LOCT(s); });
+
+		// Trigger a localization update to make sure that the window is properly localized
+		updateLocalization();
 	}
 
 	~ContentDialog()
 	{
-		if(m_logIndex != -1)
+		if (m_logIndex != -1)
 			UberWolfLib::UnregisterLogCallback(m_logIndex);
 	}
 
 	void SetupLog()
 	{
 		m_logIndex = UberWolfLib::RegisterLogCallback([this](const std::wstring& entry, const bool& addNewline) { addLogEntry(entry, addNewline); });
+	}
+
+protected:
+	void updateLocalization()
+	{
+		// Drop Label
+		SetDlgItemText(hWnd(), IDC_LABEL_DROP_FILE, LOCW("drop_label"));
+
+		// Labels
+		SetDlgItemText(hWnd(), IDC_LABEL_GAME_LOCATION, LOCW("game_location"));
+		SetDlgItemText(hWnd(), IDC_LABEL_PROTECTION_KEY, LOCW("protection_key"));
+
+		// Buttons
+		SetDlgItemText(hWnd(), IDC_SELECT_GAME, LOCW("select_game"));
+		SetDlgItemText(hWnd(), IDC_PROCESS, LOCW("process"));
+		SetDlgItemText(hWnd(), IDC_OPTIONS, LOCW("options"));
+
+		adjustLabelEditComb(IDC_LABEL_GAME_LOCATION, IDC_GAME_LOCATION);
+		adjustLabelEditComb(IDC_LABEL_PROTECTION_KEY, IDC_PROTECTION_KEY);
+
+		// adjustButton(IDC_PROCESS);
+		// adjustButton(IDC_OPTIONS);
+	}
+
+private:
+	void adjustButton(const int32_t& buttonID)
+	{
+		HWND hButton = GetDlgItem(hWnd(), buttonID);
+		RECT rect;
+		GetWindowRect(hButton, &rect);
+
+		int32_t newWidth = GetCaptionTextWidth(hButton) + 20;
+		SetWindowPos(hButton, nullptr, 0, 0, newWidth, rect.bottom - rect.top, SWP_NOMOVE | SWP_NOZORDER);
+	}
+
+	void adjustLabelEditComb(const int32_t& labelID, const int32_t& editID)
+	{
+		HWND hLabel = GetDlgItem(hWnd(), labelID);
+		// Get the old width
+		RECT rect;
+		RECT rectPos;
+		GetWindowRect(hLabel, &rect);
+		int32_t oldWidth = rect.right - rect.left;
+
+		int32_t newWidth = GetCaptionTextWidth(hLabel);
+		SetWindowPos(hLabel, nullptr, 0, 0, newWidth, rect.bottom - rect.top, SWP_NOMOVE | SWP_NOZORDER);
+
+		HWND hEdit = GetDlgItem(hWnd(), editID);
+		GetWindowRect(hEdit, &rect);
+		GetWindowRect(hEdit, &rectPos);
+		ScreenToClient(hWnd(), (LPPOINT)&rectPos);
+
+		int32_t widthDiff = newWidth - oldWidth;
+		int32_t editWidth = (rect.right - rect.left) - widthDiff;
+		int32_t newX      = rectPos.left + widthDiff;
+
+		SetWindowPos(hEdit, nullptr, newX, rectPos.top, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+		SetWindowPos(hEdit, nullptr, 0, 0, editWidth, rect.bottom - rect.top, SWP_NOMOVE | SWP_NOZORDER);
 	}
 
 	void onOptionsClicked()
@@ -103,7 +169,7 @@ public:
 
 		// Define the file filter and title for the dialog
 		LPCTSTR lpstrFilter = L"Wolf (Game[Pro].exe)\0Game.exe;GamePro.exe\0Executable (*.exe)\0*.exe\0All Files (*.*)\0*.*\0";
-		LPCTSTR lpstrTitle = L"Open File";
+		LPCTSTR lpstrTitle  = LOCW("open_file");
 
 		// If the user selected a file, set the text of the edit control to be the path
 		if (OpenFile(hWnd(), szFile, lpstrFilter, lpstrTitle))
@@ -118,26 +184,26 @@ public:
 
 		if (szFile[0] == '\0')
 		{
-			MessageBox(hWnd(), L"Please select a file to process.", L"Error", MB_OK | MB_ICONERROR);
+			MessageBox(hWnd(), LOCW("select_file"), LOCW("error"), MB_OK | MB_ICONERROR);
 			return;
 		}
 
 		fs::path exePath = szFile;
 
 		// Make sure that the file exists
-		if(!fs::exists(exePath))
+		if (!fs::exists(exePath))
 		{
-			MessageBox(hWnd(), L"File does not exist.", L"Error", MB_OK | MB_ICONERROR);
+			MessageBox(hWnd(), LOCW("error_msg_1"), LOCW("error"), MB_OK | MB_ICONERROR);
 			return;
 		}
 
 		const fs::path basePath = exePath.parent_path();
-		const tString dataPath = FS_PATH_TO_TSTRING(basePath) + TEXT("/") + GetWolfDataFolder();
+		const tString dataPath  = FS_PATH_TO_TSTRING(basePath) + TEXT("/") + GetWolfDataFolder();
 
 		// Check if the data folder or data.wolf file exist
-		if(!fs::exists(dataPath) && !ExistsWolfDataFile(basePath))
+		if (!fs::exists(dataPath) && !ExistsWolfDataFile(basePath))
 		{
-			MessageBox(hWnd(), L"Could not find data folder or data.wolf file.", L"Error", MB_OK | MB_ICONERROR);
+			MessageBox(hWnd(), LOCW("error_msg_2"), LOCW("error"), MB_OK | MB_ICONERROR);
 			return;
 		}
 
@@ -152,7 +218,7 @@ public:
 
 		if (result != UWLExitCode::SUCCESS)
 		{
-			MessageBox(hWnd(), L"Could not unpack all data files.", L"Error", MB_OK | MB_ICONERROR);
+			MessageBox(hWnd(), LOCW("error_msg_3"), LOCW("error"), MB_OK | MB_ICONERROR);
 			EnableWindow(GetDlgItem(hWnd(), IDC_PROCESS), TRUE);
 			return;
 		}
@@ -161,10 +227,10 @@ public:
 		if (result != UWLExitCode::SUCCESS)
 		{
 			if (result == UWLExitCode::NOT_WOLF_PRO)
-				protKey = L"Not Protected";
+				protKey = LOCW("not_protected");
 			else
 			{
-				MessageBox(hWnd(), L"Could not find protection key.", L"Error", MB_OK | MB_ICONERROR);
+				MessageBox(hWnd(), LOCW("error_msg_4"), LOCW("error"), MB_OK | MB_ICONERROR);
 				EnableWindow(GetDlgItem(hWnd(), IDC_PROCESS), TRUE);
 				return;
 			}
@@ -221,7 +287,6 @@ public:
 		}
 	}
 
-private:
 	void addLogEntry(const std::wstring& entry, const bool& addNewline = true)
 	{
 		// Lock the mutex
@@ -229,13 +294,23 @@ private:
 
 		// Add a new line to the log edit control
 		std::wstring msg = entry;
-		msg = ReplaceAll(msg, L"\r\n", L"\n");
-		msg = ReplaceAll(msg, L"\n", L"\r\n");
+		msg              = ReplaceAll(msg, L"\r\n", L"\n");
+		msg              = ReplaceAll(msg, L"\n", L"\r\n");
 		if (addNewline)
 			msg += L"\r\n";
 
 		// TODO: This appends the text at the current position of the cursor, which can be moved by the user. This is not ideal.
 		SendDlgItemMessage(hWnd(), IDC_LOG, EM_REPLACESEL, FALSE, (LPARAM)msg.c_str());
+	}
+
+	static void updateLoc(HWND hWnd)
+	{
+		SetDlgItemText(hWnd, IDC_LABEL_DROP_FILE, LOCW("drop_label"));
+		SetDlgItemText(hWnd, IDC_SELECT_GAME, LOCW("select_game"));
+		SetDlgItemText(hWnd, IDC_PROCESS, LOCW("process"));
+		SetDlgItemText(hWnd, IDC_OPTIONS, LOCW("options"));
+		SetDlgItemText(hWnd, IDC_LABEL_PROTECTION_KEY, LOCW("protection_key"));
+		SetDlgItemText(hWnd, IDC_LABEL_GAME_LOCATION, LOCW("game_location"));
 	}
 
 	static INT_PTR CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -244,13 +319,11 @@ private:
 		switch (uMsg)
 		{
 			case WM_COMMAND:
-				if (g_windowMap[hWnd])
-				{
-					if (g_windowMap[hWnd]->ProcessCommand(wParam))
-						return TRUE;
-				}
+				if (WindowBase::ProcessCommand(hWnd, wParam))
+					return TRUE;
 				break;
 			case WM_INITDIALOG:
+				updateLoc(hWnd);
 				return TRUE;
 		}
 
@@ -264,17 +337,13 @@ private:
 		switch (uMsg)
 		{
 			case WM_DROPFILES:
-				if (g_windowMap[hParent])
-				{
-					if (g_windowMap[hParent]->ProcessMessage(GetDlgCtrlID(hWnd), uMsg, wParam, lParam))
-						return TRUE;
-				}
+				if (WindowBase::ProcessMessage(hParent, GetDlgCtrlID(hWnd), uMsg, wParam, lParam))
+					return TRUE;
 				break;
 		}
 
 		return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
-
 
 private:
 	OptionDialog m_optionsDialog;

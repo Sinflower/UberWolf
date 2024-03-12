@@ -1,12 +1,12 @@
 // UberWolf.cpp : Defines the entry point for the application.
 //
 
-#include <windows.h>
 #include <UberWolfLib.h>
 #include <Utils.h>
+#include <windows.h>
 
-#include "MainWindow.h"
 #include "ContentDialog.h"
+#include "MainWindow.h"
 
 #pragma comment(lib, "Shlwapi.lib")
 #pragma comment(lib, "Comctl32.lib")
