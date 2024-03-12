@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mutex>
+#include <format>
 
 #include "Types.h"
 
@@ -103,6 +104,12 @@ static inline void RemoveLogCallback(const std::size_t& id)
 		s_logCallbacks.erase(s_logCallbacks.begin() + id);
 }
 } // namespace uberLog
+
+template<typename... Args>
+static inline std::wstring vFormat(std::wstring_view rt_fmt_str, Args&&... args)
+{
+	return std::vformat(rt_fmt_str, std::make_wformat_args(args...));
+}
 
 #define INFO_LOG  uberLog::s_info
 #define ERROR_LOG uberLog::s_error

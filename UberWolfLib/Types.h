@@ -41,3 +41,5 @@ using Key = std::vector<uint8_t>;
 using LogCallback = std::function<void(const tString&, const bool&)>;
 
 using LogCallbacks = std::vector<LogCallback>;
+
+using LocalizerQuery = std::function<const tString&(const std::string&)>;

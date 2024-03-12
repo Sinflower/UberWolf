@@ -55,6 +55,7 @@ public:
 
 	static std::size_t RegisterLogCallback(const LogCallback& callback);
 	static void UnregisterLogCallback(const std::size_t& idx);
+	static void RegisterLocQueryFunc(const LocalizerQuery& queryFunc);
 
 private:
 	UWLExitCode unpackArchive(const tString& archivePath);

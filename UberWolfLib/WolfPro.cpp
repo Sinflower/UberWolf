@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "Localizer.h"
 #include "UberLog.h"
 #include "Utils.h"
 #include "WolfUtils.h"
@@ -93,7 +94,7 @@ WolfPro::WolfPro(const tString& dataFolder, const bool& dataInBaseFolder) :
 
 	if (m_dxArcKeyFile.empty())
 	{
-		ERROR_LOG << TEXT("WARNING: Unable to find DxArc key file, this does not look like a WolfPro game") << std::endl;
+		ERROR_LOG << LOCALIZE("key_file_warn_msg") << std::endl;
 		return;
 	}
 	else
@@ -111,7 +112,7 @@ Key WolfPro::GetProtectionKey()
 
 	if (!validateProtectionKey(key))
 	{
-		ERROR_LOG << TEXT("ERROR: Invalid protection key") << std::endl;
+		ERROR_LOG << LOCALIZE("inv_prot_key_error_msg") << std::endl;
 		return Key();
 	}
 
@@ -127,7 +128,7 @@ Key WolfPro::GetDxArcKey()
 
 	if (key.empty())
 	{
-		ERROR_LOG << TEXT("ERROR: Unable to find DxArc key") << std::endl;
+		ERROR_LOG << LOCALIZE("dxarc_key_error_msg") << std::endl;
 		return Key();
 	}
 
@@ -170,13 +171,13 @@ bool WolfPro::RemoveProtection()
 {
 	if (!m_isWolfPro)
 	{
-		ERROR_LOG << TEXT("ERROR: Unable to remove protection, this does not look like a WolfPro game") << std::endl;
+		ERROR_LOG << LOCALIZE("remove_prot_error_msg") << std::endl;
 		return false;
 	}
 
 	if (m_dataFolder.empty())
 	{
-		ERROR_LOG << TEXT("ERROR: Unable to remove protection, data folder not set") << std::endl;
+		ERROR_LOG << LOCALIZE("data_dir_error_msg") << std::endl;
 		return false;
 	}
 
@@ -185,7 +186,7 @@ bool WolfPro::RemoveProtection()
 	{
 		if (!fs::create_directory(m_unprotectedFolder))
 		{
-			ERROR_LOG << std::format(TEXT("ERROR: Unable to create unprotected folder ({})"), m_unprotectedFolder) << std::endl;
+			ERROR_LOG << vFormat(LOCALIZE("unprot_dir_create_error_msg"), m_unprotectedFolder) << std::endl;
 			return false;
 		}
 	}
@@ -200,7 +201,7 @@ bool WolfPro::RemoveProtection()
 	// Remove protection from CommonEvents.dat
 	removeProtection(ProtKey::COM_EVENT, BasicDataFiles::COM_EVENT);
 
-	INFO_LOG << std::format(TEXT("Unprotected files can be found in: {}"), m_unprotectedFolder) << std::endl;
+	INFO_LOG << vFormat(LOCALIZE("unprot_file_loc"), m_unprotectedFolder) << std::endl;
 
 	return true;
 }
@@ -254,7 +255,7 @@ Key WolfPro::findProtectionKey(const tString& filePath) const
 
 	if (bytes.empty())
 	{
-		ERROR_LOG << TEXT("ERROR: Unable to decrypt protection key file") << std::endl;
+		ERROR_LOG << LOCALIZE("decrypt_key_error_msg") << std::endl;
 		return key;
 	}
 
@@ -266,7 +267,7 @@ Key WolfPro::findProtectionKey(const tString& filePath) const
 
 	if (keyLen + ProtKey::KEY_OFFSET >= bytes.size())
 	{
-		ERROR_LOG << TEXT("ERROR: Invalid key length, exiting ...") << std::endl;
+		ERROR_LOG << LOCALIZE("prot_key_len_error_msg") << std::endl;
 		return key;
 	}
 
@@ -299,7 +300,7 @@ bool WolfPro::readFile(const tString& filePath, std::vector<uint8_t>& bytes, uin
 
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
-		ERROR_LOG << std::format(TEXT("ERROR: Unable to open file \"{}\"."), filePath) << std::endl;
+		ERROR_LOG << vFormat(LOCALIZE("open_file_error_msg"), filePath) << std::endl;
 		return false;
 	}
 
@@ -307,7 +308,7 @@ bool WolfPro::readFile(const tString& filePath, std::vector<uint8_t>& bytes, uin
 
 	if (fileSize == INVALID_FILE_SIZE)
 	{
-		ERROR_LOG << std::format(TEXT("ERROR: Unable to get file size for \"{}\"."), filePath) << std::endl;
+		ERROR_LOG << vFormat(LOCALIZE("get_file_size_error_msg"), filePath) << std::endl;
 		CloseHandle(hFile);
 		return false;
 	}
@@ -320,7 +321,7 @@ bool WolfPro::readFile(const tString& filePath, std::vector<uint8_t>& bytes, uin
 
 	if (!bResult)
 	{
-		ERROR_LOG << std::format(TEXT("ERROR: Unable to read file \"{}\"."), filePath) << std::endl;
+		ERROR_LOG << vFormat(LOCALIZE("read_file_error_msg"), filePath) << std::endl;
 		return false;
 	}
 
@@ -333,7 +334,7 @@ bool WolfPro::writeFile(const tString& filePath, std::vector<uint8_t>& bytes) co
 
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
-		ERROR_LOG << std::format(TEXT("ERROR: Unable to open file \"{}\"."), filePath) << std::endl;
+		ERROR_LOG << vFormat(LOCALIZE("open_file_error_msg"), filePath) << std::endl;
 		return false;
 	}
 
@@ -344,7 +345,7 @@ bool WolfPro::writeFile(const tString& filePath, std::vector<uint8_t>& bytes) co
 
 	if (!bResult)
 	{
-		ERROR_LOG << std::format(TEXT("ERROR: Unable to write file \"{}\"."), filePath) << std::endl;
+		ERROR_LOG << vFormat(LOCALIZE("write_file_error_msg"), filePath) << std::endl;
 		return false;
 	}
 
@@ -395,7 +396,7 @@ std::vector<uint8_t> WolfPro::decrypt(const tString& filePath, const std::array<
 
 void WolfPro::removeProtection(const tString& fileName, const BasicDataFiles& bdf) const
 {
-	INFO_LOG << std::format(TEXT("Removing protection from: {} ... "), fileName) << std::flush;
+	INFO_LOG << vFormat(LOCALIZE("remove_prot"), fileName) << std::flush;
 	std::vector<uint8_t> bytes;
 	uint32_t projectSeed;
 	const tString filePath = m_basicDataFolder + TEXT("/") + fileName;
@@ -418,8 +419,8 @@ void WolfPro::removeProtection(const tString& fileName, const BasicDataFiles& bd
 		}
 		else
 		{
-			INFO_LOG << TEXT("Failed") << std::endl;
-			ERROR_LOG << std::format(TEXT("ERROR: Unable to find file \"{}\"."), filePath) << std::endl;
+			INFO_LOG << LOCALIZE("failed_msg") << std::endl;
+			ERROR_LOG << vFormat(LOCALIZE("find_file_error_msg"), filePath) << std::endl;
 			return;
 		}
 	}
@@ -432,13 +433,13 @@ void WolfPro::removeProtection(const tString& fileName, const BasicDataFiles& bd
 		}
 		else
 		{
-			INFO_LOG << TEXT("Failed") << std::endl;
-			ERROR_LOG << std::format(TEXT("ERROR: Unable to find file \"{}\"."), filePath) << std::endl;
+			INFO_LOG << LOCALIZE("failed_msg") << std::endl;
+			ERROR_LOG << vFormat(LOCALIZE("find_file_error_msg"), filePath) << std::endl;
 			return;
 		}
 	}
 
-	INFO_LOG << TEXT("Done") << std::endl;
+	INFO_LOG << LOCALIZE("done_msg") << std::endl;
 }
 
 std::vector<uint8_t> WolfPro::removeProtectionFromProject(const tString& filePath, const uint32_t& seed) const
@@ -471,7 +472,7 @@ std::vector<uint8_t> WolfPro::removeProtectionFromDat(const tString& filePath, c
 
 	if (bytes.empty())
 	{
-		ERROR_LOG << TEXT("ERROR: Unable to decrypt protected file") << std::endl;
+		ERROR_LOG << LOCALIZE("decrypt_error_msg") << std::endl;
 		return std::vector<uint8_t>();
 	}
 

@@ -207,6 +207,7 @@
     <ClCompile Include="..\3rdParty\DXLib\DXArchiveVer6.cpp" />
     <ClCompile Include="..\3rdParty\DXLib\FileLib.cpp" />
     <ClCompile Include="..\3rdParty\DXLib\Huffman.cpp" />
+    <ClCompile Include="Localizer.cpp" />
     <ClCompile Include="SyeLog.cpp" />
     <ClCompile Include="UberLog.cpp" />
     <ClCompile Include="UberWolfLib.cpp" />
@@ -228,6 +229,7 @@
     <ClInclude Include="..\3rdParty\DXLib\Huffman.h" />
     <ClInclude Include="..\3rdParty\nlohmann\json.hpp" />
     <ClInclude Include="Defines.h" />
+    <ClInclude Include="Localizer.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="UberLog.h" />
     <ClInclude Include="SyeLog.h" />

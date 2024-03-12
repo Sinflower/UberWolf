@@ -1,4 +1,5 @@
 #include "UberWolfLib.h"
+#include "Localizer.h"
 #include "UberLog.h"
 #include "Utils.h"
 #include "WolfDec.h"
@@ -122,7 +123,7 @@ UWLExitCode UberWolfLib::FindDxArcKey()
 	if (!m_valid)
 		return UWLExitCode::NOT_INITIALIZED;
 
-	INFO_LOG << TEXT("Searching for decryption key ...") << std::endl;
+	INFO_LOG << LOCALIZE("dec_key_search_msg") << std::endl;
 
 	if (findDxArcKeyFile() == UWLExitCode::SUCCESS)
 		return UWLExitCode::SUCCESS;
@@ -194,6 +195,11 @@ void UberWolfLib::UnregisterLogCallback(const std::size_t& idx)
 	uberLog::RemoveLogCallback(idx);
 }
 
+void UberWolfLib::RegisterLocQueryFunc(const LocalizerQuery& queryFunc)
+{
+	uberWolfLib::Localizer::GetInstance().RegisterLocQuery(queryFunc);
+}
+
 UWLExitCode UberWolfLib::unpackArchive(const tString& archivePath)
 {
 	// Make sure the file exists
@@ -213,15 +219,15 @@ UWLExitCode UberWolfLib::unpackArchive(const tString& archivePath)
 
 	if (!m_config.override && m_wolfDec.IsAlreadyUnpacked(archivePath))
 	{
-		INFO_LOG << std::format(TEXT("{} is already unpacked, skipping"), fileName) << std::endl;
+		INFO_LOG << vFormat(LOCALIZE("unpacked_msg"), fileName) << std::endl;
 		return UWLExitCode::SUCCESS;
 	}
 
-	INFO_LOG << std::format(TEXT("Unpacking: {} ... "), fileName);
+	INFO_LOG << vFormat(LOCALIZE("unpacking_msg"), fileName);
 
 	bool result = m_wolfDec.UnpackArchive(archivePath, m_config.override);
 
-	INFO_LOG << (result ? TEXT("Done") : TEXT("Failed")) << std::endl;
+	INFO_LOG << (result ? LOCALIZE("done_msg") : LOCALIZE("failed_msg")) << std::endl;
 
 	if (!result)
 	{
@@ -271,26 +277,26 @@ UWLExitCode UberWolfLib::findDxArcKeyFile()
 	if (!m_wolfPro.IsWolfPro())
 		return UWLExitCode::NOT_WOLF_PRO;
 
-	INFO_LOG << TEXT("WolfPro game detected, trying to get key from Game.dat ... ") << std::endl;
+	INFO_LOG << LOCALIZE("prot_key_found_msg") << std::endl;
 
 	const Key key = m_wolfPro.GetDxArcKey();
 
 	if (key.empty())
 	{
-		INFO_LOG << TEXT("Failed to find the key in Game.dat") << std::endl;
+		INFO_LOG << LOCALIZE("prot_key_error_msg") << std::endl;
 		return UWLExitCode::KEY_DETECT_FAILED;
 	}
 
 	m_wolfDec.AddKey("UNKNOWN_PRO", false, key);
 	updateConfig(false, key);
-	INFO_LOG << TEXT("Found the decryption key, restarting extraction") << std::endl;
+	INFO_LOG << LOCALIZE("det_key_found_msg") << std::endl;
 
 	return UWLExitCode::SUCCESS;
 }
 
 UWLExitCode UberWolfLib::findDxArcKeyInject()
 {
-	INFO_LOG << TEXT("Trying to get key using injection ... ") << std::endl;
+	INFO_LOG << LOCALIZE("det_key_inj_msg") << std::endl;
 	WolfKeyFinder wkf(m_gameExePath);
 
 	const tString tmpPath = FS_PATH_TO_TSTRING(fs::temp_directory_path());
@@ -301,17 +307,17 @@ UWLExitCode UberWolfLib::findDxArcKeyInject()
 		return UWLExitCode::KEY_DETECT_FAILED;
 	}
 
-	INFO_LOG << TEXT("Executing game and injecting DLL ... ") << std::endl;
+	INFO_LOG << LOCALIZE("exec_game_inj_msg") << std::endl;
 	std::vector<BYTE> key;
 	if (!wkf.Inject(tmpPath))
 	{
-		INFO_LOG << TEXT("Injecting the DLL failed, stopping") << std::endl;
+		INFO_LOG << LOCALIZE("inj_error_msg") << std::endl;
 		return UWLExitCode::KEY_DETECT_FAILED;
 	}
 
 	m_wolfDec.AddKey("UNKNOWN", wkf.UseOldDxArc(), wkf.GetKey());
 	updateConfig(wkf.UseOldDxArc(), wkf.GetKey());
-	INFO_LOG << TEXT("Found the decryption key, restarting extraction") << std::endl;
+	INFO_LOG << LOCALIZE("det_key_found_msg") << std::endl;
 
 	return UWLExitCode::SUCCESS;
 }
@@ -365,7 +371,7 @@ bool UberWolfLib::findGameFromArchive(const tString& archivePath)
 	if (fs::path(searchFolder).filename() == DATA_FOLDER_NAME)
 		searchFolder = FS_PATH_TO_TSTRING(fs::path(searchFolder).parent_path());
 
-	INFO_LOG << TEXT("Searching for game executable in: ") << searchFolder << std::endl;
+	INFO_LOG << vFormat(LOCALIZE("search_game_msg"), searchFolder) << std::endl;
 
 	// Check if the game executable exists in the search folder
 	for (const auto& gameExeName : GAME_EXE_NAMES)
@@ -373,31 +379,31 @@ bool UberWolfLib::findGameFromArchive(const tString& archivePath)
 		const tString gameExePath = searchFolder + TEXT("/") + gameExeName;
 		if (fs::exists(gameExePath))
 		{
-			INFO_LOG << std::format(TEXT("Found game executable: {}"), gameExeName) << std::endl;
+			INFO_LOG << vFormat(LOCALIZE("exe_found_msg"), gameExeName) << std::endl;
 			return InitGame(gameExePath);
 		}
 	}
 
-	INFO_LOG << TEXT("Could not find the game executable") << std::endl;
+	INFO_LOG << LOCALIZE("exe_error_msg") << std::endl;
 
 	return false;
 }
 
 bool UberWolfLib::copyDllFromResource(const tString& outDir) const
 {
-	INFO_LOG << std::format(TEXT("Copying DLL from resource to {} ..."), outDir) << std::endl;
+	INFO_LOG << vFormat(LOCALIZE("dll_copy_msg"), outDir) << std::endl;
 
 	const HRSRC hResource = FindResource(NULL, MAKEINTRESOURCE(IDR_KEY_HOOK), RT_RCDATA);
 	if (hResource == NULL)
 	{
-		ERROR_LOG << TEXT("UberWolfLib: Failed to find resource") << std::endl;
+		ERROR_LOG << LOCALIZE("dll_error_msg_1") << std::endl;
 		return false;
 	}
 
 	const HGLOBAL hResData = LoadResource(NULL, hResource);
 	if (hResData == NULL)
 	{
-		ERROR_LOG << TEXT("UberWolfLib: Failed to load resource") << std::endl;
+		ERROR_LOG << LOCALIZE("dll_error_msg_2") << std::endl;
 		return false;
 	}
 
@@ -409,7 +415,7 @@ bool UberWolfLib::copyDllFromResource(const tString& outDir) const
 	HANDLE hFile = CreateFile(dllPath.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
-		ERROR_LOG << TEXT("UberWolfLib: Failed to create file") << std::endl;
+		ERROR_LOG << TEXT("dll_error_msg_3") << std::endl;
 		return false;
 	}
 
@@ -417,7 +423,7 @@ bool UberWolfLib::copyDllFromResource(const tString& outDir) const
 	WriteFile(hFile, lpResourceData, dwResourceSize, &bytesWritten, NULL);
 
 	CloseHandle(hFile);
-	INFO_LOG << TEXT("DLL copied successfully") << std::endl;
+	INFO_LOG << TEXT("dll_copied_msg") << std::endl;
 
 	return true;
 }
