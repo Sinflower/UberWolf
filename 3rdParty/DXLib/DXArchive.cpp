@@ -28,7 +28,7 @@
 #define MAX_ADDRESSLISTNUM	(1024 * 1024 * 1)		// スライド辞書の最大サイズ
 #define MAX_POSITION		(1 << 24)				// 参照可能な最大相対アドレス( 16MB )
 
-WCHAR sjis2utf8(const char* sjis);
+static WCHAR* sjis2utf8(const char* sjis, const int& len);
 
 // struct -----------------------------
 
@@ -327,27 +327,7 @@ TCHAR *DXArchive::GetOriginalFileName( u8 *FileNameTable )
 
 	bool isMultiByte = false;
 	size_t nameLen = strlen(pName);
-	TCHAR *pFileStr = new TCHAR[nameLen+1]();
-
-	for(size_t si = 0, sf = 0; si < nameLen; si++, sf++)
-	{
-#ifdef _UNICODE
-		if(CheckMultiByteChar((TCHAR*)&pName[si]))
-		{
-			isMultiByte = true;
-			char ss[3];
-			ss[0] = pName[si];
-			ss[1] = pName[si + 1];
-			ss[2] = 0;
-			pFileStr[sf] = sjis2utf8(ss);
-			si++;
-		}
-		else
-#endif
-			pFileStr[sf] = pName[si];
-	}
-
-	return pFileStr;
+	return sjis2utf8(pName, nameLen);
 }
 
 // 標準ストリームにデータを書き込む( 64bit版 )
@@ -3972,14 +3952,9 @@ s64 DXArchiveFile::Size( void )
 
 
 
-WCHAR sjis2utf8(const char* sjis)
+static WCHAR* sjis2utf8(const char* sjis, const int& len)
 {
-	LPCCH pSJIS = (LPCCH)sjis;
-
-	int sjisSize = 2;
-	WCHAR *pUTF8 = new WCHAR[sjisSize];
-	MultiByteToWideChar(932, 0, (LPCCH)pSJIS, -1, pUTF8, 2);
-	WCHAR utf8 = pUTF8[0];
-	delete[] pUTF8;
-	return utf8;
+	WCHAR *pUTF8 = new WCHAR[len + 1]();
+	MultiByteToWideChar(932, 0, (LPCCH)sjis, -1, pUTF8, len);
+	return pUTF8;
 }

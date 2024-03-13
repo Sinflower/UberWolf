@@ -303,13 +303,13 @@ UWLExitCode UberWolfLib::findDxArcKeyFile()
 	if (!m_wolfPro.IsWolfPro())
 		return UWLExitCode::NOT_WOLF_PRO;
 
-	INFO_LOG << LOCALIZE("prot_key_found_msg") << std::endl;
+	INFO_LOG << LOCALIZE("pro_game_detected_msg") << std::endl;
 
 	const Key key = m_wolfPro.GetDxArcKey();
 
 	if (key.empty())
 	{
-		INFO_LOG << LOCALIZE("prot_key_error_msg") << std::endl;
+		INFO_LOG << LOCALIZE("det_key_error_msg") << std::endl;
 		return UWLExitCode::KEY_DETECT_FAILED;
 	}
 

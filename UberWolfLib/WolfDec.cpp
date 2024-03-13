@@ -216,7 +216,7 @@ bool WolfDec::detectMode(const tString& filePath, const bool& override)
 			if (success)
 			{
 				m_mode = i;
-				break;
+				return success;
 			}
 		}
 
@@ -226,7 +226,7 @@ bool WolfDec::detectMode(const tString& filePath, const bool& override)
 			if (success)
 			{
 				m_mode = static_cast<uint32_t>(DEFAULT_DECRYPT_MODES.size() + i);
-				break;
+				return success;
 			}
 		}
 	}
