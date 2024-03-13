@@ -441,7 +441,7 @@ bool UberWolfLib::copyDllFromResource(const tString& outDir) const
 	HANDLE hFile = CreateFile(dllPath.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
-		ERROR_LOG << TEXT("dll_error_msg_3") << std::endl;
+		ERROR_LOG << LOCALIZE("dll_error_msg_3") << std::endl;
 		return false;
 	}
 
@@ -449,7 +449,7 @@ bool UberWolfLib::copyDllFromResource(const tString& outDir) const
 	WriteFile(hFile, lpResourceData, dwResourceSize, &bytesWritten, NULL);
 
 	CloseHandle(hFile);
-	INFO_LOG << TEXT("dll_copied_msg") << std::endl;
+	INFO_LOG << LOCALIZE("dll_copied_msg") << std::endl;
 
 	return true;
 }
