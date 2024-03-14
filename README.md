@@ -27,3 +27,7 @@
 
 ## Usage - Extract One or More Archives
  Drag and drop the archives onto the designated area and wait until the files are extracted.
+ 
+ ## Localization
+
+ Please look at the [Localization Guide](doc/localization.md) for information on translating the application into your language.
