@@ -30,3 +30,4 @@ UberWolf contains a localization system that allows for easy translation of the 
 	...
 }
 ```
+4) Before submitting the file, please make sure that all strings are translated and that the file is valid JSON. You can use an online JSON validator such as [jsonlint](https://jsonlint.com/) to check the file.
