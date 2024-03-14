@@ -2,7 +2,7 @@
 
 UberWolf contains a localization system that allows for easy translation of the tools UI and log messages. This guide will walk you through the process of localizing UberWolf.
 
-1) Grab a copy of the English localization file from the UberWolf repository. The file can be found [here](UberWolf/lang/en.json).
+1) Grab a copy of the English localization file from the UberWolf repository. The file can be found [here](../UberWolf/lang/en.json).
 2) Rename the file to the language you are translating to. For example, if you are translating to French, rename the file to `fr.json`.
 3) Open the file in a text editor and translate the strings. The file is a simple JSON file with a key-value pair for each string. The key is an identifier for the string and the value is the translated string. For example:
 ```json
