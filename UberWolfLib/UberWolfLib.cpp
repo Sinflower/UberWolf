@@ -34,6 +34,7 @@
 #include "WolfUtils.h"
 #include "resource.h"
 
+#include <eh.h>
 #include <filesystem>
 #include <format>
 #include <fstream>
@@ -87,9 +88,20 @@ UberWolfLib::UberWolfLib(const tStrings& argv) :
 
 	if (isSubProcess)
 	{
+		// Add a new exception translator, this allows for proper catching of potential access violations
+		_set_se_translator([]([[maybe_unused]] unsigned int u, [[maybe_unused]] EXCEPTION_POINTERS* pExp) { throw std::exception(""); });
+
 		// For subprocess calls the mode was passed as an argument
 		// directly call unpack, which in this case will also terminate the process
-		m_wolfDec.UnpackArchive(path.c_str(), override);
+		try
+		{
+			m_wolfDec.UnpackArchive(path.c_str(), override);
+		}
+		catch ([[maybe_unused]] const std::exception& e)
+		{
+			ExitProcess(1);
+		}
+
 		ExitProcess(0);
 	}
 	else if (argv.size() >= 2)
