@@ -48,6 +48,7 @@ enum class UWLExitCode
 
 class UberWolfLib
 {
+	inline static const tString UWL_VERSION = _T("0.2.0");
 	struct Config
 	{
 		bool useInject = false;
@@ -83,6 +84,11 @@ public:
 	static std::size_t RegisterLogCallback(const LogCallback& callback);
 	static void UnregisterLogCallback(const std::size_t& idx);
 	static void RegisterLocQueryFunc(const LocalizerQuery& queryFunc);
+
+	static tString GetVersion()
+	{
+		return UWL_VERSION;
+	}
 
 private:
 	UWLExitCode unpackArchive(const tString& archivePath);
