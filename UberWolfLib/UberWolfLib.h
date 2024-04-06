@@ -72,6 +72,7 @@ public:
 	bool InitGame(const tString& gameExePath);
 
 	UWLExitCode UnpackData();
+	UWLExitCode UnpackDataVec(const tStrings& paths);
 	UWLExitCode UnpackArchive(const tString& archivePath);
 	UWLExitCode FindDxArcKey();
 	UWLExitCode FindProtectionKey(std::string& key);

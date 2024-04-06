@@ -125,6 +125,9 @@ bool UberWolfLib::InitGame(const tString& gameExePath)
 
 	m_gameExePath = gameExePath;
 
+	if (fs::path(m_gameExePath).parent_path().empty())
+		m_gameExePath = FS_PATH_TO_TSTRING(fs::current_path()) + TEXT("/") + m_gameExePath;
+
 	if (!findDataFolder()) return false;
 
 	m_wolfPro = WolfPro(m_dataFolder, m_dataAsFile);
@@ -138,12 +141,24 @@ UWLExitCode UberWolfLib::UnpackData()
 	if (!m_valid)
 		return UWLExitCode::NOT_INITIALIZED;
 
+	tStrings paths;
+
 	for (const auto& dirEntry : fs::directory_iterator(m_dataFolder))
 	{
 		if (IsWolfExtension(dirEntry.path().extension()))
+			paths.push_back(FS_PATH_TO_TSTRING(dirEntry.path()));
+	}
+
+	return UnpackDataVec(paths);
+}
+
+UWLExitCode UberWolfLib::UnpackDataVec(const tStrings& paths)
+{
+	for (const tString& p : paths)
+	{
+		if (IsWolfExtension(fs::path(p).extension()))
 		{
-			tString target  = FS_PATH_TO_TSTRING(dirEntry.path());
-			UWLExitCode uec = unpackArchive(target);
+			UWLExitCode uec = unpackArchive(p);
 			if (uec != UWLExitCode::SUCCESS) return uec;
 		}
 	}
