@@ -134,6 +134,21 @@ private:
 			idx++;
 		}
 
+		const std::vector<std::pair<std::wstring, std::string>> fileLangList = Localizer::GetLangCodesFromFolder();
+
+		for (const auto& lang : fileLangList)
+		{
+			// Add the language to the menu
+			const std::wstring langStr = lang.first;
+			const std::string langCode = lang.second;
+
+			AppendMenuW(hLangMenu, MF_STRING, idx, langStr.c_str());
+			registerSlot(idx, BN_CLICKED, [this](void* p) { onLanguageChanged(p); });
+			m_menuLangStrMap[idx] = langCode;
+			LOC_ADD_LANG(langCode, -1);
+			idx++;
+		}
+
 		// Initialize the localizer
 		LOC_INIT();
 

@@ -28,6 +28,7 @@
 
 #include <Windows.h>
 #include <codecvt> // codecvt_utf8
+#include <filesystem>
 #include <fstream>
 #include <locale> // wstring_convert
 #include <map>
@@ -43,8 +44,12 @@
 #define LOC_ADD_LANG(_LANG_, _RES_) Localizer::GetInstance().AddLanguage(_LANG_, _RES_)
 #define LOC_INIT()                  Localizer::GetInstance().Init()
 
+namespace fs = std::filesystem;
+
 class Localizer
 {
+	static inline const std::string LOC_FILE_FOLDER = "langs";
+
 public:
 	using LocMap  = std::map<std::string, std::string>;
 	using LocMapW = std::map<std::string, std::wstring>;
@@ -69,8 +74,11 @@ public:
 	{
 		if (!readLocalizationFromResource(lang, m_localization, m_localizationW))
 		{
-			MessageBox(NULL, L"Failed to load localization", L"Error", MB_OK | MB_ICONERROR);
-			return false;
+			if (!readLocalizationFromFile(lang, m_localization, m_localizationW))
+			{
+				MessageBox(NULL, L"Failed to load localization", L"Error", MB_OK | MB_ICONERROR);
+				return false;
+			}
 		}
 
 		return true;
@@ -100,7 +108,7 @@ public:
 		m_languageMap[langCode] = resID;
 	}
 
-	static bool ReadLocalizationFromResource(const uint16_t& resID, LocMap& map)
+	static bool ReadLocalizationFromResource(const uint16_t& resID, LocMap& map, const bool showMsg = false)
 	{
 		map.clear();
 
@@ -108,28 +116,32 @@ public:
 		HRSRC hRes = FindResource(NULL, MAKEINTRESOURCE(resID), L"LOCALS");
 		if (hRes == NULL)
 		{
-			MessageBox(NULL, L"Failed to find localization resource", L"Error", MB_OK | MB_ICONERROR);
+			if (showMsg)
+				MessageBox(NULL, L"Failed to find localization resource", L"Error", MB_OK | MB_ICONERROR);
 			return false;
 		}
 
 		HGLOBAL hData = LoadResource(NULL, hRes);
 		if (hData == NULL)
 		{
-			MessageBox(NULL, L"Failed to load localization resource", L"Error", MB_OK | MB_ICONERROR);
+			if (showMsg)
+				MessageBox(NULL, L"Failed to load localization resource", L"Error", MB_OK | MB_ICONERROR);
 			return false;
 		}
 
 		DWORD size = SizeofResource(NULL, hRes);
 		if (size == 0)
 		{
-			MessageBox(NULL, L"Failed to get size of localization resource", L"Error", MB_OK | MB_ICONERROR);
+			if (showMsg)
+				MessageBox(NULL, L"Failed to get size of localization resource", L"Error", MB_OK | MB_ICONERROR);
 			return false;
 		}
 
 		LPVOID pData = LockResource(hData);
 		if (pData == NULL)
 		{
-			MessageBox(NULL, L"Failed to lock localization resource", L"Error", MB_OK | MB_ICONERROR);
+			if (showMsg)
+				MessageBox(NULL, L"Failed to lock localization resource", L"Error", MB_OK | MB_ICONERROR);
 			return false;
 		}
 
@@ -139,6 +151,38 @@ public:
 		map = json.get<std::map<std::string, std::string>>();
 
 		return true;
+	}
+
+	static std::vector<std::pair<std::wstring, std::string>> GetLangCodesFromFolder()
+	{
+		std::vector<std::pair<std::wstring, std::string>> langCodes;
+
+		fs::path path = fs::current_path() / LOC_FILE_FOLDER;
+
+		// Check if the folder exists
+		if (!fs::exists(path) || !fs::is_directory(path))
+			return langCodes;
+
+		for (const auto& entry : fs::directory_iterator(path))
+		{
+			if (entry.is_regular_file() && entry.path().extension() == ".json")
+			{
+				std::ifstream file(entry.path());
+				if (!file.is_open())
+					continue;
+
+				nlohmann::json json;
+				file >> json;
+				file.close();
+
+				const std::wstring langStr = Localizer::ToUTF16(json.at("lang_name"));
+				const std::string langCode = json.at("lang_code");
+
+				langCodes.push_back({ langStr, langCode });
+			}
+		}
+
+		return langCodes;
 	}
 
 	static std::wstring ToUTF16(const std::string& utf8String)
@@ -211,6 +255,42 @@ private:
 
 		if (!ReadLocalizationFromResource(m_languageMap.at(lang), map))
 			return false;
+
+		for (const auto& [key, value] : map)
+			mapW[key] = ToUTF16(value);
+
+		return true;
+	}
+
+	bool readLocalizationFromFile(const std::string& lang, LocMap& map, LocMapW& mapW)
+	{
+		map.clear();
+		mapW.clear();
+
+		// Make sure the file exists
+		fs::path path = fs::current_path() / LOC_FILE_FOLDER / (lang + ".json");
+		if (!fs::exists(path))
+		{
+			const std::wstring errMsg = L"Failed to find localization file: " + path.wstring();
+			MessageBox(NULL, errMsg.c_str(), L"Error", MB_OK | MB_ICONERROR);
+			return false;
+		}
+
+		// Read the localization file
+		std::ifstream file(path);
+		if (!file.is_open())
+		{
+			const std::wstring errMsg = L"Failed to open localization file: " + path.wstring();
+			MessageBox(NULL, errMsg.c_str(), L"Error", MB_OK | MB_ICONERROR);
+			return false;
+		}
+
+		nlohmann::json json;
+		file >> json;
+
+		file.close();
+
+		map = json.get<std::map<std::string, std::string>>();
 
 		for (const auto& [key, value] : map)
 			mapW[key] = ToUTF16(value);
