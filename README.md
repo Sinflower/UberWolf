@@ -23,7 +23,7 @@
 
 ## Usage - Full Game Processing
 - Drag and drop ***Game.exe*** or ***GamePro.exe*** onto the dedicated area or select it using the ***Select Game*** button.
-- Press Process to unpack all archive files and, if present, detect the ***Protection Key***
+- Press Process to unpack all archive files and, if present, detect the ***Protection Key***.
 
 ## Usage - Extract One or More Archives
  Drag and drop the archives onto the designated area and wait until the files are extracted.
@@ -31,3 +31,14 @@
  ## Localization
 
  Please look at the [Localization Guide](doc/localization.md) for information on translating the application into your language.
+
+----
+
+# UberWolfCli
+ Simple command line interface to decrypt Wolf RPG games.
+
+## Usage
+ The usage of UberWolfCli is very similar to the GUI application:
+ - Drag and drop ***Game.exe*** or ***GamePro.exe*** onto the executable to automatically detect the data folder and decrypt all files.
+ - Drag and drop a ***folder*** folder onto the executable to extract all supported wolf files within it.
+ - Drag and drop one or more supported files (e.g., ***.wolf***) onto the executable to extract them all.
