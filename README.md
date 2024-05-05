@@ -42,3 +42,12 @@
  - Drag and drop ***Game.exe*** or ***GamePro.exe*** onto the executable to automatically detect the data folder and decrypt all files.
  - Drag and drop a ***folder*** folder onto the executable to extract all supported wolf files within it.
  - Drag and drop one or more supported files (e.g., ***.wolf***) onto the executable to extract them all.
+ - Call it from the command line like this:
+```bash
+# Full auto-detect
+UberWolfCli.exe "D:\Path to Game\Game.exe"
+# Using a folder, e.g., Data
+UberWolfCli.exe "D:\Path to Game\Data"
+# Unpacking a single file
+UberWolfCli.exe "D:\Path to Game\Data\BasicData.wolf"
+```
