@@ -168,8 +168,8 @@ public:
 	DXArchive_VER6(TCHAR* ArchivePath = NULL);
 	~DXArchive_VER6();
 
-	static int			EncodeArchive(TCHAR* OutputFileName, TCHAR** FileOrDirectoryPath, int FileNum, bool Press = false, const char* KeyString = NULL);	// アーカイブファイルを作成する
-	static int			EncodeArchiveOneDirectory(TCHAR* OutputFileName, TCHAR* FolderPath, bool Press = false, const char* KeyString = NULL);		// アーカイブファイルを作成する(ディレクトリ一個だけ)
+	static int			EncodeArchive(const TCHAR* OutputFileName, TCHAR** FileOrDirectoryPath, int FileNum, bool Press = false, const char* KeyString = NULL);	// アーカイブファイルを作成する
+	static int			EncodeArchiveOneDirectory(const TCHAR* OutputFileName, const TCHAR* FolderPath, bool Press = false, const char* KeyString = NULL);		// アーカイブファイルを作成する(ディレクトリ一個だけ)
 	static int			DecodeArchive(TCHAR* ArchiveName, const TCHAR* OutputPath, const char* KeyString = NULL);								// アーカイブファイルを展開する
 
 	int					OpenArchiveFile(const TCHAR* ArchivePath, const char* KeyString = NULL);				// アーカイブファイルを開く( 0:成功  -1:失敗 )
@@ -260,6 +260,11 @@ protected:
 	inline static int CheckMultiByteChar(const TCHAR* Buf)
 	{
 		return  ((unsigned char)*Buf >= 0x81 && (unsigned char)*Buf <= 0x9F) || ((unsigned char)*Buf >= 0xE0 && (unsigned char)*Buf <= 0xFC);
+	}
+
+	inline static int CheckMultiByteChar(const char* Buf)
+	{
+		return ((unsigned char)*Buf >= 0x81 && (unsigned char)*Buf <= 0x9F) || ((unsigned char)*Buf >= 0xE0 && (unsigned char)*Buf <= 0xFC);
 	}
 
 

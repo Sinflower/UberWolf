@@ -26,6 +26,7 @@
 #define MAX_POSITION		(1 << 24)				// 参照可能な最大相対アドレス( 16MB )
 
 static WCHAR *sjis2utf8(const char *sjis, const int &len);
+static char *utf82sjis(const WCHAR *utf8);
 
 // struct -----------------------------
 
@@ -235,72 +236,77 @@ int DXArchive_VER6::ConvSearchData( SEARCHDATA *SearchData, const TCHAR *Src, in
 	return 0 ;
 }
 
+
 // ファイル名データを追加する( 戻り値は使用したデータバイト数 )
-int DXArchive_VER6::AddFileNameData( const TCHAR *FileName, u8 *FileNameTable )
+int DXArchive_VER6::AddFileNameData(const TCHAR *FileName, u8 *FileNameTable)
 {
-	int PackNum, Length, i ;
-	u32 Parity ;
+	int PackNum, Length, i;
+	u32 Parity;
+
+	char *fN = utf82sjis(FileName);
 
 	// サイズをセット
-	Length = ( int )_tcslen( FileName ) ;
+	Length = (int)strlen(fN);
 
 	// 一文字も無かった場合の処理
-	if( Length == 0 )
+	if (Length == 0)
 	{
 		// パック数とパリティ情報のみ保存
-		*((u32 *)&FileNameTable[0]) = 0 ;
+		*((u32 *)&FileNameTable[0]) = 0;
 
 		// 使用サイズを返す
-		return 4 ;
+		return 4;
 	}
-	Length ++ ;
+	Length++;
 
-	PackNum = ( Length + 3 ) / 4 ;
+	PackNum = (Length + 3) / 4;
 
 	// パック数を保存
-	*((u16 *)&FileNameTable[0]) = PackNum ;
+	*((u16 *)&FileNameTable[0]) = PackNum;
 
 	// バッファの初期化
-	memset( &FileNameTable[4], 0, PackNum * 4 * 2 ) ;
+	memset(&FileNameTable[4], 0, PackNum * 4 * 2);
 
 	// 文字列をコピー
-	_tcscpy( (TCHAR *)&FileNameTable[4 + PackNum * 4], FileName ) ;
+	strcpy((char *)&FileNameTable[4 + PackNum * 4], fN);
 
 	// 英字の小文字を全て大文字に変換したファイル名を保存
-	Parity = 0 ;
-	for( i = 0 ; FileName[i] != '\0' ; )
+	Parity = 0;
+	for (i = 0; fN[i] != '\0';)
 	{
 		// ２バイト文字かどうかで処理を分岐
-		if( CheckMultiByteChar( &FileName[i] ) == TRUE )
+		if (CheckMultiByteChar(&fN[i]) == TRUE)
 		{
 			// ２バイト文字
-			*((u16 *)&FileNameTable[4 + i]) = *((u16 *)&FileName[i]) ;
-			Parity += (u8)FileName[i] + (u8)FileName[i+1] ;
-			i += 2 ;
+			*((u16 *)&FileNameTable[4 + i]) = *((u16 *)&fN[i]);
+			Parity += (u8)fN[i] + (u8)fN[i + 1];
+			i += 2;
 		}
 		else
 		{
 			// １バイト文字
-			if( FileName[i] >= 'a' && FileName[i] <= 'z' )
+			if (fN[i] >= 'a' && fN[i] <= 'z')
 			{
 				// 小文字の場合は大文字に変換
-				FileNameTable[4 + i] = (u8)FileName[i] - 'a' + 'A' ;
+				FileNameTable[4 + i] = (u8)fN[i] - 'a' + 'A';
 			}
 			else
 			{
 				// そうではない場合は普通にコピー
-				FileNameTable[4 + i] = (u8)FileName[i] ;
+				FileNameTable[4 + i] = (u8)fN[i];
 			}
-			Parity += FileNameTable[4 + i] ;
-			i ++ ;
+			Parity += FileNameTable[4 + i];
+			i++;
 		}
 	}
 
 	// パリティ情報を保存
-	*((u16 *)&FileNameTable[2]) = (u16)Parity ;
+	*((u16 *)&FileNameTable[2]) = (u16)Parity;
+
+	delete[] fN;
 
 	// 使用したサイズを返す
-	return PackNum * 4 * 2 + 4 ;
+	return PackNum * 4 * 2 + 4;
 }
 
 // ファイル名データから元のファイル名の文字列を取得する
@@ -1457,7 +1463,7 @@ int DXArchive_VER6::Decode( void *Src, void *Dest )
 
 
 // アーカイブファイルを作成する(ディレクトリ一個だけ)
-int DXArchive_VER6::EncodeArchiveOneDirectory(TCHAR *OutputFileName, TCHAR *DirectoryPath, bool Press, const char *KeyString )
+int DXArchive_VER6::EncodeArchiveOneDirectory(const TCHAR *OutputFileName, const TCHAR *DirectoryPath, bool Press, const char *KeyString )
 {
 	int i, FileNum, Result ;
 	TCHAR **FilePathList, *NameBuffer ;
@@ -1488,7 +1494,7 @@ int DXArchive_VER6::EncodeArchiveOneDirectory(TCHAR *OutputFileName, TCHAR *Dire
 }
 
 // アーカイブファイルを作成する
-int DXArchive_VER6::EncodeArchive(TCHAR *OutputFileName, TCHAR **FileOrDirectoryPath, int FileNum, bool Press, const char *KeyString )
+int DXArchive_VER6::EncodeArchive(const TCHAR *OutputFileName, TCHAR **FileOrDirectoryPath, int FileNum, bool Press, const char *KeyString )
 {
 	DARC_HEAD_VER6 Head ;
 	DARC_DIRECTORY_VER6 Directory ;
@@ -2712,4 +2718,13 @@ static WCHAR *sjis2utf8(const char *sjis, const int &len)
 	WCHAR *pUTF8 = new WCHAR[len + 1]();
 	MultiByteToWideChar(932, 0, (LPCCH)sjis, -1, pUTF8, len);
 	return pUTF8;
+}
+
+static char *utf82sjis(const WCHAR *utf8)
+{
+	int32_t sizeRequired = WideCharToMultiByte(932, 0, utf8, -1, NULL, 0, NULL, NULL);
+	char *pSJIS          = new char[sizeRequired]();
+	WideCharToMultiByte(932, 0, utf8, -1, pSJIS, sizeRequired, NULL, NULL);
+
+	return pSJIS;
 }

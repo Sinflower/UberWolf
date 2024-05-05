@@ -41,6 +41,7 @@
 #include <string>
 #include <vector>
 #include <windows.h>
+#include <codecvt>
 
 #include "UberLog.h"
 #include "Utils.h"
@@ -48,15 +49,18 @@
 
 namespace fs = std::filesystem;
 
-const DecryptModes DEFAULT_DECRYPT_MODES = {
-	{ "Wolf RPG v2.01", &DXArchive_VER5::DecodeArchive, std::vector<unsigned char>{ 0x0f, 0x53, 0xe1, 0x3e, 0x04, 0x37, 0x12, 0x17, 0x60, 0x0f, 0x53, 0xe1 } },
-	{ "Wolf RPG v2.10", &DXArchive_VER5::DecodeArchive, std::vector<unsigned char>{ 0x4c, 0xd9, 0x2a, 0xb7, 0x28, 0x9b, 0xac, 0x07, 0x3e, 0x77, 0xec, 0x4c } },
-	{ "Wolf RPG v2.20", &DXArchive_VER6::DecodeArchive, std::vector<unsigned char>{ 0x38, 0x50, 0x40, 0x28, 0x72, 0x4f, 0x21, 0x70, 0x3b, 0x73, 0x35, 0x38 } },
-	{ "Wolf RPG v2.225", &DXArchive::DecodeArchive, "WLFRPrO!p(;s5((8P@((UFWlu$#5(=" },
-	{ "Wolf RPG v3.00", &DXArchive::DecodeArchive, std::vector<unsigned char>{ 0x0F, 0x53, 0xE1, 0x3E, 0x8E, 0xB5, 0x41, 0x91, 0x52, 0x16, 0x55, 0xAE, 0x34, 0xC9, 0x8F, 0x79, 0x59, 0x2F, 0x59, 0x6B, 0x95, 0x19, 0x9B, 0x1B, 0x35, 0x9A, 0x2F, 0xDE, 0xC9, 0x7C, 0x12, 0x96, 0xC3, 0x14, 0xB5, 0x0F, 0x53, 0xE1, 0x3E, 0x8E, 0x00 } },
-	{ "Wolf RPG v3.14", &DXArchive::DecodeArchive, std::vector<unsigned char>{ 0x31, 0xF9, 0x01, 0x36, 0xA3, 0xE3, 0x8D, 0x3C, 0x7B, 0xC3, 0x7D, 0x25, 0xAD, 0x63, 0x28, 0x19, 0x1B, 0xF7, 0x8E, 0x6C, 0xC4, 0xE5, 0xE2, 0x76, 0x82, 0xEA, 0x4F, 0xED, 0x61, 0xDA, 0xE0, 0x44, 0x5B, 0xB6, 0x46, 0x3B, 0x06, 0xD5, 0xCE, 0xB6, 0x78, 0x58, 0xD0, 0x7C, 0x82, 0x00 } },
-	{ "One Way Heroics", &DXArchive::DecodeArchive, "nGui9('&1=@3#a" },
-	{ "One Way Heroics Plus", &DXArchive::DecodeArchive, "Ph=X3^]o2A(,1=@3#a" }
+// TODO: Add mode detection based on crypt version in header
+
+const CryptModes DEFAULT_CRYPT_MODES = {
+	{ "Wolf RPG v2.01", &DXArchive_VER5::DecodeArchive, &DXArchive_VER5::EncodeArchiveOneDirectory, std::vector<unsigned char>{ 0x0f, 0x53, 0xe1, 0x3e, 0x04, 0x37, 0x12, 0x17, 0x60, 0x0f, 0x53, 0xe1 } },
+	{ "Wolf RPG v2.10", &DXArchive_VER5::DecodeArchive, &DXArchive_VER5::EncodeArchiveOneDirectory, std::vector<unsigned char>{ 0x4c, 0xd9, 0x2a, 0xb7, 0x28, 0x9b, 0xac, 0x07, 0x3e, 0x77, 0xec, 0x4c } },
+	{ "Wolf RPG v2.20", &DXArchive_VER6::DecodeArchive, &DXArchive_VER6::EncodeArchiveOneDirectory, std::vector<unsigned char>{ 0x38, 0x50, 0x40, 0x28, 0x72, 0x4f, 0x21, 0x70, 0x3b, 0x73, 0x35, 0x38 } },
+	{ "Wolf RPG v2.225", &DXArchive::DecodeArchive, &DXArchive::EncodeArchiveOneDirectoryWolf, "WLFRPrO!p(;s5((8P@((UFWlu$#5(=" },
+	{ "Wolf RPG v3.00", &DXArchive::DecodeArchive, &DXArchive::EncodeArchiveOneDirectoryWolf, std::vector<unsigned char>{ 0x0F, 0x53, 0xE1, 0x3E, 0x8E, 0xB5, 0x41, 0x91, 0x52, 0x16, 0x55, 0xAE, 0x34, 0xC9, 0x8F, 0x79, 0x59, 0x2F, 0x59, 0x6B, 0x95, 0x19, 0x9B, 0x1B, 0x35, 0x9A, 0x2F, 0xDE, 0xC9, 0x7C, 0x12, 0x96, 0xC3, 0x14, 0xB5, 0x0F, 0x53, 0xE1, 0x3E, 0x8E, 0x00 } },
+	{ "Wolf RPG v3.14", &DXArchive::DecodeArchive, &DXArchive::EncodeArchiveOneDirectoryWolf, std::vector<unsigned char>{ 0x31, 0xF9, 0x01, 0x36, 0xA3, 0xE3, 0x8D, 0x3C, 0x7B, 0xC3, 0x7D, 0x25, 0xAD, 0x63, 0x28, 0x19, 0x1B, 0xF7, 0x8E, 0x6C, 0xC4, 0xE5, 0xE2, 0x76, 0x82, 0xEA, 0x4F, 0xED, 0x61, 0xDA, 0xE0, 0x44, 0x5B, 0xB6, 0x46, 0x3B, 0x06, 0xD5, 0xCE, 0xB6, 0x78, 0x58, 0xD0, 0x7C, 0x82, 0x00 } },
+	{ "Wolf RPG v3.31", &DXArchive::DecodeArchive, &DXArchive::EncodeArchiveOneDirectoryWolf, std::vector<unsigned char>{ 0xCA, 0x08, 0x4C, 0x5D, 0x17, 0x0D, 0xDA, 0xA1, 0xD7, 0x27, 0xC8, 0x41, 0x54, 0x38, 0x82, 0x32, 0x54, 0xB7, 0xF9, 0x46, 0x8E, 0x13, 0x6B, 0xCA, 0xD0, 0x5C, 0x95, 0x95, 0xE2, 0xDC, 0x03, 0x53, 0x60, 0x9B, 0x4A, 0x38, 0x17, 0xF3, 0x69, 0x59, 0xA4, 0xC7, 0x9A, 0x43, 0x63, 0xE6, 0x54, 0xAF, 0xDB, 0xBB, 0x43, 0x58, 0x00 } },
+	{ "One Way Heroics", &DXArchive::DecodeArchive, &DXArchive::EncodeArchiveOneDirectoryWolf, "nGui9('&1=@3#a" },
+	{ "One Way Heroics Plus", &DXArchive::DecodeArchive, &DXArchive::EncodeArchiveOneDirectoryWolf, "Ph=X3^]o2A(,1=@3#a" }
 };
 
 WolfDec::WolfDec(const std::wstring& progName, const uint32_t& mode, const bool& isSubProcess) :
@@ -89,6 +93,65 @@ bool WolfDec::IsAlreadyUnpacked(const tString& filePath) const
 	return (fs::exists(outDir) && !fs::is_empty(outDir));
 }
 
+bool WolfDec::PackArchive(const tString& folderPath, const bool& override)
+{
+	const fs::path fp = fs::path(folderPath);
+
+	if (!fs::exists(fp) || !fs::is_directory(fp))
+	{
+		ERROR_LOG << std::format(TEXT("Invalid directory: {}"), folderPath) << std::endl;
+		if (m_isSubProcess)
+			ExitProcess(1);
+		else
+			return false;
+	}
+
+	const tString directoryPath = fp.parent_path();
+	const tString fileName      = fp.stem();
+	// TODO: How to detect the other file extensions?
+	const tString outputFile	= directoryPath + TEXT("/") + fileName + TEXT(".wolf");
+
+	// Check if the output file already exists
+	if (!override && fs::exists(outputFile))
+		return true;
+
+	if (m_mode == -1)
+		throw InvalidModeException();
+
+	if (m_mode >= (DEFAULT_CRYPT_MODES.size() + m_additionalModes.size()))
+	{
+		ERROR_LOG << std::format(TEXT("Specified Mode: {} out of range"), m_mode) << std::endl;
+		if (m_isSubProcess)
+			ExitProcess(1);
+		else
+			return false;
+	}
+
+	const CryptMode curMode = (m_mode < DEFAULT_CRYPT_MODES.size() ? DEFAULT_CRYPT_MODES.at(m_mode) : m_additionalModes.at(m_mode - DEFAULT_CRYPT_MODES.size()));
+
+	fs::current_path(directoryPath);
+
+	if (curMode.encFunc == nullptr)
+	{
+		const std::wstring modeName = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(curMode.name);
+		ERROR_LOG << std::format(TEXT("Encryption function not found for mode: {}"), modeName) << std::endl;
+		if (m_isSubProcess)
+			ExitProcess(1);
+		else
+			return false;
+	}
+
+	const bool failed = curMode.encFunc(outputFile.c_str(), folderPath.c_str(), true, curMode.key.data()) < 0;
+
+	if (failed)
+		fs::remove(outputFile);
+
+	if (m_isSubProcess)
+		ExitProcess(failed);
+
+	return !failed;
+}
+
 bool WolfDec::UnpackArchive(const tString& filePath, const bool& override)
 {
 	TCHAR pFullPath[MAX_PATH];
@@ -111,7 +174,7 @@ bool WolfDec::UnpackArchive(const tString& filePath, const bool& override)
 	if (m_mode == -1)
 		return detectMode(filePath, override);
 
-	if (m_mode >= (DEFAULT_DECRYPT_MODES.size() + m_additionalModes.size()))
+	if (m_mode >= (DEFAULT_CRYPT_MODES.size() + m_additionalModes.size()))
 	{
 		ERROR_LOG << std::format(TEXT("Specified Mode: {} out of range"), m_mode) << std::endl;
 		if (m_isSubProcess)
@@ -120,7 +183,7 @@ bool WolfDec::UnpackArchive(const tString& filePath, const bool& override)
 			return false;
 	}
 
-	const DecryptMode curMode = (m_mode < DEFAULT_DECRYPT_MODES.size() ? DEFAULT_DECRYPT_MODES.at(m_mode) : m_additionalModes.at(m_mode - DEFAULT_DECRYPT_MODES.size()));
+	const CryptMode curMode = (m_mode < DEFAULT_CRYPT_MODES.size() ? DEFAULT_CRYPT_MODES.at(m_mode) : m_additionalModes.at(m_mode - DEFAULT_CRYPT_MODES.size()));
 
 	fs::current_path(directoryPath);
 	fs::create_directory(fileName);
@@ -144,7 +207,7 @@ bool WolfDec::UnpackArchive(const tString& filePath, const bool& override)
 
 void WolfDec::AddKey(const std::string& name, const bool& useOldDxArc, const Key& key)
 {
-	m_additionalModes.push_back({ name, (useOldDxArc ? &DXArchive_VER6::DecodeArchive : &DXArchive::DecodeArchive), key });
+	m_additionalModes.push_back({ name, (useOldDxArc ? &DXArchive_VER6::DecodeArchive : &DXArchive::DecodeArchive), nullptr, key });
 }
 
 void WolfDec::loadConfig()
@@ -193,7 +256,7 @@ void WolfDec::loadConfig()
 						key.push_back(0x00);
 					}
 
-					m_additionalModes.push_back({ name, decFunc, key });
+					m_additionalModes.push_back({ name, decFunc, nullptr, key });
 				}
 			}
 		}
@@ -210,7 +273,7 @@ bool WolfDec::detectMode(const tString& filePath, const bool& override)
 
 	if (m_mode == -1)
 	{
-		for (uint32_t i = 0; i < DEFAULT_DECRYPT_MODES.size(); i++)
+		for (uint32_t i = 0; i < DEFAULT_CRYPT_MODES.size(); i++)
 		{
 			success = runProcess(filePath, i, override);
 			if (success)
@@ -222,10 +285,10 @@ bool WolfDec::detectMode(const tString& filePath, const bool& override)
 
 		for (uint32_t i = 0; i < m_additionalModes.size(); i++)
 		{
-			success = runProcess(filePath, static_cast<uint32_t>(DEFAULT_DECRYPT_MODES.size() + i), override);
+			success = runProcess(filePath, static_cast<uint32_t>(DEFAULT_CRYPT_MODES.size() + i), override);
 			if (success)
 			{
-				m_mode = static_cast<uint32_t>(DEFAULT_DECRYPT_MODES.size() + i);
+				m_mode = static_cast<uint32_t>(DEFAULT_CRYPT_MODES.size() + i);
 				return success;
 			}
 		}

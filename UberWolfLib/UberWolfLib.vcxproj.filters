@@ -176,6 +176,9 @@
     <ClInclude Include="Localizer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\3rdParty\DXLib\WolfNew.h">
+      <Filter>3rdParty\DXLib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="UberWolfLib.rc">

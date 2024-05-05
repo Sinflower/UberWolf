@@ -1,4 +1,4 @@
-/*
+﻿/*
  *  File: UberWolfLib.cpp
  *  Copyright (c) 2023 Sinflower
  *
@@ -136,6 +136,41 @@ bool UberWolfLib::InitGame(const tString& gameExePath)
 	return m_valid;
 }
 
+UWLExitCode UberWolfLib::PackData()
+{
+	if (!m_valid)
+		return UWLExitCode::NOT_INITIALIZED;
+
+	tStrings paths;
+
+	for (const auto& dirEntry : fs::directory_iterator(m_dataFolder))
+	{
+		if (dirEntry.is_directory())
+			paths.push_back(FS_PATH_TO_TSTRING(dirEntry.path()));
+	}
+
+	return PackDataVec(paths);
+}
+
+UWLExitCode UberWolfLib::PackDataVec(const tStrings& paths)
+{
+	for (const tString& p : paths)
+	{
+		if (fs::is_directory(p))
+		{
+			UWLExitCode uec = packData(p);
+			if (uec != UWLExitCode::SUCCESS) return uec;
+		}
+	}
+
+	return UWLExitCode::SUCCESS;
+}
+
+UWLExitCode UberWolfLib::PackArchive(const tString& archivePath)
+{
+	return packData(archivePath);
+}
+
 UWLExitCode UberWolfLib::UnpackData()
 {
 	if (!m_valid)
@@ -251,6 +286,31 @@ void UberWolfLib::UnregisterLogCallback(const std::size_t& idx)
 void UberWolfLib::RegisterLocQueryFunc(const LocalizerQuery& queryFunc)
 {
 	uberWolfLib::Localizer::GetInstance().RegisterLocQuery(queryFunc);
+}
+
+UWLExitCode UberWolfLib::packData(const tString& dataPath)
+{
+	if (!m_valid)
+		return UWLExitCode::NOT_INITIALIZED;
+
+	if (dataPath.empty())
+		return UWLExitCode::INVALID_PATH;
+
+	if (!fs::exists(dataPath))
+		return UWLExitCode::FILE_NOT_FOUND;
+
+	if (!m_wolfDec)
+		return UWLExitCode::WOLF_DEC_NOT_INITIALIZED;
+
+	const tString fileName = fs::path(dataPath).filename();
+
+	INFO_LOG << vFormat(LOCALIZE("packing_msg"), fileName);
+
+	bool result = m_wolfDec.PackArchive(dataPath);
+
+	INFO_LOG << (result ? LOCALIZE("done_msg") : LOCALIZE("failed_msg")) << std::endl;
+
+	return result ? UWLExitCode::SUCCESS : UWLExitCode::UNKNOWN_ERROR;
 }
 
 UWLExitCode UberWolfLib::unpackArchive(const tString& archivePath)

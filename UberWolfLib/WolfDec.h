@@ -31,41 +31,50 @@
 #include <string>
 #include <tchar.h>
 #include <vector>
+#include <exception>
 
 #include "Types.h"
 
 using DecryptFunction = int (*)(TCHAR*, const TCHAR*, const char*);
+using EncryptFunction = int (*)(const TCHAR*, const TCHAR*, bool, const char*);
 
-struct DecryptMode
+class InvalidModeException : public std::exception
+{};
+
+struct CryptMode
 {
-	DecryptMode(const std::string& name, const DecryptFunction& decFunc, const std::vector<char> key) :
+	CryptMode(const std::string& name, const DecryptFunction& decFunc, const EncryptFunction& encFunc, const std::vector<char> key) :
 		name(name),
 		decFunc(decFunc),
+		encFunc(encFunc),
 		key(key)
 	{
 	}
 
-	DecryptMode(const std::string& name, const DecryptFunction& decFunc, const std::string& key) :
+	CryptMode(const std::string& name, const DecryptFunction& decFunc, const EncryptFunction& encFunc, const std::string& key) :
 		name(name),
 		decFunc(decFunc),
+		encFunc(encFunc),
 		key(key.begin(), key.end())
 	{
 		this->key.push_back(0x00); // The key needs to end with 0x00 so the parser knows when to stop
 	}
 
-	DecryptMode(const std::string& name, const DecryptFunction& decFunc, const std::vector<unsigned char> key) :
+	CryptMode(const std::string& name, const DecryptFunction& decFunc, const EncryptFunction& encFunc, const std::vector<unsigned char> key) :
 		name(name),
-		decFunc(decFunc)
+		decFunc(decFunc),
+		encFunc(encFunc)
 	{
 		std::copy(key.begin(), key.end(), std::back_inserter(this->key));
 	}
 
 	std::string name;
 	DecryptFunction decFunc;
+	EncryptFunction encFunc;
 	std::vector<char> key;
 };
 
-using DecryptModes = std::vector<DecryptMode>;
+using CryptModes = std::vector<CryptMode>;
 
 class WolfDec
 {
@@ -92,6 +101,8 @@ public:
 
 	bool IsAlreadyUnpacked(const tString& filePath) const;
 
+	bool PackArchive(const tString& folderPath, const bool& override = false);
+
 	bool UnpackArchive(const tString& filePath, const bool& override = false);
 
 	void AddKey(const std::string& name, const bool& useOldDxArc, const Key& key);
@@ -108,7 +119,7 @@ private:
 
 private:
 	uint32_t m_mode                = -1;
-	DecryptModes m_additionalModes = {};
+	CryptModes m_additionalModes = {};
 	std::wstring m_progName;
 	bool m_isSubProcess = false;
 	bool m_valid        = false;

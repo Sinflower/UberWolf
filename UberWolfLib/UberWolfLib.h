@@ -72,9 +72,14 @@ public:
 
 	bool InitGame(const tString& gameExePath);
 
+	UWLExitCode PackData();
+	UWLExitCode PackDataVec(const tStrings& paths);
+	UWLExitCode PackArchive(const tString& archivePath);
+
 	UWLExitCode UnpackData();
 	UWLExitCode UnpackDataVec(const tStrings& paths);
 	UWLExitCode UnpackArchive(const tString& archivePath);
+
 	UWLExitCode FindDxArcKey();
 	UWLExitCode FindProtectionKey(std::string& key);
 	UWLExitCode FindProtectionKey(std::wstring& key);
@@ -91,6 +96,7 @@ public:
 	}
 
 private:
+	UWLExitCode packData(const tString& dataPath);
 	UWLExitCode unpackArchive(const tString& archivePath);
 	bool findDataFolder();
 	UWLExitCode findDxArcKeyFile();

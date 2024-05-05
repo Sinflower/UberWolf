@@ -16,6 +16,9 @@
 #include <stdio.h>
 #include <tchar.h>
 
+#include <string>
+#include <vector>
+
 // define ---------------------------------------
 
 // データ型定義
@@ -191,8 +194,9 @@ public :
 	DXArchive(TCHAR *ArchivePath = NULL ) ;
 	~DXArchive() ;
 
-	static int			EncodeArchive(TCHAR *OutputFileName, TCHAR **FileOrDirectoryPath, int FileNum, bool Press = false, bool AlwaysHuffman = false, u8 HuffmanEncodeKB = 0, const char *KeyString_ = NULL, bool NoKey = false, bool OutputStatus = true, bool MaxPress = false ) ;	// アーカイブファイルを作成する
-	static int			EncodeArchiveOneDirectory(TCHAR *OutputFileName, TCHAR *FolderPath, bool Press = false, bool AlwaysHuffman = false, u8 HuffmanEncodeKB = 0, const char *KeyString_ = NULL, bool NoKey = false, bool OutputStatus = true, bool MaxPress = false ) ;		// アーカイブファイルを作成する(ディレクトリ一個だけ)
+	static int EncodeArchive(const TCHAR *OutputFileName, const std::vector<std::wstring> &FileOrDirectoryPath, int FileNum, bool Press = false, bool AlwaysHuffman = false, u8 HuffmanEncodeKB = 0, const char *KeyString_ = NULL, bool NoKey = false, bool OutputStatus = true, bool MaxPress = false); // アーカイブファイルを作成する
+	static int			EncodeArchiveOneDirectory(const TCHAR *OutputFileName, const TCHAR *FolderPath, bool Press = false, bool AlwaysHuffman = false, u8 HuffmanEncodeKB = 0, const char *KeyString_ = NULL, bool NoKey = false, bool OutputStatus = true, bool MaxPress = false ) ;		// アーカイブファイルを作成する(ディレクトリ一個だけ)
+	static int          EncodeArchiveOneDirectoryWolf(const TCHAR *OutputFileName, const TCHAR *DirectoryPath, bool Press = false, const char *KeyString_ = NULL);
 	static int			DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const char *KeyString_ = NULL ) ;								// アーカイブファイルを展開する
 
 	int					OpenArchiveFile( const TCHAR *ArchivePath, const char *KeyString_ = NULL ) ;				// アーカイブファイルを開く( 0:成功  -1:失敗 )
@@ -284,7 +288,7 @@ protected :
 	static int ConvSearchData( SEARCHDATA *Dest, const TCHAR *Src, int *Length ) ;		// 文字列を検索用のデータに変換( ヌル文字か \ があったら終了 )
 	static int AddFileNameData( const TCHAR *FileName, u8 *FileNameTable ) ;				// ファイル名データを追加する( 戻り値は使用したデータバイト数 )
 	static TCHAR *GetOriginalFileName( u8 *FileNameTable ) ;						// ファイル名データから元のファイル名の文字列を取得する
-	static int GetDirectoryFilePath( const TCHAR *DirectoryPath, TCHAR *FilePathBuffer = NULL ) ;	// ディレクトリ内のファイルのパスを取得する( FilePathBuffer は一ファイルに付き256バイトの容量が必要 )
+	static int GetDirectoryFilePath(const TCHAR *DirectoryPath, std::vector<std::wstring> *FilePathBuffer = NULL); // ディレクトリ内のファイルのパスを取得する( FilePathBuffer は一ファイルに付き256バイトの容量が必要 )
 	static void EncodeStatusErase( void ) ;														// エンコードの進行状況を表示を消去する
 	static void EncodeStatusOutput( DARC_ENCODEINFO *EncodeInfo, bool Always = false ) ;		// エンコードの進行状況を表示する
 	static void AnalyseHuffmanEncode( u64 DataSize, u8 HuffmanEncodeKB, u64 *HeadDataSize, u64 *FootDataSize ) ;	// ハフマン圧縮をする前後のサイズを取得する
