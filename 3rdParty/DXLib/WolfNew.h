@@ -14,234 +14,39 @@
 #define LODWORD(x)            (*((DWORD *)&(x))) // low dword
 #define __PAIR64__(high, low) (((uint64_t)(high) << 32) | (uint32_t)(low))
 
-int superSpecialCrypt(uint8_t *specialKey, int8_t *Data, int64_t StartPosition, int64_t EndPosition, const bool &updateDataPos = false)
+// rotate left
+template<class T>
+T __ROL__(T value, int count)
 {
-	int8_t *v5;       // esi
-	int v6;           // ebx
-	int64_t result;   // eax
-	unsigned int v8;  // edx
-	uint8_t *v9;      // ecx
-	unsigned int v10; // edi
-	char v11;         // al
-	int8_t v12;       // cl
-	int8_t v13;       // al
-	int v14;          // et0
-	int i;            // esi
-	int64_t v16;      // rax
-	int j;            // esi
-	int64_t v18;      // rax
-	char *v19;        // edi
-	__m128 *v20;      // edx
-	int v21;          // ecx
-	int8_t *v22;      // eax
-	int v23;          // esi
-	int v24;          // ecx
-	__m128 *v25;      // eax
-	__m128 v26;       // xmm0
-	__m128 v27;       // xmm1
-	int v28;          // ecx
-	__m128 *v29;      // eax
-	__m128i v30;      // xmm2
-	__m128 v31;       // xmm2
-	__m128i v32;      // xmm2
-	__m128 v33;       // xmm2
-	bool v34;         // zf
-	bool v35;         // cf
-	int v36;          // eax
-	int v37;          // edx
-	int v38;          // edi
-	char v39;         // al
-	int8_t v40;       // cl
-	int v41;          // [esp+Ch] [ebp-112Ch]
-	int v42;          // [esp+Ch] [ebp-112Ch]
-	int v43;          // [esp+Ch] [ebp-112Ch]
-	int64_t v44;      // [esp+10h] [ebp-1128h]
-	int v45;          // [esp+18h] [ebp-1120h]
-	int v46;          // [esp+18h] [ebp-1120h]
-	int8_t *v47;      // [esp+1Ch] [ebp-111Ch]
-	int v48;          // [esp+20h] [ebp-1118h]
-	int v50;          // [esp+28h] [ebp-1110h]
-	__m128i v51[272]; // [esp+30h] [ebp-1108h] BYREF
+	const uint32_t nbits = sizeof(T) * 8;
 
-	v5  = Data;
-	v47 = Data;
-	if (updateDataPos)
+	if (count > 0)
 	{
-		v5  = &Data[StartPosition];
-		v47 = &Data[StartPosition];
+		count %= nbits;
+		T high = value >> (nbits - count);
+		if (T(-1) < 0) // signed value
+			high &= ~((T(-1) << count));
+		value <<= count;
+		value |= high;
 	}
-	v44 = EndPosition - StartPosition;
-	v50 = StartPosition % 256;
-	v41 = StartPosition / 256 % 256;
-	v6  = StartPosition / 0x10000 % 256;
-	v45 = v6;
-	if ((((uint64_t)(EndPosition - StartPosition) >> 32) & 0x80000000) != 0i64)
-		goto LABEL_40;
-	if (SHIDWORD(v44) > 0 || (result = EndPosition - StartPosition, (unsigned int)v44 >= 0x100))
+	else
 	{
-		v8 = StartPosition % 256;
-		if (v50)
-		{
-			v9  = &specialKey[StartPosition / 256 % 256 + 256];
-			v10 = static_cast<uint32_t>(EndPosition - StartPosition);
-			do
-			{
-				v11 = specialKey[v8++];
-				*v5 ^= v11;
-				v12          = *v5 ^ *v9;
-				*v5          = v12;
-				v13          = v12 ^ specialKey[v6 + 512];
-				v9           = &specialKey[StartPosition / 256 % 256 + 256];
-				*v5++        = v13;
-				v14          = (__PAIR64__(HIDWORD(v44), v10--) - 1) >> 32;
-				HIDWORD(v44) = v14;
-			} while (v8 < 0x100);
-			v6           = StartPosition / 0x10000 % 256;
-			LODWORD(v44) = v10;
-			v47          = v5;
-			v50          = 0;
-			if (++v41 == 256)
-			{
-				v6  = v45 + 1;
-				v41 = 0;
-				if (v45 == 255)
-					v6 = 0;
-				v45 = v6;
-			}
-		}
-		if (v44 < 0)
-			goto LABEL_40;
-		if (SHIDWORD(v44) > 0 || (result = v44, (unsigned int)v44 >= 0x100))
-		{
-			memcpy(v51, specialKey, 0x100u);
-			for (i = 0; i < 256; ++i)
-			{
-				v16                              = 0x101010101010101i64 * (uint8_t)specialKey[i + 256];
-				*((DWORD *)&v51[16] + 2 * i)     = static_cast<DWORD>(v16);
-				*((DWORD *)&v51[16] + 2 * i + 1) = HIDWORD(v16);
-			}
-			v6 = v45;
-			for (j = 0; j < 256; ++j)
-			{
-				v18                               = 0x101010101010101i64 * (uint8_t)specialKey[j + 512];
-				*((DWORD *)&v51[144] + 2 * j)     = static_cast<DWORD>(v18);
-				*((DWORD *)&v51[144] + 2 * j + 1) = HIDWORD(v18);
-			}
-			v48 = (uint64_t)(v44 / 256) >> 32;
-			v46 = static_cast<int32_t>(v44 / 256);
-			v44 %= 256i64;
-			v5  = v47;
-			v19 = (char *)((char *)v51 - (char *)v47);
-			v20 = (__m128 *)(v47 + 32);
-			do
-			{
-				v21 = 0;
-				if (v5 > (int8_t *)&v51[15] + 8 || &v20[13].m128_u16[4] < (uint16_t *)v51)
-				{
-					v25 = v20;
-					do
-					{
-						v26 = v25[-2];
-						v25 += 4;
-						v25[-6] = _mm_xor_ps(_mm_castsi128_ps(v51[v21]), v26);
-						v27     = _mm_castsi128_ps(v51[v21 + 1]);
-						v21 += 4;
-						v25[-5] = _mm_xor_ps(v27, v25[-5]);
-						v25[-4] = _mm_xor_ps(*(__m128 *)((char *)v25 + (DWORD)v19 - 64), v25[-4]);
-						v25[-3] = _mm_xor_ps(*(__m128 *)((char *)v25 + (DWORD)v19 - 48), v25[-3]);
-					} while (v21 < 16);
-				}
-				else
-				{
-					v22 = v47;
-					v23 = 32;
-					do
-					{
-						v24 = *(DWORD *)&v19[(DWORD)v22];
-						v22 += 8;
-						*((DWORD *)v22 - 2) ^= v24;
-						*((DWORD *)v22 - 1) ^= *(DWORD *)&v19[(DWORD)v22 - 4];
-						--v23;
-					} while (v23);
-				}
-				v28 = v41;
-				v29 = v20;
-				v42 = 4;
-				v30 = _mm_loadl_epi64((const __m128i *)((char *)&v51[16] + 8 * v28));
-				v31 = _mm_castsi128_ps(_mm_unpacklo_epi64(v30, v30));
-				do
-				{
-					v29[-2] = _mm_xor_ps(v29[-2], v31);
-					v29[-1] = _mm_xor_ps(v31, v29[-1]);
-					*v29    = _mm_xor_ps(*v29, v31);
-					v29[1]  = _mm_xor_ps(v29[1], v31);
-					v29 += 4;
-					--v42;
-				} while (v42);
-				v32 = _mm_loadl_epi64((const __m128i *)((char *)&v51[144] + 8 * v6));
-				v33 = _mm_castsi128_ps(_mm_unpacklo_epi64(v32, v32));
-				v43 = 4;
-				do
-				{
-					v34 = v43-- == 1;
-					v20 += 4;
-					v20[-6] = _mm_xor_ps(v33, v20[-6]);
-					v20[-5] = _mm_xor_ps(v20[-5], v33);
-					v20[-4] = _mm_xor_ps(v33, v20[-4]);
-					v20[-3] = _mm_xor_ps(v33, v20[-3]);
-				} while (!v34);
-				v20 = v29;
-				v5  = v47 + 256;
-				v19 -= 256;
-				v35 = v46 != 0;
-				v36 = v46 - 1;
-				v47 += 256;
-				--v46;
-				v48 = v35 + v48 - 1;
-				v41 = v28 + 1;
-				if (v28 == 255)
-				{
-					++v6;
-					v41 = 0;
-					if (v6 == 256)
-						v6 = 0;
-					v36 = v46;
-				}
-			} while (v48 > 0 || v48 >= 0 && v36);
-		LABEL_40:
-			result = v44;
-			goto LABEL_41;
-		}
+		count = -count % nbits;
+		T low = value << (nbits - count);
+		value >>= count;
+		value |= low;
 	}
-LABEL_41:
-	if (v44 >= 0 && (SHIDWORD(v44) > 0 || result))
-	{
-		v37 = v41;
-		v38 = v50;
-		do
-		{
-			++v5;
-			v39 = specialKey[v38++];
-			*(v5 - 1) ^= v39;
-			v40       = *(v5 - 1) ^ specialKey[v37 + 256];
-			*(v5 - 1) = v40;
-			*(v5 - 1) = v40 ^ specialKey[v6 + 512];
-			if (v38 == 256)
-			{
-				++v37;
-				v38 = 0;
-				if (v37 == 256)
-				{
-					++v6;
-					v37 = 0;
-					if (v6 == 256)
-						v6 = 0;
-				}
-			}
-			result = --v44;
-		} while (v44 > 0);
-	}
-	return static_cast<int32_t>(result);
+	return value;
+}
+
+inline uint8_t __ROR1__(uint8_t value, int count)
+{
+	return __ROL__((uint8_t)value, -count);
+}
+
+inline uint32_t __ROR4__(uint32_t value, int count)
+{
+	return __ROL__((uint32_t)value, -count);
 }
 
 void specialCrypt(int8_t *pKey, int8_t *pData, int64_t start, int64_t end, const bool &updateDataPos = false)
@@ -281,71 +86,16 @@ void specialCrypt(int8_t *pKey, int8_t *pData, int64_t start, int64_t end, const
 	}
 }
 
-// rotate left
-template<class T>
-T __ROL__(T value, int count)
-{
-	const uint32_t nbits = sizeof(T) * 8;
-
-	if (count > 0)
-	{
-		count %= nbits;
-		T high = value >> (nbits - count);
-		if (T(-1) < 0) // signed value
-			high &= ~((T(-1) << count));
-		value <<= count;
-		value |= high;
-	}
-	else
-	{
-		count = -count % nbits;
-		T low = value << (nbits - count);
-		value >>= count;
-		value |= low;
-	}
-	return value;
-}
-
-inline uint8_t __ROR1__(uint8_t value, int count)
-{
-	return __ROL__((uint8_t)value, -count);
-}
-
-inline uint32_t __ROR4__(uint32_t value, int count)
-{
-	return __ROL__((uint32_t)value, -count);
-}
-
 void sub_C38920(const char *a1, char *a2)
 {
-	const char *v3;  // ecx
-	unsigned int v4; // esi
-	char *v5;        // ecx
-	unsigned int v6; // edx
-	char v7;         // al
-	int i;           // edi
-
 	if (!a2)
 		return;
-	v3 = a1;
-	v4 = strlen(a1);
-	if (v4)
-	{
-		v5 = a2;
-		v6 = v4;
-		do
-		{
-			v7        = (v5++)[a1 - a2];
-			*(v5 - 1) = v7;
-			--v6;
-		} while (v6);
-		v3 = a1;
-	}
-	for (i = 0; i < 128; ++i)
-	{
-		a2[i] = i / v4 + v3[i % v4];
-		v3    = a1;
-	}
+
+	uint32_t len = strlen(a1);
+
+	for (uint32_t i = 0; i < 128; i++)
+		a2[i] = (i / len) + a1[i % len];
+
 	return;
 }
 
@@ -462,7 +212,8 @@ void initSpecialCrypt(int8_t *pA3, int8_t *pKey, int8_t *pData = nullptr, const 
 		} while (v23 < 256);
 
 		int8_t v88[128] = { 0 };
-		uint8_t s[]     = { 0xCA, 0x08, 0x4C, 0x5D, 0x17, 0x0D, 0xDA, 0xA1, 0xD7, 0x27, 0xC8, 0x41, 0x54, 0x38, 0x82, 0x32, 0x54, 0xB7, 0xF9, 0x46, 0x8E, 0x13, 0x6B, 0xCA, 0xD0, 0x5C, 0x95, 0x95, 0xE2, 0xDC, 0x03, 0x53, 0x60, 0x9B, 0x4A, 0x38, 0x17, 0xF3, 0x69, 0x59, 0xA4, 0xC7, 0x9A, 0x43, 0x63, 0xE6, 0x54, 0xAF, 0xDB, 0xBB, 0x43, 0x58, 0x00 };
+		// This is the archive crypt key (see list in wolfdec.cpp)
+		uint8_t s[] = { 0xCA, 0x08, 0x4C, 0x5D, 0x17, 0x0D, 0xDA, 0xA1, 0xD7, 0x27, 0xC8, 0x41, 0x54, 0x38, 0x82, 0x32, 0x54, 0xB7, 0xF9, 0x46, 0x8E, 0x13, 0x6B, 0xCA, 0xD0, 0x5C, 0x95, 0x95, 0xE2, 0xDC, 0x03, 0x53, 0x60, 0x9B, 0x4A, 0x38, 0x17, 0xF3, 0x69, 0x59, 0xA4, 0xC7, 0x9A, 0x43, 0x63, 0xE6, 0x54, 0xAF, 0xDB, 0xBB, 0x43, 0x58, 0x00 };
 
 		int32_t v27 = v76;
 
@@ -567,28 +318,30 @@ void initSpecialCrypt(int8_t *pA3, int8_t *pKey, int8_t *pData = nullptr, const 
 			v74 = v28;
 		} while (v28 < 3);
 
-		superSpecialCrypt((uint8_t *)pKey, pData, start, end, true);
-		//		specialCrypt(pKey, pData, start, end, true);
+		specialCrypt(pKey, pData, start, end, true);
 	}
 }
 
-void cryptAddresses(int8_t *pData, int8_t *a1)
+// --------------------------------------------------------------
+
+void cryptAddresses(int8_t *pData, int8_t *pKey)
 {
-	uint16_t *v40; // [esp+10h] [ebp-8h]
+	uint16_t *pDataB16 = reinterpret_cast<uint16_t *>(pData);
 
-	v40 = reinterpret_cast<uint16_t *>(pData);
-	srand((a1[0] & 0xFF) + (a1[7] & 0xFF) * (a1[12] & 0xFF));
+	srand((pKey[0] & 0xFF) + (pKey[7] & 0xFF) * (pKey[12] & 0xFF));
 
-	v40 += 3;
+	pDataB16 += 3;
 
 	for (int32_t i = 0; i < 4; i++)
 	{
 		for (int32_t j = 4; j > 0; j--)
-			v40[j] ^= rand() & 0xFFFF;
+			pDataB16[j] ^= rand() & 0xFFFF;
 
-		v40 += 4;
+		pDataB16 += 4;
 	}
 }
+
+// --------------------------------------------------------------
 
 uint8_t sbox[256] = {
 	0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76, 0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0, 0xB7, 0xFD, 0x93, 0x26, 0x36, 0x3F, 0xF7, 0xCC, 0x34, 0xA5, 0xE5, 0xF1, 0x71, 0xD8, 0x31, 0x15, 0x04, 0xC7, 0x23, 0xC3, 0x18, 0x96, 0x05, 0x9A, 0x07, 0x12, 0x80, 0xE2, 0xEB, 0x27, 0xB2, 0x75, 0x09, 0x83, 0x2C, 0x1A, 0x1B, 0x6E, 0x5A, 0xA0, 0x52, 0x3B,
@@ -598,11 +351,6 @@ uint8_t sbox[256] = {
 };
 
 uint8_t Rcon[11] = { 0x8D, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36 };
-
-uint32_t sub_A88280(uint32_t v)
-{
-	return __ROR4__(v, 4);
-}
 
 // Init the AES RoundKey
 void sub_C392B0(uint8_t *a1, uint8_t *a2)
@@ -652,7 +400,7 @@ void sub_C392B0(uint8_t *a1, uint8_t *a2)
 		{
 			v9  = v2;
 			v10 = sbox[v5];
-			v11 = sub_A88280(sbox[v7]);
+			v11 = __ROR4__(sbox[v7], 4);
 			v12 = v14;
 			v14 = __ROR1__(v10, 7);
 			v7  = ~sbox[v12];
