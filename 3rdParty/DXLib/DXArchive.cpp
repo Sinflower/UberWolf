@@ -2611,10 +2611,10 @@ int DXArchive::DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const 
 
 			size_t ret = fread(pFileData, 1, size, ArcP);
 
-			int8_t secureKey[0xC0] = { 0 };
+			uint8_t secureKey[AES_SECRET_SIZE] = { 0 };
 			initSpecialCrypt((int8_t *)Head.Reserve, g_specialKey, pFileData, 64, size - 64, true);
 
-			initSpecialCrypt2(secureKey, (int8_t *)Head.Reserve);
+			initAES128(secureKey, Head.Reserve);
 			specialCrypt2(pFileData + 64, secureKey, 0x400);
 
 			specialCrypt2(pFileData + Head.FileNameTableStartAddress, secureKey, size - static_cast<int32_t>(Head.FileNameTableStartAddress));

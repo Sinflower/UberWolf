@@ -352,117 +352,87 @@ uint8_t sbox[256] = {
 
 uint8_t Rcon[11] = { 0x8D, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36 };
 
+#define Nk 4
+#define Nb 4
+#define Nr 10
+
+#define AES_KEY_EXP_SIZE 176
+#define AES_KEY_SIZE 16
+#define AES_IV_SIZE 16
+#define AES_SECRET_SIZE AES_KEY_EXP_SIZE + AES_IV_SIZE
+
+#define PW_SIZE 15
+
 // Init the AES RoundKey
-void sub_C392B0(uint8_t *a1, uint8_t *a2)
+void keyExpansion(uint8_t *pRoundKey, const uint8_t *pKey)
 {
-	uint8_t v2;      // bl
-	uint8_t *v3;     // esi
-	uint32_t result; // eax
-	uint8_t v5;      // cl
-	uint8_t *v6;     // edx
-	uint8_t v7;      // bh
-	uint8_t v8;      // ch
-	int v9;          // esi
-	char v10;        // bl
-	uint8_t v11;     // al
-	int v12;         // ecx
-	uint32_t v13;    // [esp+8h] [ebp-8h]
-	uint8_t v14;     // [esp+Fh] [ebp-1h]
+	uint8_t tempa[4];
 
-	*a1    = *a2;
-	a1[1]  = a2[1];
-	a1[2]  = a2[2];
-	a1[3]  = a2[3];
-	a1[4]  = a2[4];
-	a1[5]  = a2[5];
-	a1[6]  = a2[6];
-	a1[7]  = a2[7];
-	a1[8]  = a2[8];
-	a1[9]  = a2[9];
-	a1[10] = a2[10];
-	a1[11] = a2[11];
-	a1[12] = a2[12];
-	v2     = a2[13];
-	v3     = a1 + 13;
-	a1[13] = v2;
-	a1[14] = a2[14];
-	a1[15] = a2[15];
-	result = 4;
-	v13    = 4;
-	do
+	// The first round key is the key itself.
+	for (uint32_t i = 0; i < Nk; ++i)
 	{
-		v5  = *(v3 - 1);
-		v6  = v3; // v6 = data after first 16
-		v7  = v3[1];
-		v8  = v2;
-		v14 = v3[2];
-		if ((result & 3) == 0)
-		{
-			v9  = v2;
-			v10 = sbox[v5];
-			v11 = __ROR4__(sbox[v7], 4);
-			v12 = v14;
-			v14 = __ROR1__(v10, 7);
-			v7  = ~sbox[v12];
-			v5  = sbox[v9] ^ Rcon[v13 >> 2];
-			v8  = v11;
-		}
-		v3     = v6 + 4;
-		v6[3]  = v5 ^ *(v6 - 13); // 0
-		v2     = v8 ^ *(v6 - 12); // 1
-		v6[4]  = v2;
-		v6[5]  = v7 ^ *(v6 - 11);
-		v6[6]  = v14 ^ *(v6 - 10);
-		result = v13 + 1;
-		v13    = result;
-	} while (result < 0x2C);
-}
-
-// Build the AES key and IV based on the 15 byte key (a3) read from the file header
-void initSpecialCrypt2(int8_t *pSecureKey, int8_t *a3)
-{
-	int8_t v30[16] = { 0 };
-	int8_t v31[16] = { 0 };
-
-	int32_t v6  = 0;
-	int32_t v26 = 0;
-
-	for (int32_t i = 0; i < 105; i += 7)
-	{
-		v30[v6] ^= v6 * v6 + a3[i % 0xFu];
-		v31[v6] ^= a3[v26 % 15] - v6 * v6;
-		v26 += 11;
-		++v6;
+		pRoundKey[(i * 4) + 0] = pKey[(i * 4) + 0];
+		pRoundKey[(i * 4) + 1] = pKey[(i * 4) + 1];
+		pRoundKey[(i * 4) + 2] = pKey[(i * 4) + 2];
+		pRoundKey[(i * 4) + 3] = pKey[(i * 4) + 3];
 	}
-	int32_t v8  = 0;
-	int8_t v28  = v31[15];
-	int32_t v9  = 0;
-	int32_t v10 = 0;
-	int8_t v29  = v30[15];
-	int8_t v12  = 0;
 
-	do
+	for (uint32_t i = Nk; i < Nb * (Nr + 1); i++)
 	{
-		int8_t v11 = a3[v8];
-		v29 ^= v11 + v10;
-		v10 += 3;
-		v12 = (v11 + v9) ^ v28;
-		++v8;
-		v9 += 5;
-		v28 = v12;
-	} while (v10 < 45);
-	v30[15] = v29;
-	v31[15] = v12;
+		uint32_t k = (i - 1) * 4;
+		tempa[0]   = pRoundKey[k + 0];
+		tempa[1]   = pRoundKey[k + 1];
+		tempa[2]   = pRoundKey[k + 2];
+		tempa[3]   = pRoundKey[k + 3];
 
-	sub_C392B0((uint8_t *)pSecureKey, (uint8_t *)v30);
+		if ((i % Nk) == 0)
+		{
+			const uint8_t u8tmp = tempa[0];
+			tempa[0]            = tempa[1];
+			tempa[1]            = tempa[2];
+			tempa[2]            = tempa[3];
+			tempa[3]            = u8tmp;
 
-	for (uint32_t i = 0; i < 16; i++)
-		pSecureKey[0xB0 + i] = v31[i];
+			tempa[0] = sbox[tempa[0]] ^ Rcon[i / Nk];
+			tempa[1] = sbox[tempa[1]] >> 4;
+			tempa[2] = ~sbox[tempa[2]];
+			tempa[3] = (sbox[tempa[3]] << 1) | (sbox[tempa[3]] >> 7);
+		}
+
+		uint32_t j = i * 4;
+		k          = (i - Nk) * 4;
+
+		pRoundKey[j + 0] = pRoundKey[k + 0] ^ tempa[0];
+		pRoundKey[j + 1] = pRoundKey[k + 1] ^ tempa[1];
+		pRoundKey[j + 2] = pRoundKey[k + 2] ^ tempa[2];
+		pRoundKey[j + 3] = pRoundKey[k + 3] ^ tempa[3];
+	}
 }
 
-int sub_C39280(uint8_t *a1, uint8_t a2, int8_t *a3)
+void initAES128(uint8_t *pRoundKey, uint8_t *pPw)
 {
-	int8_t *v3; // ecx
+	uint8_t key[AES_KEY_SIZE] = { 0 };
+	uint8_t iv[AES_IV_SIZE]   = { 0 };
+
+	for (int32_t i = 0; i < PW_SIZE; i++)
+	{
+		key[i] ^= pPw[(i * 7) % 0xF] + i * i;
+		iv[i] ^= pPw[(i * 11) % 0xF] - i * i;
+	}
+
+	for (uint32_t i = 0; i < PW_SIZE; i++)
+	{
+		key[PW_SIZE] ^= pPw[i] + (i * 3);
+		iv[PW_SIZE] ^= pPw[i] + (i * 5);
+	}
+
+	keyExpansion(pRoundKey, key);
+	std::memcpy(pRoundKey + AES_KEY_EXP_SIZE, iv, AES_IV_SIZE);
+}
+
+int sub_C39280(uint8_t *a1, uint8_t a2, uint8_t *a3)
+{
+	uint8_t *v3; // ecx
 	int v4;     // edi
 	int v5;     // esi
 	int result; // eax
@@ -593,7 +563,7 @@ char sub_C39130(uint8_t *a1)
 }
 
 // AES Cipher
-int sub_C390D0(uint8_t *a1, int8_t *a2)
+int sub_C390D0(uint8_t *a1, uint8_t *a2)
 {
 	uint8_t i; // bl
 
@@ -611,13 +581,13 @@ int sub_C390D0(uint8_t *a1, int8_t *a2)
 }
 
 // AES_CTR_xcrypt
-void specialCrypt2(int8_t *data, int8_t *key, uint32_t size)
+void specialCrypt2(int8_t *data, uint8_t *key, uint32_t size)
 {
 	uint32_t v3;    // ebx
 	int i;          // esi
 	int v6;         // eax
 	__int8 v7;      // cl
-	int8_t *v8;     // edx
+	uint8_t *v8;     // edx
 	char v9;        // al
 	int8_t *v10;    // [esp+Ch] [ebp-18h]
 	int8_t v11[16]; // [esp+10h] [ebp-14h] BYREF
