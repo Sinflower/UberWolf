@@ -1,75 +1,41 @@
 #pragma once
 
+#include <bit>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <string>
 #include <windows.h>
 
-// rotate left
-template<class T>
-T __ROL__(T value, int count)
-{
-	const uint32_t nbits = sizeof(T) * 8;
-
-	if (count > 0)
-	{
-		count %= nbits;
-		T high = value >> (nbits - count);
-		if (T(-1) < 0) // signed value
-			high &= ~((T(-1) << count));
-		value <<= count;
-		value |= high;
-	}
-	else
-	{
-		count = -count % nbits;
-		T low = value << (nbits - count);
-		value >>= count;
-		value |= low;
-	}
-	return value;
-}
-
-inline uint8_t __ROR1__(uint8_t value, int count)
-{
-	return __ROL__((uint8_t)value, -count);
-}
-
 void specialCrypt(int8_t *pKey, int8_t *pData, int64_t start, int64_t end, const bool &updateDataPos = false)
 {
-	int64_t v44 = end - start;
+	const int64_t len = end - start;
 
 	if (updateDataPos)
 		pData += start;
 
-	if (v44 >= 0)
+	int32_t v1Cnt = start % 256;
+	int32_t v2Cnt = start / 256 % 256;
+	int32_t v3Cnt = start / 0x10000 % 256;
+
+	for (int64_t i = 0; i < len; i++)
 	{
-		int32_t v37 = start / 256 % 256;
-		int32_t v38 = start % 256;
-		int32_t v6  = start / 0x10000 % 256;
-		do
+		pData[i] ^= pKey[v1Cnt++] ^ pKey[v2Cnt + 256] ^ pKey[v3Cnt + 512];
+
+		if (v1Cnt == 256)
 		{
-			++pData;
-			int8_t v39 = pKey[v38++];
-			*(pData - 1) ^= v39;
-			int8_t v40   = *(pData - 1) ^ pKey[v37 + 256];
-			*(pData - 1) = v40;
-			*(pData - 1) = v40 ^ pKey[v6 + 512];
-			if (v38 == 256)
+			v1Cnt = 0;
+			++v2Cnt;
+
+			if (v2Cnt == 256)
 			{
-				++v37;
-				v38 = 0;
-				if (v37 == 256)
-				{
-					++v6;
-					v37 = 0;
-					if (v6 == 256)
-						v6 = 0;
-				}
+				v2Cnt = 0;
+				++v3Cnt;
+
+				if (v3Cnt == 256)
+					v3Cnt = 0;
 			}
-			--v44;
-		} while (v44 > 0);
+		}
 	}
 }
 
@@ -88,7 +54,6 @@ void sub_C38920(const char *a1, char *a2)
 
 void initSpecialCrypt(int8_t *pA3, int8_t *pKey, int8_t *pData = nullptr, const int64_t &start = -1, const int64_t &end = -1, const bool &other = false)
 {
-	// int8_t a3[16] = { 0 };
 	int32_t v86 = 0;
 	int32_t v85 = 0;
 	int32_t v84 = 0;
@@ -101,19 +66,9 @@ void initSpecialCrypt(int8_t *pA3, int8_t *pKey, int8_t *pData = nullptr, const 
 
 		uint32_t v50 = (v49 >> 32) >> 1;
 		int8_t v81   = 0;
-		if (v50)
-		{
-			uint32_t v51 = 0;
-			int8_t v52;
-			do
-			{
-				v52 = v76 ^ __ROR1__(v14 ^ (pA3[v76 - 15 * (v51 / 0xF)] & 0xFF), 3);
-				v51 = v76 + 1;
-				v76 = v51;
-				v14 = v52;
-			} while (v51 < v50);
-			v81 = v52;
-		}
+
+		for (uint32_t i = 0; i < v50; i++)
+			v14 = i ^ std::rotr<uint8_t>(v14 ^ (pA3[i % 15] & 0xFF), 3);
 
 		uint32_t v1 = (pA3[2] & 0xFF);
 		uint32_t v2 = (pA3[5] & 0xFF);
@@ -123,7 +78,6 @@ void initSpecialCrypt(int8_t *pA3, int8_t *pKey, int8_t *pData = nullptr, const 
 		uint32_t seed = v1 * v2 + v3 + v4;
 
 		srand(seed);
-		int32_t v53 = 0;
 
 		int32_t v21 = rand() % 256;
 		int32_t v22 = v14 % 3;
@@ -141,14 +95,15 @@ void initSpecialCrypt(int8_t *pA3, int8_t *pKey, int8_t *pData = nullptr, const 
 				break;
 		}
 
-		do
+		for (uint32_t i = 0; i < 256; i++)
 		{
-			int16_t v54       = rand();
-			int8_t v55        = rand();
-			pKey[v53]         = v84 ^ v55;
-			pKey[v53 + 256]   = v85 ^ (v54 >> 8);
-			pKey[v53++ + 512] = v86 ^ v54;
-		} while (v53 < 256);
+			int16_t v54 = rand();
+			int8_t v55  = rand();
+
+			pKey[i]       = v84 ^ v55;
+			pKey[i + 256] = v85 ^ (v54 >> 8);
+			pKey[i + 512] = v86 ^ v54;
+		}
 	}
 	else
 	{
@@ -160,7 +115,7 @@ void initSpecialCrypt(int8_t *pA3, int8_t *pKey, int8_t *pData = nullptr, const 
 		{
 			do
 			{
-				v17 = v15 ^ __ROR1__(v81 ^ pA3[v15 + -15 * (v15 / 0xF)], 2);
+				v17 = v15 ^ std::rotr<uint8_t>(v81 ^ pA3[v15 + -15 * (v15 / 0xF)], 2);
 				++v15;
 				v81 = v17;
 			} while (v15 < v16);
@@ -355,10 +310,10 @@ uint8_t Rcon[11] = { 0x8D, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B,
 // Init the AES RoundKey
 void keyExpansion(uint8_t *pRoundKey, const uint8_t *pKey)
 {
-	uint8_t tempa[4];
+	uint8_t tempa[4] = { 0 };
 
 	// The first round key is the key itself.
-	for (uint32_t i = 0; i < Nk; ++i)
+	for (uint32_t i = 0; i < Nk; i++)
 	{
 		pRoundKey[(i * 4) + 0] = pKey[(i * 4) + 0];
 		pRoundKey[(i * 4) + 1] = pKey[(i * 4) + 1];
@@ -385,7 +340,7 @@ void keyExpansion(uint8_t *pRoundKey, const uint8_t *pKey)
 			tempa[0] = sbox[tempa[0]] ^ Rcon[i / Nk];
 			tempa[1] = sbox[tempa[1]] >> 4;
 			tempa[2] = ~sbox[tempa[2]];
-			tempa[3] = (sbox[tempa[3]] << 1) | (sbox[tempa[3]] >> 7);
+			tempa[3] = std::rotr(sbox[tempa[3]], 7);
 		}
 
 		uint32_t j = i * 4;
