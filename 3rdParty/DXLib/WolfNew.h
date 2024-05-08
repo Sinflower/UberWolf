@@ -357,9 +357,11 @@ uint8_t Rcon[11] = { 0x8D, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B,
 #define Nr 10
 
 #define AES_KEY_EXP_SIZE 176
-#define AES_KEY_SIZE 16
-#define AES_IV_SIZE 16
-#define AES_SECRET_SIZE AES_KEY_EXP_SIZE + AES_IV_SIZE
+#define AES_KEY_SIZE     16
+#define AES_IV_SIZE      16
+#define AES_BLOCKLEN     16
+
+#define AES_ROUND_KEY_SIZE AES_KEY_EXP_SIZE + AES_IV_SIZE
 
 #define PW_SIZE 15
 
@@ -430,196 +432,113 @@ void initAES128(uint8_t *pRoundKey, uint8_t *pPw)
 	std::memcpy(pRoundKey + AES_KEY_EXP_SIZE, iv, AES_IV_SIZE);
 }
 
-int sub_C39280(uint8_t *a1, uint8_t a2, uint8_t *a3)
+void addRoundKey(uint8_t *pState, const uint8_t &round, const uint8_t *pRoundKey)
 {
-	uint8_t *v3; // ecx
-	int v4;     // edi
-	int v5;     // esi
-	int result; // eax
+	for (uint32_t i = 0; i < AES_KEY_SIZE; i++)
+		pState[i] ^= pRoundKey[(round * AES_KEY_SIZE) + i];
+}
 
-	v3 = &a3[16 * a2];
-	v4 = 4;
-	do
+void subBytes(uint8_t *pState)
+{
+	for (uint32_t i = 0; i < AES_KEY_SIZE; i++)
+		pState[i] = sbox[pState[i]];
+}
+
+void shiftRows(uint8_t *pState)
+{
+	uint8_t temp;
+
+	temp       = pState[1];
+	pState[1]  = pState[5];
+	pState[5]  = pState[9];
+	pState[9]  = pState[13];
+	pState[13] = temp;
+
+	temp       = pState[2];
+	pState[2]  = pState[10];
+	pState[10] = temp;
+
+	temp       = pState[6];
+	pState[6]  = pState[14];
+	pState[14] = temp;
+
+	temp       = pState[3];
+	pState[3]  = pState[15];
+	pState[15] = pState[11];
+	pState[11] = pState[7];
+	pState[7]  = temp;
+}
+
+char xtime(uint8_t x)
+{
+	return ((x << 1) ^ (((x >> 7) & 1) * 0x1b));
+}
+
+void mixColumns(uint8_t *pState)
+{
+	uint8_t tmp;
+	uint8_t t;
+
+	for (uint32_t i = 0; i < 4; i++)
 	{
-		v5 = 4;
-		do
-		{
-			result = *v3++;
-			*a1++ ^= result;
-			--v5;
-		} while (v5);
-		--v4;
-	} while (v4);
-	return result;
-}
+		t   = pState[0];
+		tmp = pState[1] ^ pState[0] ^ pState[2] ^ pState[3];
 
-uint8_t *sub_C39240(uint8_t *a1)
-{
-	int v2;          // edi
-	uint8_t *result; // eax
-	int v4;          // edx
-	int v5;          // ecx
+		pState[0] ^= tmp ^ xtime(pState[1] ^ pState[0]);
+		pState[1] ^= tmp ^ xtime(pState[2] ^ pState[1]);
+		pState[2] ^= tmp ^ xtime(pState[2] ^ pState[3]);
+		pState[3] ^= tmp ^ xtime(pState[3] ^ t);
 
-	v2 = 4;
-	do
-	{
-		result = a1;
-		v4     = 4;
-		do
-		{
-			v5 = *result;
-			result += 4;
-			*(result - 4) = sbox[v5];
-			--v4;
-		} while (v4);
-		++a1;
-		--v2;
-	} while (v2);
-	return result;
-}
-
-int sub_C391E0(uint8_t *a1)
-{
-	char v2;    // al
-	char v3;    // dl
-	char v4;    // cl
-	char v5;    // al
-	char v6;    // cl
-	char v7;    // al
-	char v8;    // cl
-	int result; // eax
-
-	v2     = a1[5];
-	v3     = a1[1];
-	v4     = a1[2];
-	a1[1]  = v2;
-	a1[5]  = a1[9];
-	a1[9]  = a1[13];
-	a1[2]  = a1[10];
-	v5     = a1[14];
-	a1[10] = v4;
-	v6     = a1[6];
-	a1[6]  = v5;
-	v7     = a1[15];
-	a1[14] = v6;
-	v8     = a1[3];
-	a1[3]  = v7;
-	a1[15] = a1[11];
-	result = (uint8_t)a1[7];
-	a1[13] = v3;
-	a1[11] = result;
-	a1[7]  = v8;
-	return result;
-}
-
-char sub_C391C0(uint8_t a1)
-{
-	return (2 * a1) ^ (27 * (a1 >> 7));
-}
-
-char sub_C39130(uint8_t *a1)
-{
-	uint8_t *v1;    // edx
-	int v2;         // esi
-	uint8_t v3;     // bh
-	char v4;        // bl
-	char v5;        // al
-	char v7;        // al
-	char v9;        // al
-	char v11;       // al
-	uint8_t result; // al
-	uint8_t v14;    // [esp+8h] [ebp-4h]
-	char v15;       // [esp+9h] [ebp-3h]
-	uint8_t v16;    // [esp+Ah] [ebp-2h]
-	char v17;       // [esp+Bh] [ebp-1h]
-
-	v1 = a1;
-	v2 = 4;
-
-	do
-	{
-		v3  = v1[2] ^ v1[3];
-		v16 = v1[2];
-		v14 = v1[3];
-		v4  = v1[1];
-		v15 = v1[0];
-
-		v17    = v4 ^ v15 ^ v3;
-		v5     = sub_C391C0(v4 ^ v15);
-		v1[0]  = v17 ^ v15 ^ v5;
-		v7     = v4 ^ sub_C391C0(v16 ^ v4);
-		v1[1]  = v17 ^ v7;
-		v9     = sub_C391C0(v3);
-		v1[2]  = v17 ^ v16 ^ v9;
-		v11    = sub_C391C0(v14 ^ v15);
-		result = v17 ^ v14 ^ v11;
-
-		v1[3] = result;
-		v1 += 4;
-
-		--v2;
-	} while (v2);
-	return result;
+		pState += 4;
+	}
 }
 
 // AES Cipher
-int sub_C390D0(uint8_t *a1, uint8_t *a2)
+void cipher(uint8_t *pState, const uint8_t *pRoundKey)
 {
-	uint8_t i; // bl
+	addRoundKey(pState, 0, pRoundKey);
 
-	sub_C39280(a1, 0, a2);
-	for (i = 1; i < 0xAu; ++i)
+	for (uint32_t round = 1; round < Nr; round++)
 	{
-		sub_C39240(a1);
-		sub_C391E0(a1);
-		sub_C39130(a1);
-		sub_C39280(a1, i, a2);
+		subBytes(pState);
+		shiftRows(pState);
+		mixColumns(pState);
+		addRoundKey(pState, round, pRoundKey);
 	}
-	sub_C39240(a1);
-	sub_C391E0(a1);
-	return sub_C39280(a1, 0xAu, a2);
+
+	subBytes(pState);
+	shiftRows(pState);
+	addRoundKey(pState, Nr, pRoundKey);
 }
 
 // AES_CTR_xcrypt
-void specialCrypt2(int8_t *data, uint8_t *key, uint32_t size)
+void aesCtrXCrypt(int8_t *pData, uint8_t *pKey, const uint32_t &size)
 {
-	uint32_t v3;    // ebx
-	int i;          // esi
-	int v6;         // eax
-	__int8 v7;      // cl
-	uint8_t *v8;     // edx
-	char v9;        // al
-	int8_t *v10;    // [esp+Ch] [ebp-18h]
-	int8_t v11[16]; // [esp+10h] [ebp-14h] BYREF
+	uint8_t state[AES_BLOCKLEN];
+	uint8_t *pIv = pKey + AES_KEY_EXP_SIZE;
+	int32_t bi   = AES_BLOCKLEN;
 
-	v3  = 0;
-	v10 = data;
-	for (i = 16; v3 < size; ++v3)
+	for (uint32_t i = 0; i < size; i++, bi++)
 	{
-		if (i == 16)
+		if (bi == AES_BLOCKLEN)
 		{
-			for (uint32_t c = 0; c < 16; c++)
-				v11[c] = key[176 + c];
+			std::memcpy(state, pIv, AES_BLOCKLEN);
 
-			sub_C390D0((uint8_t *)v11, key); // might be modifying v11
-			v6 = 15;
-			while (1)
+			cipher(state, pKey);
+
+			for (bi = AES_BLOCKLEN - 1; bi >= 0; bi--)
 			{
-				v7 = key[v6 + 176];
-				v8 = &key[v6];
-				if (v7 != -1)
-					break;
-				--v6;
-				v8[176] = 0;
-				if (v6 < 0)
-					goto LABEL_8;
+				if (pIv[bi] == 0xFF)
+				{
+					pIv[bi] = 0;
+					continue;
+				}
+				pIv[bi]++;
+				break;
 			}
-			v8[176] = v7 + 1;
-		LABEL_8:
-			data = v10;
-			i    = 0;
+			bi = 0;
 		}
-		v9 = *((uint8_t *)&v11 + i++);
-		data[v3] ^= v9;
+
+		pData[i] ^= state[bi];
 	}
 }
