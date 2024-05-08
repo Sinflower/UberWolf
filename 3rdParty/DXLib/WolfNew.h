@@ -6,14 +6,6 @@
 #include <string>
 #include <windows.h>
 
-#include <emmintrin.h>
-#include <xmmintrin.h>
-
-#define SHIDWORD(x)           (*((int32_t *)&(x) + 1))
-#define HIDWORD(x)            (*((DWORD *)&(x) + 1))
-#define LODWORD(x)            (*((DWORD *)&(x))) // low dword
-#define __PAIR64__(high, low) (((uint64_t)(high) << 32) | (uint32_t)(low))
-
 // rotate left
 template<class T>
 T __ROL__(T value, int count)
@@ -42,11 +34,6 @@ T __ROL__(T value, int count)
 inline uint8_t __ROR1__(uint8_t value, int count)
 {
 	return __ROL__((uint8_t)value, -count);
-}
-
-inline uint32_t __ROR4__(uint32_t value, int count)
-{
-	return __ROL__((uint32_t)value, -count);
 }
 
 void specialCrypt(int8_t *pKey, int8_t *pData, int64_t start, int64_t end, const bool &updateDataPos = false)
