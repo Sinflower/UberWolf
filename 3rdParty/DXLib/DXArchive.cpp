@@ -30,7 +30,7 @@
 
 #define GLOBAL_CHAR_CODE 932
 
-int8_t g_specialKey[768] = {};
+uint8_t g_specialKey[768] = {};
 bool g_newCrypt          = false;
 
 static WCHAR *sjis2utf8(const char *sjis, const int &len);
@@ -565,8 +565,7 @@ void DXArchive::KeyConv(void *Data, s64 Size, s64 Position, unsigned char *Key)
 {
 	if (g_newCrypt)
 	{
-		specialCrypt(g_specialKey, (int8_t *)Data, Position, Position + Size);
-		// superSpecialCrypt((uint8_t*)g_specialKey, (int8_t *)Data, Position, Position + Size);
+		wolfCrypt(g_specialKey, reinterpret_cast<uint8_t *>(Data), Position, Position + Size);
 		return;
 	}
 
@@ -2601,25 +2600,24 @@ int DXArchive::DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const 
 		if (g_newCrypt)
 		{
 			memset(g_specialKey, 0, 768);
-			cryptAddresses((int8_t *)&Head, (int8_t *)Head.Reserve);
+			cryptAddresses((uint8_t *)&Head, Head.Reserve);
 
 			fseek(ArcP, 0, SEEK_END);
 			int32_t size = ftell(ArcP);
 			fseek(ArcP, 0, SEEK_SET);
 
-			int8_t *pFileData = new int8_t[size]();
+			uint8_t *pFileData = new uint8_t[size]();
 
 			size_t ret = fread(pFileData, 1, size, ArcP);
 
 			uint8_t roundKey[AES_ROUND_KEY_SIZE] = { 0 };
-			initSpecialCrypt((int8_t *)Head.Reserve, g_specialKey, pFileData, 64, size - 64, true);
+			initWolfCrypt(Head.Reserve, g_specialKey, pFileData, 64, size - 64, true);
 
 			initAES128(roundKey, Head.Reserve);
-			aesCtrXCrypt(pFileData + 64, roundKey, 0x400);
 
+			aesCtrXCrypt(pFileData + 64, roundKey, 0x400);
 			aesCtrXCrypt(pFileData + Head.FileNameTableStartAddress, roundKey, size - static_cast<int32_t>(Head.FileNameTableStartAddress));
 
-			// Write to file
 			// Write to file
 			FILE *fp = fopen("decrypt_temp", "wb");
 			fwrite(pFileData, size, 1, fp);
@@ -2633,7 +2631,7 @@ int DXArchive::DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const 
 			ArcP = fopen("decrypt_temp", "rb");
 			fseek(ArcP, sizeof(DARC_HEAD), SEEK_SET);
 
-			initSpecialCrypt((int8_t *)Head.Reserve, g_specialKey);
+			initWolfCrypt(Head.Reserve, g_specialKey);
 		}
 
 		// 鍵処理が行われていないかを取得する

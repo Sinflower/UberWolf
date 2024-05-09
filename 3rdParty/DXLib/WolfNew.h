@@ -2,12 +2,9 @@
 
 #include <bit>
 #include <cstdint>
-#include <cstdlib>
-#include <cstring>
 #include <string>
-#include <windows.h>
 
-void specialCrypt(int8_t *pKey, int8_t *pData, int64_t start, int64_t end, const bool &updateDataPos = false)
+void wolfCrypt(const uint8_t *pKey, uint8_t *pData, const int64_t &start, const int64_t &end, const bool &updateDataPos = false)
 {
 	const int64_t len = end - start;
 
@@ -39,234 +36,136 @@ void specialCrypt(int8_t *pKey, int8_t *pData, int64_t start, int64_t end, const
 	}
 }
 
-void sub_C38920(const char *a1, char *a2)
+void calcSalt(const char *pStr, uint8_t *pSalt)
 {
-	if (!a2)
+	if (!pSalt)
 		return;
 
-	uint32_t len = strlen(a1);
+	uint32_t len = strlen(pStr);
 
 	for (uint32_t i = 0; i < 128; i++)
-		a2[i] = (i / len) + a1[i % len];
+		pSalt[i] = (i / len) + pStr[i % len];
 
 	return;
 }
 
-void initSpecialCrypt(int8_t *pA3, int8_t *pKey, int8_t *pData = nullptr, const int64_t &start = -1, const int64_t &end = -1, const bool &other = false)
+void initWolfCrypt(const uint8_t *pPW, uint8_t *pKey, uint8_t *pData = nullptr, const int64_t &start = -1, const int64_t &end = -1, const bool &other = false)
 {
-	int32_t v86 = 0;
-	int32_t v85 = 0;
-	int32_t v84 = 0;
+	uint8_t fac[3] = { 0 };
+
+	// & 0xFF to prevent sign extension
+	uint8_t s0 = (pPW[2] & 0xFF);
+	uint8_t s1 = (pPW[5] & 0xFF);
+	uint8_t s2 = (pPW[12] & 0xFF);
+	uint8_t s3 = 0;
 
 	if (!other)
 	{
-		uint8_t v14 = 0;
-		int64_t v49 = 2863311531i64 * (pA3[11] & 0xFF);
-		int32_t v76 = 0;
+		uint8_t len = (pPW[11] & 0xFF) / 3;
 
-		uint32_t v50 = (v49 >> 32) >> 1;
-		int8_t v81   = 0;
-
-		for (uint32_t i = 0; i < v50; i++)
-			v14 = i ^ std::rotr<uint8_t>(v14 ^ (pA3[i % 15] & 0xFF), 3);
-
-		uint32_t v1 = (pA3[2] & 0xFF);
-		uint32_t v2 = (pA3[5] & 0xFF);
-		uint32_t v3 = (pA3[12] & 0xFF);
-		uint32_t v4 = (v14 & 0xFF);
-
-		uint32_t seed = v1 * v2 + v3 + v4;
-
-		srand(seed);
-
-		int32_t v21 = rand() % 256;
-		int32_t v22 = v14 % 3;
-
-		switch (v22)
-		{
-			case 0:
-				v84 = v21;
-				break;
-			case 1:
-				v85 = v21;
-				break;
-			case 2:
-				v86 = v21;
-				break;
-		}
-
-		for (uint32_t i = 0; i < 256; i++)
-		{
-			int16_t v54 = rand();
-			int8_t v55  = rand();
-
-			pKey[i]       = v84 ^ v55;
-			pKey[i + 256] = v85 ^ (v54 >> 8);
-			pKey[i + 512] = v86 ^ v54;
-		}
+		for (uint8_t i = 0; i < len; i++)
+			s3 = i ^ std::rotr<uint8_t>(s3 ^ (pPW[i % 15] & 0xFF), 3);
 	}
 	else
 	{
-		uint32_t v15 = 0;
-		uint32_t v16 = (pA3[8] & 0xFF) >> 2;
-		int8_t v81   = 0;
-		uint8_t v17  = 0;
-		if (v16)
-		{
-			do
-			{
-				v17 = v15 ^ std::rotr<uint8_t>(v81 ^ pA3[v15 + -15 * (v15 / 0xF)], 2);
-				++v15;
-				v81 = v17;
-			} while (v15 < v16);
-		}
-		else
-			v17 = 0;
+		uint8_t len = (pPW[8] & 0xFF) / 4;
 
-		int32_t v18 = v17;
-		int32_t v19 = (pA3[2] & 0xFF) * (pA3[5] & 0xFF);
-		int32_t v20 = (pA3[12] & 0xFF);
-		int32_t v76 = v18;
-		srand(v18 + v19 + v20);
-		int32_t v21 = rand() % 256;
-		int32_t v22 = v18 % 3;
-		int32_t v23 = 0;
-		switch (v22)
-		{
-			case 0:
-				v84 = v21;
-				break;
-			case 1:
-				v85 = v21;
-				break;
-			case 2:
-				v86 = v21;
-				break;
-		}
+		for (uint8_t i = 0; i < len; i++)
+			s3 = i ^ std::rotr<uint8_t>(s3 ^ (pPW[i % 15] & 0xFF), 2);
+	}
 
-		do
-		{
-			int16_t v24       = rand();
-			int8_t v25        = rand();
-			pKey[v23]         = v84 ^ v25;
-			pKey[v23 + 256]   = v85 ^ (v24 >> 8);
-			pKey[v23++ + 512] = v86 ^ v24;
-		} while (v23 < 256);
+	const uint32_t seed = s0 * s1 + s2 + s3;
+	srand(seed);
 
-		int8_t v88[128] = { 0 };
+	fac[s3 % 3] = rand() % 256;
+
+	for (uint32_t i = 0; i < 256; i++)
+	{
+		int16_t rn = rand() & 0xFFFF;
+
+		pKey[i]       = fac[0] ^ (rand() & 0xFF);
+		pKey[i + 256] = fac[1] ^ (rn >> 8);
+		pKey[i + 512] = fac[2] ^ rn;
+	}
+
+	if (other)
+	{
+		// --------------------------------------------------------------
+
+		uint8_t salt[128] = { 0 };
 		// This is the archive crypt key (see list in wolfdec.cpp)
-		uint8_t s[] = { 0xCA, 0x08, 0x4C, 0x5D, 0x17, 0x0D, 0xDA, 0xA1, 0xD7, 0x27, 0xC8, 0x41, 0x54, 0x38, 0x82, 0x32, 0x54, 0xB7, 0xF9, 0x46, 0x8E, 0x13, 0x6B, 0xCA, 0xD0, 0x5C, 0x95, 0x95, 0xE2, 0xDC, 0x03, 0x53, 0x60, 0x9B, 0x4A, 0x38, 0x17, 0xF3, 0x69, 0x59, 0xA4, 0xC7, 0x9A, 0x43, 0x63, 0xE6, 0x54, 0xAF, 0xDB, 0xBB, 0x43, 0x58, 0x00 };
+		const uint8_t s[] = { 0xCA, 0x08, 0x4C, 0x5D, 0x17, 0x0D, 0xDA, 0xA1, 0xD7, 0x27, 0xC8, 0x41, 0x54, 0x38, 0x82, 0x32, 0x54, 0xB7, 0xF9, 0x46, 0x8E, 0x13, 0x6B, 0xCA, 0xD0, 0x5C, 0x95, 0x95, 0xE2, 0xDC, 0x03, 0x53, 0x60, 0x9B, 0x4A, 0x38, 0x17, 0xF3, 0x69, 0x59, 0xA4, 0xC7, 0x9A, 0x43, 0x63, 0xE6, 0x54, 0xAF, 0xDB, 0xBB, 0x43, 0x58, 0x00 };
 
-		int32_t v27 = v76;
+		calcSalt(reinterpret_cast<const char *>(s), salt);
 
-		if (strlen((const char *)s))
-			sub_C38920((const char *)s, (char *)v88);
-		else
-			sub_C38920("958", (char *)v88);
-
-		int32_t v28  = 0;
-		int32_t v74  = 0;
-		int8_t *v29  = pKey;
-		uint32_t v75 = 97;
-
-		do
+		for (uint32_t i = 0; i < 3; i++)
 		{
-			int32_t v30 = 0;
-			int32_t v79 = v27;
-			int32_t v72 = 0;
-			do
-			{
-				uint8_t v31  = v88[v30 & 0x7F];
-				int32_t v77  = v30 + v28;
-				uint8_t v32  = v88[(v30 + v28) % 128];
-				uint32_t v80 = v31;
-				v81          = v32;
-				uint32_t v73 = v32;
-				uint32_t v33 = (v32 | (v31 << 8)) % 7u;
-				char v78     = *v29;
-				char v34     = v31 ^ v78;
-				*v29         = v31 ^ v78;
-				char v35     = v34;
-				uint32_t v36 = 0;
-				char v37     = 0;
+			int32_t t = s3;
 
-				switch (v33)
+			for (uint32_t j = 0; j < 256; j++)
+			{
+				bool skip = false;
+
+				uint8_t curS  = salt[j & 0x7F];
+				uint8_t curS2 = salt[(j + i) % 0x80];
+				uint8_t curK  = pKey[i * 256 + j];
+				uint8_t sXk   = curS ^ curK;
+
+				uint8_t round = (curS2 | (curS << 8)) % 7;
+
+				uint8_t newK = sXk;
+
+				switch (round)
 				{
-					case 1u:
-						v35 = v34;
-						if (v73 % 0xB)
-							goto LABEL_22;
-						v35 = v78;
-						goto LABEL_21;
-					case 2u:
-						v36 = v80;
-						v35 = v34;
-						if (!(v80 % 0x1D))
-						{
-							v35  = ~v34;
-							*v29 = ~v34;
-						}
+					case 1:
+						if ((curS2 % 0xB) == 0)
+							newK = curK;
 						break;
-					case 3u:
-						v35 = v34;
-						if ((v33 + v30) % 0x25)
-							goto LABEL_22;
-						v35 = v81 ^ v34;
-						goto LABEL_21;
-					case 4u:
-						v36 = v80;
-						v35 = v34;
-						if (!((v80 + v73) % v75))
-						{
-							v35  = v31 + v34;
-							*v29 = v31 + v34;
-						}
+					case 2:
+						if ((curS % 0x1D) == 0)
+							newK = ~sXk;
 						break;
-					case 5u:
-						v35 = v34;
-						if (v30 * v33 % 0x7B)
-							goto LABEL_22;
-						v35 = v34 ^ v79;
-					LABEL_21:
-						*v29 = v35;
-					LABEL_22:
-						v36 = v80;
+					case 3:
+						if (((round + j) % 0x25) == 0)
+							newK = curS2 ^ sXk;
 						break;
-					case 6u:
-						v35 = v34;
-						if (v31 != 0xFF)
-							goto LABEL_22;
-						v36 = v80;
-						if (!v81)
+					case 4:
+						if (((curS + curS2) % 97) == 0)
+							newK = curS + sXk;
+						break;
+					case 5:
+						if (((j * round) % 0x7B) == 0)
+							newK = sXk ^ t;
+						break;
+					case 6:
+						if (curS == 0xFF && curS2 == 0)
 						{
-							v37  = ~v34;
-							*v29 = v37;
-							v35  = v37;
+							newK = 0;
+							skip = true;
 						}
 						break;
 					default:
-						goto LABEL_22;
+						break;
 				}
-				if (!(v77 % (int)(v36 % 5 + 1)))
-					*v29 = v35 ^ v79;
-				++v29;
-				v28 = v74;
-				v30 = v72 + 1;
-				v79 += v74;
-				v72 = v30;
-			} while (v30 < 256);
-			v27 = v76;
-			v28 = v74 + 1;
-			v74 = v28;
-		} while (v28 < 3);
 
-		specialCrypt(pKey, pData, start, end, true);
+				if (((j + i) % (curS % 5 + 1)) == 0)
+					newK ^= t;
+				else if (skip)
+					newK = ~sXk;
+
+				pKey[i * 256 + j] = newK;
+
+				t += i;
+			}
+		}
+
+		wolfCrypt(pKey, pData, start, end, true);
 	}
 }
 
 // --------------------------------------------------------------
 
-void cryptAddresses(int8_t *pData, int8_t *pKey)
+void cryptAddresses(uint8_t *pData, const uint8_t *pKey)
 {
 	uint16_t *pDataB16 = reinterpret_cast<uint16_t *>(pData);
 
@@ -353,7 +252,7 @@ void keyExpansion(uint8_t *pRoundKey, const uint8_t *pKey)
 	}
 }
 
-void initAES128(uint8_t *pRoundKey, uint8_t *pPw)
+void initAES128(uint8_t *pRoundKey, const uint8_t *pPw)
 {
 	uint8_t key[AES_KEY_SIZE] = { 0 };
 	uint8_t iv[AES_IV_SIZE]   = { 0 };
@@ -411,7 +310,7 @@ void shiftRows(uint8_t *pState)
 	pState[7]  = temp;
 }
 
-char xtime(uint8_t x)
+uint8_t xtime(const uint8_t& x)
 {
 	return ((x << 1) ^ (((x >> 7) & 1) * 0x1b));
 }
@@ -454,7 +353,7 @@ void cipher(uint8_t *pState, const uint8_t *pRoundKey)
 }
 
 // AES_CTR_xcrypt
-void aesCtrXCrypt(int8_t *pData, uint8_t *pKey, const uint32_t &size)
+void aesCtrXCrypt(uint8_t *pData, uint8_t *pKey, const uint32_t &size)
 {
 	uint8_t state[AES_BLOCKLEN];
 	uint8_t *pIv = pKey + AES_KEY_EXP_SIZE;
