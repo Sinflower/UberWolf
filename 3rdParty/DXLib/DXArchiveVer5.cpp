@@ -1499,7 +1499,7 @@ NOENCODE:
 // デコード( 戻り値:解凍後のサイズ  -1 はエラー  Dest に NULL を入れることも可能 )
 int DXArchive_VER5::Decode( void *Src, void *Dest )
 {
-	u32 srcsize, destsize, code, indexsize, keycode, conbo, index ;
+	u32 srcsize, destsize, code, indexsize, keycode, conbo, index = 0;
 	u8 *srcp, *destp, *dp, *sp ;
 
 	destp = (u8 *)Dest ;

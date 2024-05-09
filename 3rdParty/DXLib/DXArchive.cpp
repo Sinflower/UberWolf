@@ -1794,7 +1794,7 @@ int DXArchive::Encode(void *Src, u32 SrcSize, void *Dest, bool OutStatus, bool M
 // デコード( 戻り値:解凍後のサイズ  -1 はエラー  Dest に NULL を入れることも可能 )
 int DXArchive::Decode(void *Src, void *Dest)
 {
-	u32 srcsize, destsize, code, indexsize, keycode, conbo, index;
+	u32 srcsize, destsize, code, indexsize, keycode, conbo, index = 0;
 	u8 *srcp, *destp, *dp, *sp;
 
 	destp = (u8 *)Dest;
@@ -2611,7 +2611,7 @@ int DXArchive::DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const 
 			size_t ret = fread(pFileData, 1, size, ArcP);
 
 			uint8_t roundKey[AES_ROUND_KEY_SIZE] = { 0 };
-			initWolfCrypt(Head.Reserve, g_specialKey, pFileData, 64, size - 64, true);
+			initWolfCrypt(Head.Reserve, g_specialKey, pFileData, 64, size - 64, true, KeyString_);
 
 			initAES128(roundKey, Head.Reserve);
 

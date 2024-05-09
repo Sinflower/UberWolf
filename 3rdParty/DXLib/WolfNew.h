@@ -49,7 +49,7 @@ void calcSalt(const char *pStr, uint8_t *pSalt)
 	return;
 }
 
-void initWolfCrypt(const uint8_t *pPW, uint8_t *pKey, uint8_t *pData = nullptr, const int64_t &start = -1, const int64_t &end = -1, const bool &other = false)
+void initWolfCrypt(const uint8_t *pPW, uint8_t *pKey, uint8_t *pData = nullptr, const int64_t &start = -1, const int64_t &end = -1, const bool &other = false, const char* pKeyString = nullptr)
 {
 	uint8_t fac[3] = { 0 };
 
@@ -93,10 +93,8 @@ void initWolfCrypt(const uint8_t *pPW, uint8_t *pKey, uint8_t *pData = nullptr, 
 		// --------------------------------------------------------------
 
 		uint8_t salt[128] = { 0 };
-		// This is the archive crypt key (see list in wolfdec.cpp)
-		const uint8_t s[] = { 0xCA, 0x08, 0x4C, 0x5D, 0x17, 0x0D, 0xDA, 0xA1, 0xD7, 0x27, 0xC8, 0x41, 0x54, 0x38, 0x82, 0x32, 0x54, 0xB7, 0xF9, 0x46, 0x8E, 0x13, 0x6B, 0xCA, 0xD0, 0x5C, 0x95, 0x95, 0xE2, 0xDC, 0x03, 0x53, 0x60, 0x9B, 0x4A, 0x38, 0x17, 0xF3, 0x69, 0x59, 0xA4, 0xC7, 0x9A, 0x43, 0x63, 0xE6, 0x54, 0xAF, 0xDB, 0xBB, 0x43, 0x58, 0x00 };
 
-		calcSalt(reinterpret_cast<const char *>(s), salt);
+		calcSalt(pKeyString, salt);
 
 		for (uint32_t i = 0; i < 3; i++)
 		{

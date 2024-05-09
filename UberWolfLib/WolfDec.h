@@ -43,16 +43,18 @@ class InvalidModeException : public std::exception
 
 struct CryptMode
 {
-	CryptMode(const std::string& name, const DecryptFunction& decFunc, const EncryptFunction& encFunc, const std::vector<char> key) :
+	CryptMode(const std::string& name, const uint16_t& cryptVersion, const DecryptFunction& decFunc, const EncryptFunction& encFunc, const std::vector<char> key) :
 		name(name),
+		cryptVersion(cryptVersion),
 		decFunc(decFunc),
 		encFunc(encFunc),
 		key(key)
 	{
 	}
 
-	CryptMode(const std::string& name, const DecryptFunction& decFunc, const EncryptFunction& encFunc, const std::string& key) :
+	CryptMode(const std::string& name, const uint16_t& cryptVersion, const DecryptFunction& decFunc, const EncryptFunction& encFunc, const std::string& key) :
 		name(name),
+		cryptVersion(cryptVersion),
 		decFunc(decFunc),
 		encFunc(encFunc),
 		key(key.begin(), key.end())
@@ -60,8 +62,9 @@ struct CryptMode
 		this->key.push_back(0x00); // The key needs to end with 0x00 so the parser knows when to stop
 	}
 
-	CryptMode(const std::string& name, const DecryptFunction& decFunc, const EncryptFunction& encFunc, const std::vector<unsigned char> key) :
+	CryptMode(const std::string& name, const uint16_t& cryptVersion, const DecryptFunction& decFunc, const EncryptFunction& encFunc, const std::vector<unsigned char> key) :
 		name(name),
+		cryptVersion(cryptVersion),
 		decFunc(decFunc),
 		encFunc(encFunc)
 	{
@@ -69,6 +72,7 @@ struct CryptMode
 	}
 
 	std::string name;
+	uint16_t cryptVersion;
 	DecryptFunction decFunc;
 	EncryptFunction encFunc;
 	std::vector<char> key;
@@ -114,8 +118,11 @@ public:
 
 private:
 	void loadConfig();
+	bool detectCrypt(const tString& filePath);
 	bool detectMode(const tString& filePath, const bool& override = false);
 	bool runProcess(const tString& filePath, const uint32_t& mode, const bool& override = false) const;
+
+	uint16_t getCryptVersion(const tString& filePath) const;
 
 private:
 	uint32_t m_mode                = -1;
