@@ -2595,7 +2595,9 @@ int DXArchive::DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const 
 		// バージョン検査
 		if (Head.Version > DXA_VER || Head.Version < DXA_VER_MIN) goto ERR;
 
-		g_newCrypt = ((Head.Flags >> 16) == 0x014B);
+		const uint16_t cryptVersion = Head.Flags >> 16;
+
+		g_newCrypt = (cryptVersion >= 331 && cryptVersion < 1000 || cryptVersion >= 1010);
 
 		if (g_newCrypt)
 		{
@@ -2611,9 +2613,18 @@ int DXArchive::DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const 
 			size_t ret = fread(pFileData, 1, size, ArcP);
 
 			uint8_t roundKey[AES_ROUND_KEY_SIZE] = { 0 };
-			initWolfCrypt(Head.Reserve, g_specialKey, pFileData, 64, size - 64, true, KeyString_);
+			initWolfCrypt(Head.Reserve, g_specialKey, nullptr, pFileData, 64, size - 64, true, KeyString_);
 
-			initAES128(roundKey, Head.Reserve);
+
+			uint8_t *pK2 = nullptr;
+
+			if (cryptVersion >= 1010)
+			{
+				pK2 = (uint8_t *)KeyString_ + KeyStringBytes + 1;
+				initAES128Pro(roundKey, Head.Reserve, pK2);
+			}
+			else
+				initAES128(roundKey, Head.Reserve);
 
 			aesCtrXCrypt(pFileData + 64, roundKey, 0x400);
 			aesCtrXCrypt(pFileData + Head.FileNameTableStartAddress, roundKey, size - static_cast<int32_t>(Head.FileNameTableStartAddress));
@@ -2631,7 +2642,7 @@ int DXArchive::DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const 
 			ArcP = fopen("decrypt_temp", "rb");
 			fseek(ArcP, sizeof(DARC_HEAD), SEEK_SET);
 
-			initWolfCrypt(Head.Reserve, g_specialKey);
+			initWolfCrypt(Head.Reserve, g_specialKey, pK2);
 		}
 
 		// 鍵処理が行われていないかを取得する

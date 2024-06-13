@@ -56,11 +56,18 @@ public:
 	bool RecheckProtFileState();
 	tString GetProtKeyArchiveName() const;
 
+	bool IsProV2() const
+	{
+		return m_proVersion == 2;
+	}
+
 	bool RemoveProtection();
 
 private:
 	Key findProtectionKey(const tString& filePath) const;
-	Key findDxArcKey(const tString& filePath) const;
+	Key findDxArcKey(const tString& filePath);
+	Key findDxArcKeyV1(std::vector<uint8_t>& byteData, const uint32_t& fileSize) const;
+	Key findDxArcKeyV2(std::vector<uint8_t>& byteData) const;
 	bool validateProtectionKey(const Key& key) const;
 	bool readFile(const tString& filePath, std::vector<uint8_t>& bytes, uint32_t& fileSize) const;
 	bool writeFile(const tString& filePath, std::vector<uint8_t>& bytes) const;
@@ -80,4 +87,5 @@ private:
 	bool m_needsUnpacking   = false;
 	bool m_isWolfPro        = false;
 	bool m_dataInBaseFolder = false;
+	uint32_t m_proVersion   = 1;
 };

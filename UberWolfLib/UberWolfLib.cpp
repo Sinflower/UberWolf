@@ -400,7 +400,7 @@ UWLExitCode UberWolfLib::findDxArcKeyFile()
 		return UWLExitCode::KEY_DETECT_FAILED;
 	}
 
-	m_wolfDec.AddKey("UNKNOWN_PRO", false, key);
+	m_wolfDec.AddKey("UNKNOWN_PRO", (m_wolfPro.IsProV2() ? 1010 : 1000), false, key);
 	updateConfig(false, key);
 	INFO_LOG << LOCALIZE("det_key_found_msg") << std::endl;
 
@@ -416,9 +416,7 @@ UWLExitCode UberWolfLib::findDxArcKeyInject()
 
 	// Copy the dll into the temp directory
 	if (!copyDllFromResource(tmpPath))
-	{
 		return UWLExitCode::KEY_DETECT_FAILED;
-	}
 
 	INFO_LOG << LOCALIZE("exec_game_inj_msg") << std::endl;
 	std::vector<BYTE> key;
@@ -428,7 +426,7 @@ UWLExitCode UberWolfLib::findDxArcKeyInject()
 		return UWLExitCode::KEY_DETECT_FAILED;
 	}
 
-	m_wolfDec.AddKey("UNKNOWN", wkf.UseOldDxArc(), wkf.GetKey());
+	m_wolfDec.AddKey("UNKNOWN", 0x0, wkf.UseOldDxArc(), wkf.GetKey());
 	updateConfig(wkf.UseOldDxArc(), wkf.GetKey());
 	INFO_LOG << LOCALIZE("det_key_found_msg") << std::endl;
 
@@ -447,9 +445,7 @@ void UberWolfLib::updateConfig(const bool& useOldDxArc, const Key& key)
 	}
 	// Create a new config file
 	else
-	{
 		data["keys"] = nlohmann::json::object();
-	}
 
 	uint32_t cnt                = 0;
 	const std::string NAME_BASE = "UNKNOWN_";

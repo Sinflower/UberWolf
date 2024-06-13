@@ -109,7 +109,7 @@ public:
 
 	bool UnpackArchive(const tString& filePath, const bool& override = false);
 
-	void AddKey(const std::string& name, const bool& useOldDxArc, const Key& key);
+	void AddKey(const std::string& name, const uint16_t& cryptVersion, const bool& useOldDxArc, const Key& key);
 
 	void Reset()
 	{

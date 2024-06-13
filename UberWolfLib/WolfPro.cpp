@@ -34,6 +34,8 @@
 #include <fstream>
 #include <iostream>
 
+#include <DXLib\WolfNew.h>
+
 #include "Localizer.h"
 #include "UberLog.h"
 #include "Utils.h"
@@ -158,9 +160,12 @@ Key WolfPro::GetDxArcKey()
 		return Key();
 	}
 
-	// Make sure the key ends with 0x00
-	if (key.back() != 0x00)
-		key.push_back(0x00);
+	if (m_proVersion == 1)
+	{
+		// Make sure the key ends with 0x00
+		if (key.back() != 0x00)
+			key.push_back(0x00);
+	}
 
 	return key;
 }
@@ -234,9 +239,8 @@ bool WolfPro::RemoveProtection()
 
 /////////////////////////////////////////
 
-Key WolfPro::findDxArcKey(const tString& filePath) const
+Key WolfPro::findDxArcKey(const tString& filePath)
 {
-	Key key;
 	std::vector<uint8_t> bytes;
 	uint32_t fileSize;
 
@@ -244,16 +248,32 @@ Key WolfPro::findDxArcKey(const tString& filePath) const
 	INFO_LOG << std::format(TEXT("Searching for DxArc key in: {} ... "), filePath) << std::endl;
 #endif
 
-	if (!readFile(filePath, bytes, fileSize)) return key;
+	if (!readFile(filePath, bytes, fileSize)) return Key();
+	if (bytes.empty()) return Key();
 
+	if (bytes[0] == 0xA0)
+	{
+		m_proVersion = 1;
+		return findDxArcKeyV1(bytes, fileSize);
+	}
+	else
+	{
+		m_proVersion = 2;
+		return findDxArcKeyV2(bytes);
+	}
+}
+
+Key WolfPro::findDxArcKeyV1(std::vector<uint8_t>& byteData, const uint32_t& fileSize) const
+{
+	Key key;
 	if (fileSize < DxArcKey::MIN_FILESIZE) return key;
 
-	srand(bytes[DxArcKey::SEED_OFFSET]);
+	srand(byteData[DxArcKey::SEED_OFFSET]);
 
-	for (std::size_t j = DxArcKey::XOR_START_OFFSET; j < bytes.size(); j++)
-		bytes[j] ^= static_cast<uint8_t>(rand() >> DxArcKey::SHIFT);
+	for (std::size_t j = DxArcKey::XOR_START_OFFSET; j < byteData.size(); j++)
+		byteData[j] ^= static_cast<uint8_t>(rand() >> DxArcKey::SHIFT);
 
-	uint8_t keyLen  = bytes[DxArcKey::KEY_LEN_OFFSET];
+	uint8_t keyLen  = byteData[DxArcKey::KEY_LEN_OFFSET];
 	uint32_t steps  = DxArcKey::STEP_DIVISOR / keyLen;
 	uint32_t offset = DxArcKey::KEY_START_OFFSET;
 
@@ -263,10 +283,16 @@ Key WolfPro::findDxArcKey(const tString& filePath) const
 
 	for (uint8_t i = 0; i < keyLen; i++)
 	{
-		key.push_back(bytes[offset]);
+		key.push_back(byteData[offset]);
 		offset += steps;
 	}
 
+	return key;
+}
+
+Key WolfPro::findDxArcKeyV2(std::vector<uint8_t>& byteData) const
+{
+	Key key = calcKey(byteData);
 	return key;
 }
 

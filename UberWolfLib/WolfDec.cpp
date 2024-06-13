@@ -203,9 +203,9 @@ bool WolfDec::UnpackArchive(const tString& filePath, const bool& override)
 	return !failed;
 }
 
-void WolfDec::AddKey(const std::string& name, const bool& useOldDxArc, const Key& key)
+void WolfDec::AddKey(const std::string& name, const uint16_t& cryptVersion, const bool& useOldDxArc, const Key& key)
 {
-	m_additionalModes.push_back({ name, 0x0, (useOldDxArc ? &DXArchive_VER6::DecodeArchive : &DXArchive::DecodeArchive), nullptr, key });
+	m_additionalModes.push_back({ name, cryptVersion, (useOldDxArc ? &DXArchive_VER6::DecodeArchive : &DXArchive::DecodeArchive), nullptr, key });
 }
 
 void WolfDec::loadConfig()
