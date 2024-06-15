@@ -717,6 +717,41 @@ static inline void initCrypt(CryptData &cd)
 	cd.seed2 = val3;
 }
 
+static inline void aesKeyGen(CryptData &cd, RngData &rd, std::array<uint8_t, AES_KEY_SIZE> &aesKey, std::array<uint8_t, AES_IV_SIZE> &aesIv)
+{
+	runCrypt(rd, cd.seedBytes[0], cd.seedBytes[1]);
+
+	std::vector<uint8_t> cryptData(RngData::DATA_VEC_LEN, 0);
+
+	for (uint32_t i = 0; i < RngData::DATA_VEC_LEN; i++)
+		aLotOfRngStuff(rd, i + cd.seedBytes[3], cd.seedBytes[2] - i, i, cryptData);
+
+	uint8_t seed = cd.seedBytes[1] ^ cd.seedBytes[2];
+
+	std::vector<uint8_t> indexes(RngData::DATA_VEC_LEN, 0);
+	std::vector<uint8_t> resData(RngData::DATA_VEC_LEN, 0);
+	std::iota(indexes.begin(), indexes.end(), 0);
+
+	srand(seed);
+
+	for (uint32_t i = 0; i < RngData::DATA_VEC_LEN; ++i)
+	{
+		uint32_t rn = rand();
+		uint8_t old = indexes[i];
+		indexes[i]  = indexes[rn % RngData::DATA_VEC_LEN];
+
+		indexes[rn % RngData::DATA_VEC_LEN] = old;
+	}
+
+	for (uint32_t i = 0; i < RngData::DATA_VEC_LEN; i++)
+		resData[i] = cryptData[indexes[i]];
+
+	const auto ivBegin = resData.begin() + AES_KEY_SIZE;
+
+	std::copy(resData.begin(), resData.begin() + AES_KEY_SIZE, aesKey.begin());
+	std::copy(ivBegin, ivBegin + AES_IV_SIZE, aesIv.begin());
+}
+
 static inline std::vector<uint8_t> calcKey(const std::vector<uint8_t> &gameDataBytes)
 {
 	CryptData cd;
@@ -726,47 +761,12 @@ static inline std::vector<uint8_t> calcKey(const std::vector<uint8_t> &gameDataB
 
 	initCrypt(cd);
 
-	const uint32_t OUTER_VEC_LEN = 0x20;
-	const uint32_t INNER_VEC_LEN = 0x100;
-	const uint32_t DATA_VEC_LEN  = 0x30;
-
-	std::vector<std::vector<uint32_t>> data(OUTER_VEC_LEN, std::vector<uint32_t>(INNER_VEC_LEN, 0));
-
 	runCrypt(rd, cd.seed1, cd.seed2);
-	runCrypt(rd, cd.seedBytes[0], cd.seedBytes[1]);
-
-	std::vector<uint8_t> cryptData(DATA_VEC_LEN, 0);
-
-	for (uint32_t i = 0; i < DATA_VEC_LEN; i++)
-		aLotOfRngStuff(rd, i + cd.seedBytes[3], cd.seedBytes[2] - i, i, cryptData);
-
-	uint8_t seed = cd.seedBytes[1] ^ cd.seedBytes[2];
-
-	std::vector<uint8_t> indexes(DATA_VEC_LEN, 0);
-	std::vector<uint8_t> resData(DATA_VEC_LEN, 0);
-	std::iota(indexes.begin(), indexes.end(), 0);
-
-	srand(seed);
-
-	for (uint32_t i = 0; i < DATA_VEC_LEN; ++i)
-	{
-		uint32_t rn = rand();
-		uint8_t old = indexes[i];
-		indexes[i]  = indexes[rn % DATA_VEC_LEN];
-
-		indexes[rn % DATA_VEC_LEN] = old;
-	}
-
-	for (uint32_t i = 0; i < DATA_VEC_LEN; i++)
-		resData[i] = cryptData[indexes[i]];
 
 	std::array<uint8_t, AES_KEY_SIZE> aesKey;
 	std::array<uint8_t, AES_IV_SIZE> aesIv;
 
-	const auto ivBegin = resData.begin() + AES_KEY_SIZE;
-
-	std::copy(resData.begin(), resData.begin() + AES_KEY_SIZE, aesKey.begin());
-	std::copy(ivBegin, ivBegin + AES_IV_SIZE, aesIv.begin());
+	aesKeyGen(cd, rd, aesKey, aesIv);
 
 	std::array<uint8_t, AES_ROUND_KEY_SIZE> roundKey;
 
@@ -810,3 +810,4 @@ static inline std::vector<uint8_t> calcKey(const std::vector<uint8_t> &gameDataB
 
 	return key;
 }
+
