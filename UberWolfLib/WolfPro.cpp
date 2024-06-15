@@ -212,6 +212,8 @@ bool WolfPro::RemoveProtection()
 		return false;
 	}
 
+	if (m_proVersion == 2) return false;
+
 	// Check if the unprotected folder exists in the data folder and create it if it doesn't
 	if (!fs::exists(m_unprotectedFolder))
 	{
@@ -296,14 +298,37 @@ Key WolfPro::findDxArcKeyV2(std::vector<uint8_t>& byteData) const
 	return key;
 }
 
-Key WolfPro::findProtectionKey(const tString& filePath) const
+Key WolfPro::findProtectionKey(const tString& filePath)
+{
+	std::vector<uint8_t> bytes;
+	uint32_t fileSize;
+
+#ifdef PRINT_DEBUG
+	INFO_LOG << std::format(TEXT("Searching for protection key in: {} ... "), filePath) << std::endl;
+#endif
+
+	if (!readFile(filePath, bytes, fileSize)) return Key();
+
+	if (bytes[1] == 0x50 && bytes[5] == 0x55)
+	{
+		m_proVersion = 2;
+		return findProtectionKeyV2(bytes);
+	}
+	else
+	{
+		m_proVersion = 1;
+		return findProtectionKeyV1(bytes);
+	}
+}
+
+Key WolfPro::findProtectionKeyV1(std::vector<uint8_t>& byteData) const
 {
 #ifdef PRINT_DEBUG
 	INFO_LOG << std::format(TEXT("Searching for protection key in: {} ..."), filePath) << std::endl;
 #endif
 
 	Key key;
-	std::vector<uint8_t> bytes = decrypt(filePath);
+	std::vector<uint8_t> bytes = decrypt(byteData);
 
 	if (bytes.empty())
 	{
@@ -327,6 +352,16 @@ Key WolfPro::findProtectionKey(const tString& filePath) const
 
 	for (std::size_t i = 0; i < keyLen; i++)
 		key.push_back(bytes[ProtKey::KEY_OFFSET + i] ^ static_cast<uint8_t>(rand()));
+
+	return key;
+}
+
+Key WolfPro::findProtectionKeyV2(std::vector<uint8_t>& byteData) const
+{
+	Key key = calcKeyProt(byteData);
+
+	if (key.empty())
+		ERROR_LOG << LOCALIZE("calc_prot_key_error_msg") << std::endl;
 
 	return key;
 }
@@ -406,15 +441,20 @@ bool WolfPro::writeFile(const tString& filePath, std::vector<uint8_t>& bytes) co
 
 std::vector<uint8_t> WolfPro::decrypt(const tString& filePath, const std::array<uint8_t, 3> seedIdx) const
 {
-	std::array<uint8_t, ProtKey::SEED_COUNT> seeds;
 	uint32_t fileSize;
 	std::vector<uint8_t> bytes;
 
+	if (!readFile(filePath, bytes, fileSize)) return bytes;
+
+	return decrypt(bytes, seedIdx);
+}
+
+std::vector<uint8_t> WolfPro::decrypt(std::vector<uint8_t>& bytes, const std::array<uint8_t, 3> seedIdx) const
+{
+	std::array<uint8_t, ProtKey::SEED_COUNT> seeds;
 #ifdef PRINT_DEBUG
 	INFO_LOG << std::format(TEXT("Decrypting: {} ..."), filePath) << std::endl;
 #endif
-
-	if (!readFile(filePath, bytes, fileSize)) return bytes;
 
 	for (std::size_t i = 0; i < seedIdx.size(); i++)
 		seeds[i] = bytes[seedIdx[i]];

@@ -64,7 +64,9 @@ public:
 	bool RemoveProtection();
 
 private:
-	Key findProtectionKey(const tString& filePath) const;
+	Key findProtectionKey(const tString& filePath);
+	Key findProtectionKeyV1(std::vector<uint8_t>& byteData) const;
+	Key findProtectionKeyV2(std::vector<uint8_t>& byteData) const;
 	Key findDxArcKey(const tString& filePath);
 	Key findDxArcKeyV1(std::vector<uint8_t>& byteData, const uint32_t& fileSize) const;
 	Key findDxArcKeyV2(std::vector<uint8_t>& byteData) const;
@@ -73,6 +75,7 @@ private:
 	bool writeFile(const tString& filePath, std::vector<uint8_t>& bytes) const;
 
 	std::vector<uint8_t> decrypt(const tString& filePath, const std::array<uint8_t, 3> seedIdx = { 0, 8, 6 }) const;
+	std::vector<uint8_t> decrypt(std::vector<uint8_t>& bytes, const std::array<uint8_t, 3> seedIdx = { 0, 8, 6 }) const;
 	void removeProtection(const tString& fileName, const BasicDataFiles& bdf) const;
 	std::vector<uint8_t> removeProtectionFromProject(const tString& filePath, const uint32_t& seed) const;
 	std::vector<uint8_t> removeProtectionFromDat(const tString& filePath, const BasicDataFiles& bdf, uint32_t& projectSeed) const;

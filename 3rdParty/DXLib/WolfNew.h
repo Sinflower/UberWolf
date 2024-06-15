@@ -26,10 +26,12 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <bit>
 #include <cstdint>
 #include <numeric>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -811,3 +813,129 @@ static inline std::vector<uint8_t> calcKey(const std::vector<uint8_t> &gameDataB
 	return key;
 }
 
+static inline uint32_t genMTSeed(const std::array<uint8_t, 3> &seeds)
+{
+	int32_t seedP1  = (seeds[1] | (seeds[0] << 8)) << 8;
+	uint32_t seedP2 = ((((seeds[2] | seedP1) << 13) ^ (seeds[2] | (uint32_t)seedP1)) >> 17) ^ ((seeds[2] | seedP1) << 13) ^ (seeds[2] | seedP1);
+	uint32_t seed   = (32 * seedP2) ^ seedP2;
+
+	return seed;
+}
+
+static inline void decrpytProV2P1(std::vector<uint8_t> &data, const uint32_t &seed)
+{
+	const uint32_t NUM_RNDS = 128;
+
+	std::mt19937 gen;
+	gen.seed(seed);
+
+	std::array<uint32_t, NUM_RNDS> rnds;
+
+	for (uint32_t &rnd : rnds)
+		rnd = gen();
+
+	for (uint32_t i = 0xA; i < data.size(); i++)
+		data[i] ^= rnds[i % NUM_RNDS];
+}
+
+static inline void initCryptProt(CryptData &cd)
+{
+	uint32_t fileSize = static_cast<uint32_t>(cd.gameDatBytes.size());
+
+	if (fileSize - 20 < 326)
+		cd.dataSize = fileSize - 20;
+	else
+		cd.dataSize = 326;
+
+	decrpytProV2P1(cd.gameDatBytes, genMTSeed({ cd.gameDatBytes[0], cd.gameDatBytes[8], cd.gameDatBytes[6] }));
+
+	std::copy(cd.gameDatBytes.begin() + 0xB, cd.gameDatBytes.begin() + 0xF, cd.keyBytes.begin());
+
+	cd.seedBytes[0] = cd.gameDatBytes[7] + 3 * cd.keyBytes[0];
+	cd.seedBytes[1] = cd.keyBytes[1] ^ cd.keyBytes[2];
+	cd.seedBytes[2] = cd.keyBytes[3] ^ cd.gameDatBytes[7];
+	cd.seedBytes[3] = cd.keyBytes[2] + cd.gameDatBytes[7] - cd.keyBytes[0];
+
+	cd.seed1 = cd.keyBytes[1] ^ cd.keyBytes[2];
+	cd.seed2 = cd.keyBytes[1] ^ cd.keyBytes[2];
+}
+
+static constexpr uint32_t ENCRYPTED_KEY_SIZE = 128;
+
+static inline bool validateKey(const std::vector<uint8_t> &key, const std::array<uint8_t, ENCRYPTED_KEY_SIZE> &tarKey)
+{
+	if (key.empty()) return false;
+
+	const uint32_t keyLen = static_cast<uint32_t>(key.size());
+
+	if (keyLen > ENCRYPTED_KEY_SIZE)
+		throw std::runtime_error("Key is too long");
+
+	std::array<uint8_t, ENCRYPTED_KEY_SIZE> keyBytes;
+
+	for (uint32_t i = 0; i < keyLen; i++)
+		keyBytes[i] = key[i];
+
+	for (uint32_t i = 0; i < ENCRYPTED_KEY_SIZE; i++)
+		keyBytes[i] = i / keyLen + key[i % keyLen];
+
+	// Compare the target key and the generated key
+	return std::equal(keyBytes.begin(), keyBytes.end(), tarKey.begin());
+}
+
+static inline std::vector<uint8_t> findKey(const std::array<uint8_t, ENCRYPTED_KEY_SIZE> &encKey)
+{
+	const uint32_t MIN_KEY_LEN = 4;
+	for (uint32_t i = MIN_KEY_LEN; i < ENCRYPTED_KEY_SIZE; i++)
+	{
+		std::vector<uint8_t> key(i, 0);
+		std::copy(encKey.begin(), encKey.begin() + i, key.begin());
+
+		if (validateKey(key, encKey))
+			return key;
+	}
+
+	return {};
+}
+
+static inline std::vector<uint8_t> calcKeyProt(const std::vector<uint8_t>& gameDatBytes)
+{
+	CryptData cd;
+	RngData rd;
+
+	cd.gameDatBytes = gameDatBytes;
+	initCryptProt(cd);
+
+	runCrypt(rd, cd.seed1, cd.seed2);
+
+	std::array<uint8_t, AES_KEY_SIZE> aesKey;
+	std::array<uint8_t, AES_IV_SIZE> aesIv;
+
+	aesKeyGen(cd, rd, aesKey, aesIv);
+
+	std::array<uint8_t, AES_ROUND_KEY_SIZE> roundKey;
+
+	keyExpansion(roundKey.data(), aesKey.data());
+	std::copy(aesIv.begin(), aesIv.end(), roundKey.begin() + AES_KEY_EXP_SIZE);
+
+	aesCtrXCrypt(cd.gameDatBytes.data() + 20, roundKey.data(), cd.dataSize);
+
+	rd.Reset();
+
+	runCrypt(rd, cd.keyBytes[3], cd.keyBytes[0]);
+
+	cd.seedBytes = cd.keyBytes;
+
+	aesKeyGen(cd, rd, aesKey, aesIv);
+
+	keyExpansion(roundKey.data(), aesKey.data());
+	std::copy(aesIv.begin(), aesIv.end(), roundKey.begin() + AES_KEY_EXP_SIZE);
+
+	std::array<uint8_t, ENCRYPTED_KEY_SIZE> encryptedKey;
+	const auto &keyBegin = cd.gameDatBytes.begin() + 0xF;
+	std::copy(keyBegin, keyBegin + ENCRYPTED_KEY_SIZE, encryptedKey.begin());
+
+	aesCtrXCrypt(encryptedKey.data(), roundKey.data(), ENCRYPTED_KEY_SIZE);
+
+	return findKey(encryptedKey);
+}
