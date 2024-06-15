@@ -34,7 +34,7 @@
 
 namespace fs = std::filesystem;
 
-static const std::string UWCLI_VERSION = "0.1.0";
+static const std::string UWCLI_VERSION = "0.2.0";
 static const std::string UWCLI_NAME  = "UberWolfCli";
 
 void printHelp()
