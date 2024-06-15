@@ -470,9 +470,24 @@ struct CryptData
 
 struct RngData
 {
+	static constexpr uint32_t OUTER_VEC_LEN = 0x20;
+	static constexpr uint32_t INNER_VEC_LEN = 0x100;
+	static constexpr uint32_t DATA_VEC_LEN  = 0x30;
+
 	uint32_t seed1   = 0;
 	uint32_t seed2   = 0;
 	uint32_t counter = 0;
+
+	std::vector<std::vector<uint32_t>> data = std::vector<std::vector<uint32_t>>(OUTER_VEC_LEN, std::vector<uint32_t>(INNER_VEC_LEN, 0));
+
+	void Reset()
+	{
+		seed1   = 0;
+		seed2   = 0;
+		counter = 0;
+
+		data = std::vector<std::vector<uint32_t>>(OUTER_VEC_LEN, std::vector<uint32_t>(INNER_VEC_LEN, 0));
+	}
 };
 
 static inline uint32_t customRng1(RngData &rd)
@@ -614,7 +629,7 @@ static inline void rngChain(RngData &rd, std::vector<uint32_t> &data)
 	}
 }
 
-static inline void runCrypt(RngData &rd, std::vector<std::vector<uint32_t>> &data, const uint32_t &seed1, const uint32_t &seed2)
+static inline void runCrypt(RngData &rd, const uint32_t &seed1, const uint32_t &seed2)
 {
 	rd.seed1   = seed1;
 	rd.seed2   = seed2;
@@ -622,11 +637,11 @@ static inline void runCrypt(RngData &rd, std::vector<std::vector<uint32_t>> &dat
 
 	srand(seed1);
 
-	for (uint32_t i = 0; i < data.size(); i++)
-		rngChain(rd, data[i]);
+	for (uint32_t i = 0; i < rd.data.size(); i++)
+		rngChain(rd, rd.data[i]);
 }
 
-static inline void aLotOfRngStuff(RngData &rd, std::vector<std::vector<uint32_t>> &data, uint32_t a2, uint32_t a3, const uint32_t &idx, std::vector<uint8_t> &cryptData)
+static inline void aLotOfRngStuff(RngData &rd, uint32_t a2, uint32_t a3, const uint32_t &idx, std::vector<uint8_t> &cryptData)
 {
 	uint32_t itrs = 20;
 
@@ -634,12 +649,12 @@ static inline void aLotOfRngStuff(RngData &rd, std::vector<std::vector<uint32_t>
 	{
 		uint32_t idx1 = (a2 ^ customRng1(rd)) & 0x1F;
 		uint32_t idx2 = (a3 ^ customRng2(rd)) & 0xFF;
-		a3            = data[idx1][idx2];
+		a3            = rd.data[idx1][idx2];
 
 		switch ((a2 + rd.counter) % 0x14u)
 		{
 			case 1:
-				rngChain(rd, data[(a2 + 5) & 0x1F]);
+				rngChain(rd, rd.data[(a2 + 5) & 0x1F]);
 				break;
 			case 2:
 				a3 ^= customRng1(rd);
@@ -717,13 +732,13 @@ static inline std::vector<uint8_t> calcKey(const std::vector<uint8_t> &gameDataB
 
 	std::vector<std::vector<uint32_t>> data(OUTER_VEC_LEN, std::vector<uint32_t>(INNER_VEC_LEN, 0));
 
-	runCrypt(rd, data, cd.seed1, cd.seed2);
-	runCrypt(rd, data, cd.seedBytes[0], cd.seedBytes[1]);
+	runCrypt(rd, cd.seed1, cd.seed2);
+	runCrypt(rd, cd.seedBytes[0], cd.seedBytes[1]);
 
 	std::vector<uint8_t> cryptData(DATA_VEC_LEN, 0);
 
 	for (uint32_t i = 0; i < DATA_VEC_LEN; i++)
-		aLotOfRngStuff(rd, data, i + cd.seedBytes[3], cd.seedBytes[2] - i, i, cryptData);
+		aLotOfRngStuff(rd, i + cd.seedBytes[3], cd.seedBytes[2] - i, i, cryptData);
 
 	uint8_t seed = cd.seedBytes[1] ^ cd.seedBytes[2];
 
