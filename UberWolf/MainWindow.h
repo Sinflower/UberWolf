@@ -42,7 +42,7 @@ class MainWindow : public WindowBase
 	static const int32_t LANGUAGE_MENU_IDX = 0;
 	static const int32_t DEFAULT_LANG_ID   = ID_LANGUAGE_EN;
 
-	inline static const std::wstring WINDOW_TITLE = L"Uberwolf v0.3.0";
+	inline static const std::wstring WINDOW_TITLE = L"Uberwolf v0.3.1";
 
 public:
 	MainWindow(const HINSTANCE hInstance) :
@@ -134,6 +134,9 @@ private:
 			LOC_ADD_LANG(langCode, langID);
 			idx++;
 		}
+
+		// Add a separator between built-in and file languages
+		AppendMenuW(hLangMenu, MF_SEPARATOR, 0, nullptr);
 
 		const std::vector<std::pair<std::wstring, std::string>> fileLangList = Localizer::GetLangCodesFromFolder();
 
