@@ -48,7 +48,7 @@ enum class UWLExitCode
 
 class UberWolfLib
 {
-	inline static const tString UWL_VERSION = _T("0.3.0");
+	inline static const tString UWL_VERSION = _T("0.3.1");
 	struct Config
 	{
 		bool useInject = false;

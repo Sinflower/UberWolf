@@ -2626,6 +2626,9 @@ int DXArchive::DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const 
 			else
 				initAES128(roundKey, Head.Reserve);
 
+			if ((size - 64) < 0x400)
+				return 0;
+
 			aesCtrXCrypt(pFileData + 64, roundKey, 0x400);
 			aesCtrXCrypt(pFileData + Head.FileNameTableStartAddress, roundKey, size - static_cast<int32_t>(Head.FileNameTableStartAddress));
 

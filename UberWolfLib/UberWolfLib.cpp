@@ -400,8 +400,8 @@ UWLExitCode UberWolfLib::findDxArcKeyFile()
 		return UWLExitCode::KEY_DETECT_FAILED;
 	}
 
-	m_wolfDec.AddKey("UNKNOWN_PRO", (m_wolfPro.IsProV2() ? 1010 : 1000), false, key);
-	updateConfig(false, key);
+	m_wolfDec.AddAndSetKey("UNKNOWN_PRO", (m_wolfPro.IsProV2() ? 1010 : 1000), false, key);
+	// updateConfig(false, key);
 	INFO_LOG << LOCALIZE("det_key_found_msg") << std::endl;
 
 	return UWLExitCode::SUCCESS;

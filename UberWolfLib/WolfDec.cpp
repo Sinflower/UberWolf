@@ -24,6 +24,8 @@
  *
  */
 
+// TODO: For Pro Games always detect the key before unpacking and skip mode detection
+
 #include "WolfDec.h"
 
 #include <DXLib/DXArchive.h>
@@ -88,7 +90,22 @@ bool WolfDec::IsAlreadyUnpacked(const tString& filePath) const
 	const tString fileName = fp.stem();
 	const tString outDir = directoryPath + TEXT("/") + fileName;
 
-	return (fs::exists(outDir) && !fs::is_empty(outDir));
+	if (!fs::exists(outDir)) return false; 
+	if (fs::is_empty(outDir)) return false;
+
+	// Get all files in the directory
+	std::vector<fs::path> files;
+	for (const auto& entry : fs::directory_iterator(outDir))
+		files.push_back(entry.path());
+
+	if (files.size() == 1 && files.front().filename() == "decrypt_temp")
+	{
+		// Remove the temporary directory
+		fs::remove(files.front());
+		return false;
+	}
+
+	return true;
 }
 
 bool WolfDec::PackArchive(const tString& folderPath, const bool& override)
@@ -201,6 +218,12 @@ bool WolfDec::UnpackArchive(const tString& filePath, const bool& override)
 	fs::current_path(cwd);
 
 	return !failed;
+}
+
+void WolfDec::AddAndSetKey(const std::string& name, const uint16_t& cryptVersion, const bool& useOldDxArc, const Key& key)
+{
+	AddKey(name, cryptVersion, useOldDxArc, key);
+	m_mode = static_cast<uint32_t>(DEFAULT_CRYPT_MODES.size() + m_additionalModes.size() - 1);
 }
 
 void WolfDec::AddKey(const std::string& name, const uint16_t& cryptVersion, const bool& useOldDxArc, const Key& key)
