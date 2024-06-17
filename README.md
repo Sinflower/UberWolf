@@ -27,10 +27,6 @@
 
 ## Usage - Extract One or More Archives
  Drag and drop the archives onto the designated area and wait until the files are extracted.
- 
- ## Localization
-
- Please look at the [Localization Guide](doc/localization.md) for information on translating the application into your language.
 
 ----
 
@@ -51,3 +47,13 @@ UberWolfCli.exe "D:\Path to Game\Data"
 # Unpacking a single file
 UberWolfCli.exe "D:\Path to Game\Data\BasicData.wolf"
 ```
+
+----
+
+# Localization
+
+ Please look at the [Localization Guide](doc/localization.md) for information on translating the application into your language.
+
+### Credits
+- Japanese (MTL) - Brothers3398
+- Korean (MTL) - Brothers3398
