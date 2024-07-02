@@ -36,6 +36,7 @@
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
+#include <codecvt>
 #include <filesystem>
 #include <format>
 #include <fstream>
@@ -43,7 +44,6 @@
 #include <string>
 #include <vector>
 #include <windows.h>
-#include <codecvt>
 
 #include "UberLog.h"
 #include "Utils.h"
@@ -87,10 +87,10 @@ bool WolfDec::IsAlreadyUnpacked(const tString& filePath) const
 	const fs::path fp = fs::path(filePath);
 
 	const tString directoryPath = fp.parent_path();
-	const tString fileName = fp.stem();
-	const tString outDir = directoryPath + TEXT("/") + fileName;
+	const tString fileName      = fp.stem();
+	const tString outDir        = directoryPath + TEXT("/") + fileName;
 
-	if (!fs::exists(outDir)) return false; 
+	if (!fs::exists(outDir)) return false;
 	if (fs::is_empty(outDir)) return false;
 
 	// Get all files in the directory
@@ -122,7 +122,7 @@ bool WolfDec::PackArchive(const tString& folderPath, const bool& override)
 	}
 
 	const tString directoryPath = fp.parent_path();
-	const tString fileName = fp.stem();
+	const tString fileName      = fp.stem();
 	// TODO: How to detect the other file extensions?
 	const tString outputFile = directoryPath + TEXT("/") + fileName + TEXT(".wolf");
 
@@ -156,7 +156,7 @@ bool WolfDec::PackArchive(const tString& folderPath, const bool& override)
 			return false;
 	}
 
-	const bool failed = curMode.encFunc(outputFile.c_str(), folderPath.c_str(), true, curMode.key.data()) < 0;
+	const bool failed = curMode.encFunc(outputFile.c_str(), folderPath.c_str(), true, curMode.key.data(), curMode.cryptVersion) < 0;
 
 	if (failed)
 		fs::remove(outputFile);
@@ -174,7 +174,7 @@ bool WolfDec::UnpackArchive(const tString& filePath, const bool& override)
 	const tString cwd = fs::current_path();
 
 	const tString directoryPath = fp.parent_path();
-	const tString fileName = fp.stem();
+	const tString fileName      = fp.stem();
 
 	ConvertFullPath__(filePath.c_str(), pFullPath);
 
@@ -231,6 +231,15 @@ void WolfDec::AddKey(const std::string& name, const uint16_t& cryptVersion, cons
 	m_additionalModes.push_back({ name, cryptVersion, (useOldDxArc ? &DXArchive_VER6::DecodeArchive : &DXArchive::DecodeArchive), nullptr, key });
 }
 
+tStrings WolfDec::GetEncryptions()
+{
+	tStrings encryptions;
+	for (const auto& mode : DEFAULT_CRYPT_MODES)
+		encryptions.push_back(StringToWString(mode.name));
+
+	return encryptions;
+}
+
 void WolfDec::loadConfig()
 {
 	// Return if the config file does not exist or is empty
@@ -248,7 +257,7 @@ void WolfDec::loadConfig()
 			{
 				if (value.contains("mode") && value.contains("key"))
 				{
-					std::string mode = value["mode"];
+					std::string mode        = value["mode"];
 					DecryptFunction decFunc = nullptr;
 					std::transform(mode.begin(), mode.end(), mode.begin(), [](const unsigned char& c) { return std::tolower(c); });
 					if (mode == "ver5")
@@ -273,7 +282,7 @@ void WolfDec::loadConfig()
 					else
 					{
 						std::string keyStr = value["key"];
-						key = std::vector<unsigned char>(keyStr.begin(), keyStr.end());
+						key                = std::vector<unsigned char>(keyStr.begin(), keyStr.end());
 						key.push_back(0x00);
 					}
 

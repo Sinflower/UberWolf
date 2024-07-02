@@ -31,7 +31,7 @@
 #define GLOBAL_CHAR_CODE 932
 
 uint8_t g_specialKey[768] = {};
-bool g_newCrypt          = false;
+bool g_newCrypt           = false;
 
 static WCHAR *sjis2utf8(const char *sjis, const int &len);
 static char *utf82sjis(const WCHAR *utf8);
@@ -1956,13 +1956,13 @@ u32 DXArchive::HashCRC32(const void *SrcData, size_t SrcDataSize)
 	return CRC ^ 0xffffffff;
 }
 
-int DXArchive::EncodeArchiveOneDirectoryWolf(const TCHAR *OutputFileName, const TCHAR *DirectoryPath, bool Press, const char *KeyString_)
+int DXArchive::EncodeArchiveOneDirectoryWolf(const TCHAR *OutputFileName, const TCHAR *DirectoryPath, bool Press, const char *KeyString_, uint16_t cryptVersion)
 {
-	return EncodeArchiveOneDirectory(OutputFileName, DirectoryPath, Press, true, 0xC, KeyString_, false, false, false);
+	return EncodeArchiveOneDirectory(OutputFileName, DirectoryPath, Press, true, 0xC, KeyString_, false, false, false, cryptVersion);
 }
 
 // アーカイブファイルを作成する(ディレクトリ一個だけ)
-int DXArchive::EncodeArchiveOneDirectory(const TCHAR *OutputFileName, const TCHAR *DirectoryPath, bool Press, bool AlwaysHuffman, u8 HuffmanEncodeKB, const char *KeyString_, bool NoKey, bool OutputStatus, bool MaxPress)
+int DXArchive::EncodeArchiveOneDirectory(const TCHAR *OutputFileName, const TCHAR *DirectoryPath, bool Press, bool AlwaysHuffman, u8 HuffmanEncodeKB, const char *KeyString_, bool NoKey, bool OutputStatus, bool MaxPress, uint16_t cryptVersion)
 {
 	int FileNum, Result;
 	// TCHAR **FilePathList, *NameBuffer ;
@@ -1985,7 +1985,7 @@ int DXArchive::EncodeArchiveOneDirectory(const TCHAR *OutputFileName, const TCHA
 	//	FilePathList[i] = NameBuffer + i * 256 ;
 
 	// エンコード
-	Result = EncodeArchive(OutputFileName, filePathList, FileNum, Press, AlwaysHuffman, HuffmanEncodeKB, KeyString_, NoKey, OutputStatus, MaxPress);
+	Result = EncodeArchive(OutputFileName, filePathList, FileNum, Press, AlwaysHuffman, HuffmanEncodeKB, KeyString_, NoKey, OutputStatus, MaxPress, cryptVersion);
 
 	// 確保したメモリの解放
 	// free( NameBuffer ) ;
@@ -1995,7 +1995,7 @@ int DXArchive::EncodeArchiveOneDirectory(const TCHAR *OutputFileName, const TCHA
 }
 
 // アーカイブファイルを作成する
-int DXArchive::EncodeArchive(const TCHAR *OutputFileName, const std::vector<std::wstring> &FileOrDirectoryPath, int FileNum, bool Press, bool AlwaysHuffman, u8 HuffmanEncodeKB, const char *KeyString_, bool NoKey, bool OutputStatus, bool MaxPress)
+int DXArchive::EncodeArchive(const TCHAR *OutputFileName, const std::vector<std::wstring> &FileOrDirectoryPath, int FileNum, bool Press, bool AlwaysHuffman, u8 HuffmanEncodeKB, const char *KeyString_, bool NoKey, bool OutputStatus, bool MaxPress, uint16_t cryptVersion)
 {
 	DARC_HEAD Head;
 	DARC_DIRECTORY Directory, *DirectoryP;
@@ -2071,7 +2071,22 @@ int DXArchive::EncodeArchive(const TCHAR *OutputFileName, const std::vector<std:
 	TempBuffer = malloc(DXA_BUFFERSIZE);
 
 	// 出力ファイルを開く
-	DestFp = _tfopen( OutputFileName, TEXT("wb") ) ;
+	DestFp = _tfopen(OutputFileName, TEXT("wb+"));
+
+	g_newCrypt   = (cryptVersion >= 331 && cryptVersion < 1000 || cryptVersion >= 1010);
+	uint8_t *pK2 = nullptr;
+
+	if (g_newCrypt)
+	{
+		memset(&Head, 0, sizeof(Head));
+
+		memset(g_specialKey, 0, 768);
+
+		if (cryptVersion >= 1010)
+			pK2 = (uint8_t *)KeyString_ + KeyStringBytes + 1;
+
+		initWolfCrypt(Head.Reserve, g_specialKey, pK2);
+	}
 
 	// アーカイブのヘッダを出力する
 	{
@@ -2083,8 +2098,8 @@ int DXArchive::EncodeArchive(const TCHAR *OutputFileName, const std::vector<std:
 		Head.FileNameTableStartAddress  = 0xffffffffffffffff;
 		Head.DirectoryTableStartAddress = 0xffffffffffffffff;
 		Head.FileTableStartAddress      = 0xffffffffffffffff;
-		Head.CharCodeFormat				= GetACP() ;
-		Head.Flags						= 0 ;
+		Head.CharCodeFormat             = GetACP();
+		Head.Flags                      = cryptVersion << 16;
 		Head.HuffmanEncodeKB            = HuffmanEncodeKB;
 		if (NoKey) Head.Flags |= DXA_FLAG_NO_KEY;
 		if (Press == false) Head.Flags |= DXA_FLAG_NO_HEAD_PRESS;
@@ -2486,7 +2501,7 @@ int DXArchive::EncodeArchive(const TCHAR *OutputFileName, const std::vector<std:
 			if (PressData == NULL) return -1;
 
 			// LZ圧縮
-			LZDataSize = Encode( PressSource, ( u32 )TotalSize, PressData, false ) ;
+			LZDataSize = Encode(PressSource, (u32)TotalSize, PressData, false);
 
 			// ハフマン圧縮
 			HeaderHuffDataSize = Huffman_Encode(PressData, (u64)LZDataSize, PressData + TotalSize * 2 + 32);
@@ -2519,6 +2534,40 @@ int DXArchive::EncodeArchive(const TCHAR *OutputFileName, const std::vector<std:
 
 		_fseeki64(DestFp, 0, SEEK_SET);
 		fwrite64(&Head, sizeof(DARC_HEAD), DestFp);
+	}
+
+	if (g_newCrypt)
+	{
+		uint8_t roundKey[AES_ROUND_KEY_SIZE] = { 0 };
+
+		fseek(DestFp, 0, SEEK_END);
+		int32_t size = ftell(DestFp);
+		fseek(DestFp, 0, SEEK_SET);
+
+		uint8_t *pFileData = new uint8_t[size]();
+
+		size_t ret = fread(pFileData, 1, size, DestFp);
+
+		if (cryptVersion >= 1010)
+			initAES128Pro(roundKey, Head.Reserve, pK2);
+		else
+			initAES128(roundKey, Head.Reserve);
+
+		uint32_t cryptSize = size - 64;
+		if (cryptSize >= 0x400)
+			cryptSize = 0x400;
+
+		aesCtrXCrypt(pFileData + 64, roundKey, cryptSize);
+		aesCtrXCrypt(pFileData + Head.FileNameTableStartAddress, roundKey, size - static_cast<int32_t>(Head.FileNameTableStartAddress));
+
+		initWolfCrypt(Head.Reserve, g_specialKey, nullptr, pFileData, 64, size - 64, true, KeyString_);
+
+		cryptAddresses(pFileData, Head.Reserve);
+
+		fseek(DestFp, 0, SEEK_SET);
+		fwrite64(pFileData, size, DestFp);
+
+		delete[] pFileData;
 	}
 
 	// 書き出したファイルを閉じる
@@ -2614,7 +2663,6 @@ int DXArchive::DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const 
 
 			uint8_t roundKey[AES_ROUND_KEY_SIZE] = { 0 };
 			initWolfCrypt(Head.Reserve, g_specialKey, nullptr, pFileData, 64, size - 64, true, KeyString_);
-
 
 			uint8_t *pK2 = nullptr;
 

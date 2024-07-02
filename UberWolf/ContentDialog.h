@@ -38,6 +38,7 @@
 
 #include "Localizer.h"
 #include "OptionDialog.h"
+#include "PackConfig.h"
 #include "WindowBase.h"
 #include "WolfUtils.h"
 #include "resource.h"
@@ -83,6 +84,7 @@ public:
 	ContentDialog(const HINSTANCE hInstance, const HWND hWndParent) :
 		WindowBase(hInstance, hWndParent),
 		m_optionsDialog(hInstance, nullptr),
+		m_packConfig(hInstance, nullptr),
 		m_mutex()
 	{
 		setHandle(CreateDialogParamW(m_hInstance, MAKEINTRESOURCE(IDD_CONTENT), m_hWndParent, wndProc, 0));
@@ -101,10 +103,13 @@ public:
 
 		registerSlot(IDC_OPTIONS, BN_CLICKED, [this]() { onOptionsClicked(); });
 		registerSlot(IDC_SELECT_GAME, BN_CLICKED, [this]() { onSelectGameClicked(); });
-		registerSlot(IDC_PROCESS, BN_CLICKED, [this]() { onProcessClicked(); });
+		registerSlot(IDC_UNPACK, BN_CLICKED, [this]() { onProcessClicked(); });
+		registerSlot(IDC_PACK, BN_CLICKED, [this]() { onPackClicked(); });
 		registerSlot(IDC_LABEL_DROP_FILE, WM_DROPFILES, [this](void* p) { onDropFile(p); });
 
 		m_optionsDialog.SetParent(hWnd());
+		m_packConfig.SetParent(hWnd());
+		m_packConfig.Populate(UberWolfLib::GetEncryptions());
 
 		// Register the Localizer GetValueW method as the query function for UberWolfLib
 		UberWolfLib::RegisterLocQueryFunc([](const std::string& s) -> const tString& { return LOCT(s); });
@@ -136,13 +141,14 @@ protected:
 
 		// Buttons
 		SetDlgItemText(hWnd(), IDC_SELECT_GAME, LOCW("select_game"));
-		SetDlgItemText(hWnd(), IDC_PROCESS, LOCW("process"));
+		SetDlgItemText(hWnd(), IDC_UNPACK, LOCW("process"));
+		SetDlgItemText(hWnd(), IDC_PACK, LOCW("pack"));
 		SetDlgItemText(hWnd(), IDC_OPTIONS, LOCW("options"));
 
 		adjustLabelEditComb(IDC_LABEL_GAME_LOCATION, IDC_GAME_LOCATION);
 		adjustLabelEditComb(IDC_LABEL_PROTECTION_KEY, IDC_PROTECTION_KEY);
 
-		// adjustButton(IDC_PROCESS);
+		// adjustButton(IDC_UNPACK);
 		// adjustButton(IDC_OPTIONS);
 	}
 
@@ -155,6 +161,14 @@ private:
 
 		int32_t newWidth = GetCaptionTextWidth(hButton) + 20;
 		SetWindowPos(hButton, nullptr, 0, 0, newWidth, rect.bottom - rect.top, SWP_NOMOVE | SWP_NOZORDER);
+	}
+
+	void setButtonStates(const BOOL& en)
+	{
+		// Set the "Process" button state
+		EnableWindow(GetDlgItem(hWnd(), IDC_UNPACK), en);
+		// Set the "Pack" button state
+		EnableWindow(GetDlgItem(hWnd(), IDC_PACK), en);
 	}
 
 	void adjustLabelEditComb(const int32_t& labelID, const int32_t& editID)
@@ -187,6 +201,27 @@ private:
 		m_optionsDialog.Show();
 	}
 
+	void onPackClicked()
+	{
+		const fs::path exePath = getExePath();
+
+		if (exePath.empty())
+			return;
+
+		setButtonStates(FALSE);
+
+		if (m_packConfig.Show())
+		{
+			// Pack the data
+			UberWolfLib uwl;
+			uwl.InitGame(exePath);
+			uwl.Configure(m_optionsDialog.Overwrite());
+			uwl.PackData(m_packConfig.GetSelectedIndex());
+		}
+
+		setButtonStates(TRUE);
+	}
+
 	// When the "Select Game" button is clicked
 	void onSelectGameClicked()
 	{
@@ -204,24 +239,10 @@ private:
 
 	void onProcessClicked()
 	{
-		// Make sure that the user has selected a file
-		WCHAR szFile[MAX_PATH];
-		GetDlgItemText(hWnd(), IDC_GAME_LOCATION, szFile, MAX_PATH);
+		const fs::path exePath = getExePath();
 
-		if (szFile[0] == '\0')
-		{
-			MessageBox(hWnd(), LOCW("select_file"), LOCW("error"), MB_OK | MB_ICONERROR);
+		if (exePath.empty())
 			return;
-		}
-
-		fs::path exePath = szFile;
-
-		// Make sure that the file exists
-		if (!fs::exists(exePath))
-		{
-			MessageBox(hWnd(), LOCW("error_msg_1"), LOCW("error"), MB_OK | MB_ICONERROR);
-			return;
-		}
 
 		const fs::path basePath = exePath.parent_path();
 		const tString dataPath  = FS_PATH_TO_TSTRING(basePath) + TEXT("/") + GetWolfDataFolder();
@@ -233,19 +254,18 @@ private:
 			return;
 		}
 
-		// Disable the "Process" button
-		EnableWindow(GetDlgItem(hWnd(), IDC_PROCESS), FALSE);
+		setButtonStates(FALSE);
 
 		UberWolfLib uwl;
 		uwl.Configure(m_optionsDialog.Overwrite(), m_optionsDialog.UseInject());
-		uwl.InitGame(szFile);
+		uwl.InitGame(exePath);
 		std::wstring protKey;
 		UWLExitCode result = uwl.UnpackData();
 
 		if (result != UWLExitCode::SUCCESS)
 		{
 			MessageBox(hWnd(), LOCW("error_msg_3"), LOCW("error"), MB_OK | MB_ICONERROR);
-			EnableWindow(GetDlgItem(hWnd(), IDC_PROCESS), TRUE);
+			setButtonStates(TRUE);
 			return;
 		}
 
@@ -257,7 +277,7 @@ private:
 			else
 			{
 				MessageBox(hWnd(), LOCW("error_msg_4"), LOCW("error"), MB_OK | MB_ICONERROR);
-				EnableWindow(GetDlgItem(hWnd(), IDC_PROCESS), TRUE);
+				setButtonStates(TRUE);
 				return;
 			}
 		}
@@ -265,8 +285,7 @@ private:
 		// Set the text of the protection key edit control to be the key
 		SetDlgItemText(hWnd(), IDC_PROTECTION_KEY, protKey.c_str());
 
-		// Enable the "Process" button
-		EnableWindow(GetDlgItem(hWnd(), IDC_PROCESS), TRUE);
+		setButtonStates(TRUE);
 	}
 
 	// When a file is dropped onto the "Drop File" label
@@ -329,11 +348,36 @@ private:
 		SendDlgItemMessage(hWnd(), IDC_LOG, EM_REPLACESEL, FALSE, (LPARAM)msg.c_str());
 	}
 
+	fs::path getExePath() const
+	{
+		// Make sure that the user has selected a file
+		WCHAR szFile[MAX_PATH];
+		GetDlgItemText(hWnd(), IDC_GAME_LOCATION, szFile, MAX_PATH);
+
+		if (szFile[0] == '\0')
+		{
+			MessageBox(hWnd(), LOCW("select_file"), LOCW("error"), MB_OK | MB_ICONERROR);
+			return fs::path();
+		}
+
+		fs::path exePath = szFile;
+
+		// Make sure that the file exists
+		if (!fs::exists(exePath))
+		{
+			MessageBox(hWnd(), LOCW("error_msg_1"), LOCW("error"), MB_OK | MB_ICONERROR);
+			return fs::path();
+		}
+
+		return exePath;
+	}
+
 	static void updateLoc(HWND hWnd)
 	{
 		SetDlgItemText(hWnd, IDC_LABEL_DROP_FILE, LOCW("drop_label"));
 		SetDlgItemText(hWnd, IDC_SELECT_GAME, LOCW("select_game"));
-		SetDlgItemText(hWnd, IDC_PROCESS, LOCW("process"));
+		SetDlgItemText(hWnd, IDC_UNPACK, LOCW("process"));
+		SetDlgItemText(hWnd, IDC_PACK, LOCW("pack"));
 		SetDlgItemText(hWnd, IDC_OPTIONS, LOCW("options"));
 		SetDlgItemText(hWnd, IDC_LABEL_PROTECTION_KEY, LOCW("protection_key"));
 		SetDlgItemText(hWnd, IDC_LABEL_GAME_LOCATION, LOCW("game_location"));
@@ -373,6 +417,7 @@ private:
 
 private:
 	OptionDialog m_optionsDialog;
+	PackConfig m_packConfig;
 	std::mutex m_mutex;
 	int32_t m_logIndex = -1;
 };

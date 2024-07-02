@@ -194,7 +194,7 @@ public :
 	~DXArchive_VER5() ;
 
 	static int			EncodeArchive(const TCHAR *OutputFileName, TCHAR **FileOrDirectoryPath, int FileNum, bool Press = false, const char *KeyString = NULL ) ;	// アーカイブファイルを作成する
-	static int			EncodeArchiveOneDirectory(const TCHAR *OutputFileName, const TCHAR *FolderPath, bool Press = false, const char *KeyString = NULL ) ;		// アーカイブファイルを作成する(ディレクトリ一個だけ)
+	static int			EncodeArchiveOneDirectory(const TCHAR *OutputFileName, const TCHAR *FolderPath, bool Press = false, const char *KeyString = NULL, u16 cryptVersion = 0); // アーカイブファイルを作成する(ディレクトリ一個だけ)
 	static int			DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const char *KeyString = NULL ) ;								// アーカイブファイルを展開する
 
 	int					OpenArchiveFile( const TCHAR *ArchivePath, const char *KeyString = NULL ) ;				// アーカイブファイルを開く( 0:成功  -1:失敗 )

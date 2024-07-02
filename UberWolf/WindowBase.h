@@ -139,6 +139,8 @@ protected:
 	{
 		m_hWnd              = hWnd;
 		s_windowMap[m_hWnd] = this;
+
+		afterHWndInit();
 	}
 
 	void unsetHandle()
@@ -216,6 +218,8 @@ protected:
 	virtual void updateLocalization()
 	{
 	}
+
+	virtual void afterHWndInit() {}
 
 	HWND hWnd() const
 	{

@@ -1463,7 +1463,7 @@ int DXArchive_VER6::Decode( void *Src, void *Dest )
 
 
 // アーカイブファイルを作成する(ディレクトリ一個だけ)
-int DXArchive_VER6::EncodeArchiveOneDirectory(const TCHAR *OutputFileName, const TCHAR *DirectoryPath, bool Press, const char *KeyString )
+int DXArchive_VER6::EncodeArchiveOneDirectory(const TCHAR *OutputFileName, const TCHAR *DirectoryPath, bool Press, const char *KeyString, u16 cryptVersion)
 {
 	int i, FileNum, Result ;
 	TCHAR **FilePathList, *NameBuffer ;

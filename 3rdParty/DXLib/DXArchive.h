@@ -194,9 +194,9 @@ public :
 	DXArchive(TCHAR *ArchivePath = NULL ) ;
 	~DXArchive() ;
 
-	static int EncodeArchive(const TCHAR *OutputFileName, const std::vector<std::wstring> &FileOrDirectoryPath, int FileNum, bool Press = false, bool AlwaysHuffman = false, u8 HuffmanEncodeKB = 0, const char *KeyString_ = NULL, bool NoKey = false, bool OutputStatus = true, bool MaxPress = false); // アーカイブファイルを作成する
-	static int			EncodeArchiveOneDirectory(const TCHAR *OutputFileName, const TCHAR *FolderPath, bool Press = false, bool AlwaysHuffman = false, u8 HuffmanEncodeKB = 0, const char *KeyString_ = NULL, bool NoKey = false, bool OutputStatus = true, bool MaxPress = false ) ;		// アーカイブファイルを作成する(ディレクトリ一個だけ)
-	static int          EncodeArchiveOneDirectoryWolf(const TCHAR *OutputFileName, const TCHAR *DirectoryPath, bool Press = false, const char *KeyString_ = NULL);
+	static int			EncodeArchive(const TCHAR *OutputFileName, const std::vector<std::wstring> &FileOrDirectoryPath, int FileNum, bool Press = false, bool AlwaysHuffman = false, u8 HuffmanEncodeKB = 0, const char *KeyString_ = NULL, bool NoKey = false, bool OutputStatus = true, bool MaxPress = false, uint16_t cryptVersion = 0); // アーカイブファイルを作成する
+	static int 			EncodeArchiveOneDirectory(const TCHAR *OutputFileName, const TCHAR *FolderPath, bool Press = false, bool AlwaysHuffman = false, u8 HuffmanEncodeKB = 0, const char *KeyString_ = NULL, bool NoKey = false, bool OutputStatus = true, bool MaxPress = false, uint16_t cryptVersion = 0);                               // アーカイブファイルを作成する(ディレクトリ一個だけ)
+	static int			EncodeArchiveOneDirectoryWolf(const TCHAR *OutputFileName, const TCHAR *DirectoryPath, bool Press = false, const char *KeyString_ = NULL, uint16_t cryptVersion = 0);
 	static int			DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const char *KeyString_ = NULL ) ;								// アーカイブファイルを展開する
 
 	int					OpenArchiveFile( const TCHAR *ArchivePath, const char *KeyString_ = NULL ) ;				// アーカイブファイルを開く( 0:成功  -1:失敗 )

@@ -43,12 +43,13 @@ enum class UWLExitCode
 	KEY_DETECT_FAIELD,
 	UNPACK_FAILED,
 	PROT_KEY_DETECT_FAILED,
+	INVALID_ENCRYPTION,
 	UNKNOWN_ERROR = 999
 };
 
 class UberWolfLib
 {
-	inline static const tString UWL_VERSION = _T("0.3.1");
+	inline static const tString UWL_VERSION = _T("0.4.0");
 	struct Config
 	{
 		bool useInject = false;
@@ -72,7 +73,7 @@ public:
 
 	bool InitGame(const tString& gameExePath);
 
-	UWLExitCode PackData();
+	UWLExitCode PackData(const int32_t& encIdx);
 	UWLExitCode PackDataVec(const tStrings& paths);
 	UWLExitCode PackArchive(const tString& archivePath);
 
@@ -93,6 +94,11 @@ public:
 	static tString GetVersion()
 	{
 		return UWL_VERSION;
+	}
+
+	static tStrings GetEncryptions()
+	{
+		return WolfDec::GetEncryptions();
 	}
 
 private:

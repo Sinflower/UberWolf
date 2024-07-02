@@ -45,6 +45,9 @@
     <ClInclude Include="Localizer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PackConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -63,6 +66,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="lang\en.json">
+      <Filter>Resource Files\langs</Filter>
+    </None>
+    <None Include="lang\jp.json">
+      <Filter>Resource Files\langs</Filter>
+    </None>
+    <None Include="lang\ko.json">
       <Filter>Resource Files\langs</Filter>
     </None>
   </ItemGroup>

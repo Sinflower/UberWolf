@@ -136,12 +136,17 @@ bool UberWolfLib::InitGame(const tString& gameExePath)
 	return m_valid;
 }
 
-UWLExitCode UberWolfLib::PackData()
+UWLExitCode UberWolfLib::PackData(const int32_t& encIdx)
 {
 	if (!m_valid)
 		return UWLExitCode::NOT_INITIALIZED;
 
+	if (encIdx < 0 || encIdx >= static_cast<int32_t>(WolfDec::GetEncryptions().size()))
+		return UWLExitCode::INVALID_ENCRYPTION;
+
 	tStrings paths;
+
+	m_wolfDec.SetMode(encIdx);
 
 	for (const auto& dirEntry : fs::directory_iterator(m_dataFolder))
 	{
@@ -306,7 +311,7 @@ UWLExitCode UberWolfLib::packData(const tString& dataPath)
 
 	INFO_LOG << vFormat(LOCALIZE("packing_msg"), fileName);
 
-	bool result = m_wolfDec.PackArchive(dataPath);
+	bool result = m_wolfDec.PackArchive(dataPath, m_config.override);
 
 	INFO_LOG << (result ? LOCALIZE("done_msg") : LOCALIZE("failed_msg")) << std::endl;
 

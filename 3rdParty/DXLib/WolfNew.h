@@ -754,7 +754,7 @@ static inline void aesKeyGen(CryptData &cd, RngData &rd, std::array<uint8_t, AES
 	std::copy(ivBegin, ivBegin + AES_IV_SIZE, aesIv.begin());
 }
 
-static inline std::vector<uint8_t> calcKey(const std::vector<uint8_t> &gameDataBytes)
+static inline CryptData decryptV2File(const std::vector<uint8_t> &gameDataBytes)
 {
 	CryptData cd;
 	RngData rd;
@@ -777,7 +777,13 @@ static inline std::vector<uint8_t> calcKey(const std::vector<uint8_t> &gameDataB
 
 	aesCtrXCrypt(cd.gameDatBytes.data() + 30, roundKey.data(), cd.dataSize);
 
+	return cd;
+}
+
+static inline std::vector<uint8_t> calcKey(const std::vector<uint8_t> &gameDataBytes)
+{
 	std::vector<uint8_t> key;
+	CryptData cd = decryptV2File(gameDataBytes);
 
 	int32_t k       = cd.gameDatBytes[4] + ((static_cast<uint16_t>(cd.gameDatBytes[3]) * cd.gameDatBytes[6]) & 0x3FF);
 	uint32_t keyLen = cd.gameDatBytes[19];

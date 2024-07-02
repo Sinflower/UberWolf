@@ -27,16 +27,16 @@
 #pragma once
 
 #include <cstdint>
+#include <exception>
 #include <iterator>
 #include <string>
 #include <tchar.h>
 #include <vector>
-#include <exception>
 
 #include "Types.h"
 
 using DecryptFunction = int (*)(TCHAR*, const TCHAR*, const char*);
-using EncryptFunction = int (*)(const TCHAR*, const TCHAR*, bool, const char*);
+using EncryptFunction = int (*)(const TCHAR*, const TCHAR*, bool, const char*, uint16_t);
 
 class InvalidModeException : public std::exception
 {};
@@ -101,6 +101,11 @@ public:
 		return m_mode != -1;
 	}
 
+	void SetMode(const uint32_t& mode)
+	{
+		m_mode = mode;
+	}
+
 	bool IsValidFile(const tString& filePath) const;
 
 	bool IsAlreadyUnpacked(const tString& filePath) const;
@@ -118,6 +123,8 @@ public:
 		m_mode = -1;
 	}
 
+	static tStrings GetEncryptions();
+
 private:
 	void loadConfig();
 	bool detectCrypt(const tString& filePath);
@@ -127,7 +134,7 @@ private:
 	uint16_t getCryptVersion(const tString& filePath) const;
 
 private:
-	uint32_t m_mode                = -1;
+	uint32_t m_mode              = -1;
 	CryptModes m_additionalModes = {};
 	std::wstring m_progName;
 	bool m_isSubProcess = false;
