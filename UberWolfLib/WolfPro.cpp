@@ -250,18 +250,26 @@ Key WolfPro::findDxArcKey(const tString& filePath)
 	INFO_LOG << std::format(TEXT("Searching for DxArc key in: {} ... "), filePath) << std::endl;
 #endif
 
-	if (!readFile(filePath, bytes, fileSize)) return Key();
-	if (bytes.empty()) return Key();
+	try
+	{
+		if (!readFile(filePath, bytes, fileSize)) return Key();
+		if (bytes.empty()) return Key();
 
-	if (bytes[0] == 0xA0)
-	{
-		m_proVersion = 1;
-		return findDxArcKeyV1(bytes, fileSize);
+		if (bytes[0] == 0xA0)
+		{
+			m_proVersion = 1;
+			return findDxArcKeyV1(bytes, fileSize);
+		}
+		else
+		{
+			m_proVersion = 2;
+			return findDxArcKeyV2(bytes);
+		}
 	}
-	else
+	catch (const std::exception& e)
 	{
-		m_proVersion = 2;
-		return findDxArcKeyV2(bytes);
+		ERROR_LOG << std::format(TEXT("ERROR: {}"), StringToWString(e.what())) << std::endl;
+		return Key();
 	}
 }
 

@@ -123,9 +123,11 @@ public:
 		m_mode = -1;
 	}
 
-	static tStrings GetEncryptions();
+	static tStrings GetEncryptionsW();
+	static Strings GetEncryptions();
 
 private:
+	void removeOldConfig() const;
 	void loadConfig();
 	bool detectCrypt(const tString& filePath);
 	bool detectMode(const tString& filePath, const bool& override = false);

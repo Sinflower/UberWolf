@@ -397,3 +397,5 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 UberWolfConfig.json
+
+3rdParty_bak

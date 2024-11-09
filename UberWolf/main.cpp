@@ -24,9 +24,6 @@
  *
  */
 
-// UberWolf.cpp : Defines the entry point for the application.
-//
-
 #include <UberWolfLib.h>
 #include <Utils.h>
 #include <windows.h>

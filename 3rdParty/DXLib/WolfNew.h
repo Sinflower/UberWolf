@@ -809,7 +809,7 @@ static inline std::vector<uint8_t> calcKey(const std::vector<uint8_t> &gameDataB
 	}
 
 	for (uint32_t i = 0; i < keyLen; i++)
-		key.push_back(cd.gameDatBytes[(i * k) % cd.dataSize + 30 + cd.gameDatBytes[7]]);
+		key.push_back(cd.gameDatBytes.at((i * k) % cd.dataSize + 30 + cd.gameDatBytes[7]));
 
 	key.push_back(0x0);
 

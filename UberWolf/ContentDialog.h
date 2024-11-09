@@ -109,7 +109,7 @@ public:
 
 		m_optionsDialog.SetParent(hWnd());
 		m_packConfig.SetParent(hWnd());
-		m_packConfig.Populate(UberWolfLib::GetEncryptions());
+		m_packConfig.Populate(UberWolfLib::GetEncryptionsW());
 
 		// Register the Localizer GetValueW method as the query function for UberWolfLib
 		UberWolfLib::RegisterLocQueryFunc([](const std::string& s) -> const tString& { return LOCT(s); });

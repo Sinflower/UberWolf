@@ -211,14 +211,15 @@ UWLExitCode UberWolfLib::UnpackArchive(const tString& archivePath)
 	return unpackArchive(archivePath);
 }
 
-UWLExitCode UberWolfLib::FindDxArcKey()
+UWLExitCode UberWolfLib::FindDxArcKey(const bool& quiet)
 {
 	if (!m_valid)
 		return UWLExitCode::NOT_INITIALIZED;
 
-	INFO_LOG << LOCALIZE("dec_key_search_msg") << std::endl;
+	if (!quiet)
+		INFO_LOG << LOCALIZE("dec_key_search_msg") << std::endl;
 
-	if (findDxArcKeyFile() == UWLExitCode::SUCCESS)
+	if (findDxArcKeyFile(quiet) == UWLExitCode::SUCCESS)
 		return UWLExitCode::SUCCESS;
 
 	if (m_config.useInject)
@@ -318,7 +319,7 @@ UWLExitCode UberWolfLib::packData(const tString& dataPath)
 	return result ? UWLExitCode::SUCCESS : UWLExitCode::UNKNOWN_ERROR;
 }
 
-UWLExitCode UberWolfLib::unpackArchive(const tString& archivePath)
+UWLExitCode UberWolfLib::unpackArchive(const tString& archivePath, const bool& quiet, const bool& secondRun)
 {
 	// Make sure the file exists
 	if (!fs::exists(archivePath))
@@ -341,25 +342,34 @@ UWLExitCode UberWolfLib::unpackArchive(const tString& archivePath)
 		return UWLExitCode::SUCCESS;
 	}
 
-	INFO_LOG << vFormat(LOCALIZE("unpacking_msg"), fileName);
+	if (!quiet)
+		INFO_LOG << vFormat(LOCALIZE("unpacking_msg"), fileName);
 
 	bool result = m_wolfDec.UnpackArchive(archivePath, m_config.override);
-
-	INFO_LOG << (result ? LOCALIZE("done_msg") : LOCALIZE("failed_msg")) << std::endl;
 
 	if (!result)
 	{
 		if (!m_valid)
 		{
 			if (!findGameFromArchive(archivePath))
+			{
+				INFO_LOG << LOCALIZE("failed_msg") << std::endl;
 				return UWLExitCode::NOT_INITIALIZED;
+			}
 		}
 
-		UWLExitCode uec = FindDxArcKey();
+		if (!secondRun)
+		{
+			UWLExitCode uec = FindDxArcKey(true);
 
-		if (uec == UWLExitCode::SUCCESS)
-			return unpackArchive(archivePath);
+			if (uec == UWLExitCode::SUCCESS)
+				return unpackArchive(archivePath, true, true);
+		}
+
+		INFO_LOG << LOCALIZE("failed_msg") << std::endl;
 	}
+	else
+		INFO_LOG << LOCALIZE("done_msg") << std::endl;
 
 	return result ? UWLExitCode::SUCCESS : UWLExitCode::KEY_MISSING;
 }
@@ -390,12 +400,13 @@ bool UberWolfLib::findDataFolder()
 	return false;
 }
 
-UWLExitCode UberWolfLib::findDxArcKeyFile()
+UWLExitCode UberWolfLib::findDxArcKeyFile(const bool& quiet)
 {
 	if (!m_wolfPro.IsWolfPro())
 		return UWLExitCode::NOT_WOLF_PRO;
 
-	INFO_LOG << LOCALIZE("pro_game_detected_msg") << std::endl;
+	if (!quiet)
+		INFO_LOG << LOCALIZE("pro_game_detected_msg") << std::endl;
 
 	const Key key = m_wolfPro.GetDxArcKey();
 
@@ -406,8 +417,10 @@ UWLExitCode UberWolfLib::findDxArcKeyFile()
 	}
 
 	m_wolfDec.AddAndSetKey("UNKNOWN_PRO", (m_wolfPro.IsProV2() ? 1010 : 1000), false, key);
-	// updateConfig(false, key);
-	INFO_LOG << LOCALIZE("det_key_found_msg") << std::endl;
+	updateConfig(false, key);
+
+	if (!quiet)
+		INFO_LOG << LOCALIZE("det_key_found_msg") << std::endl;
 
 	return UWLExitCode::SUCCESS;
 }

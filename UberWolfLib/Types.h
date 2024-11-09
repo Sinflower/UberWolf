@@ -62,6 +62,7 @@ using tStringStream = std::stringstream;
 #endif // _UNICODE
 
 using tStrings = std::vector<tString>;
+using Strings = std::vector<std::string>;
 using Key = std::vector<uint8_t>;
 
 using LogCallback = std::function<void(const tString&, const bool&)>;

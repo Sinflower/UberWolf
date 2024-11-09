@@ -51,6 +51,8 @@
 
 namespace fs = std::filesystem;
 
+static constexpr uint16_t PRO_CRYPT_VERSION = 1000;
+
 const CryptModes DEFAULT_CRYPT_MODES = {
 	{ "Wolf RPG v2.01", 0x0, &DXArchive_VER5::DecodeArchive, &DXArchive_VER5::EncodeArchiveOneDirectory, std::vector<unsigned char>{ 0x0f, 0x53, 0xe1, 0x3e, 0x04, 0x37, 0x12, 0x17, 0x60, 0x0f, 0x53, 0xe1 } },
 	{ "Wolf RPG v2.10", 0x0, &DXArchive_VER5::DecodeArchive, &DXArchive_VER5::EncodeArchiveOneDirectory, std::vector<unsigned char>{ 0x4c, 0xd9, 0x2a, 0xb7, 0x28, 0x9b, 0xac, 0x07, 0x3e, 0x77, 0xec, 0x4c } },
@@ -186,8 +188,18 @@ bool WolfDec::UnpackArchive(const tString& filePath, const bool& override)
 	if (!override && IsAlreadyUnpacked(filePath))
 		return true;
 
-	if (m_mode == -1 && !detectCrypt(filePath))
-		return detectMode(filePath, override);
+	if (m_mode == -1)
+	{
+		const uint16_t cryptVersion = getCryptVersion(filePath);
+
+		if (cryptVersion == 0x0)
+			return detectMode(filePath, override);
+		// For Pro Games always return false and let UberWolfLib calculate the key
+		else if (cryptVersion >= PRO_CRYPT_VERSION)
+			return false;
+		else if (!detectCrypt(filePath))
+			return false;
+	}
 
 	if (m_mode >= (DEFAULT_CRYPT_MODES.size() + m_additionalModes.size()))
 	{
@@ -197,6 +209,10 @@ bool WolfDec::UnpackArchive(const tString& filePath, const bool& override)
 		else
 			return false;
 	}
+
+	// Always run the unpacking in a subprocess
+	if (!m_isSubProcess)
+		return runProcess(filePath, m_mode, override);
 
 	const CryptMode curMode = (m_mode < DEFAULT_CRYPT_MODES.size() ? DEFAULT_CRYPT_MODES.at(m_mode) : m_additionalModes.at(m_mode - DEFAULT_CRYPT_MODES.size()));
 
@@ -231,13 +247,28 @@ void WolfDec::AddKey(const std::string& name, const uint16_t& cryptVersion, cons
 	m_additionalModes.push_back({ name, cryptVersion, (useOldDxArc ? &DXArchive_VER6::DecodeArchive : &DXArchive::DecodeArchive), nullptr, key });
 }
 
-tStrings WolfDec::GetEncryptions()
+tStrings WolfDec::GetEncryptionsW()
 {
 	tStrings encryptions;
 	for (const auto& mode : DEFAULT_CRYPT_MODES)
 		encryptions.push_back(StringToWString(mode.name));
 
 	return encryptions;
+}
+
+Strings WolfDec::GetEncryptions()
+{
+	Strings encryptions;
+	for (const auto& mode : DEFAULT_CRYPT_MODES)
+		encryptions.push_back(mode.name);
+
+	return encryptions;
+}
+
+void WolfDec::removeOldConfig() const
+{
+	if (fs::exists(CONFIG_FILE_NAME))
+		fs::remove(CONFIG_FILE_NAME);
 }
 
 void WolfDec::loadConfig()

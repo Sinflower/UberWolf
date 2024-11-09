@@ -24,7 +24,9 @@
  *
  */
 
+#include <CLI11/CLI11.hpp>
 #include <filesystem>
+#include <format>
 #include <iostream>
 #include <vector>
 #include <windows.h>
@@ -34,16 +36,21 @@
 
 namespace fs = std::filesystem;
 
-static const std::string UWCLI_VERSION = "0.2.0";
-static const std::string UWCLI_NAME  = "UberWolfCli";
+static const std::string UWCLI_VERSION = "0.3.0";
+static const std::string UWCLI_NAME    = "UberWolfCli";
 
-void printHelp()
+std::string buildPackInfo()
 {
-	std::cout << "UberWolfCli v" << UWCLI_VERSION << std::endl;
-	std::cout << "Usage: " << std::endl;
-	std::cout << "  " << UWCLI_NAME << " <Game[Pro].exe>" << std::endl;
-	std::cout << "  " << UWCLI_NAME << " <data_folder>" << std::endl;
-	std::cout << "  " << UWCLI_NAME << " <.wolf-files>" << std::endl;
+	Strings crypts   = UberWolfLib::GetEncryptions();
+	std::string info = "";
+	for (std::size_t i = 0; i < crypts.size(); i++)
+	{
+		if (!info.empty())
+			info += "\n";
+		info += std::format("{} - {}", i, crypts[i]);
+	}
+
+	return info;
 }
 
 int main(int argc, char* argv[])
@@ -54,37 +61,85 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	tStrings args          = argvToList(argc, argv);
-	const tStrings zeroArg = { args[0] };
+	CLI::App app{ UWCLI_NAME + " v" + UWCLI_VERSION };
+	argv = app.ensure_utf8(argv);
+
+	std::vector<std::string> files;
+	app.add_option("FILE[s]", files, "<Game[Pro].exe>\n<data_folder>\n<.wolf-files>")->required();
+
+	bool override = false;
+	app.add_flag("-o,--override", override, "Override existing files");
+
+	std::string packVersion = "";
+	app.add_option("-p,--pack", packVersion, buildPackInfo())->type_name("VER_IDX");
+
+	CLI11_PARSE(app, argc, argv);
+
+	const tStrings zeroArg = { StringToWString(argv[0]) };
 	UberWolfLib uwl(zeroArg);
 
-	// If no arguments are passed, print the help message
-	if (args.size() == 1)
+	if (files.empty())
 	{
-		printHelp();
-		return 0;
+		std::cout << "No files specified." << std::endl;
+		return -1;
 	}
 
 	// Check if the first argument is an executable
-	if (fs::exists(args[1]) && fs::is_regular_file(args[1]) && fs::path(args[1]).extension() == ".exe")
+	if (fs::exists(files.front()) && fs::is_regular_file(files.front()) && fs::path(files.front()).extension() == ".exe")
 	{
-		uwl.InitGame(args[1]);
-		uwl.UnpackData();
+		uwl.Configure(override);
+		uwl.InitGame(StringToWString(files.front()));
 
-		std::string key;
+		if (packVersion.empty())
+		{
+			uwl.UnpackData();
 
-		if (uwl.FindProtectionKey(key) == UWLExitCode::SUCCESS)
-			std::cout << "Protection key: " << key << std::endl;
+			std::string key;
+
+			if (uwl.FindProtectionKey(key) == UWLExitCode::SUCCESS)
+				std::cout << "Protection key: " << key << std::endl;
+		}
+		else
+		{
+			int32_t encIdx = -1;
+
+			try
+			{
+				encIdx = std::stoi(packVersion);
+			}
+			catch (const std::exception& e)
+			{
+				std::cerr << "Invalid package version index - " << packVersion << std::endl;
+				std::cerr << "Error: " << e.what() << std::endl;
+				return -1;
+			}
+
+			if (encIdx < 0 || static_cast<std::size_t>(encIdx) >= UberWolfLib::GetEncryptions().size())
+			{
+				std::cout << "Invalid package version index" << std::endl;
+				return -1;
+			}
+
+			UWLExitCode result = uwl.PackData(encIdx);
+			if (result != UWLExitCode::SUCCESS)
+				std::cout << "PackData failed with exit code: " << static_cast<int>(result) << std::endl;
+		}
 
 		return 0;
+	}
+
+	if (!packVersion.empty())
+	{
+		std::cerr << "[ERROR] Currently, packing can only be used with an executable" << std::endl;
+		return -1;
 	}
 
 	tStrings paths;
 
 	// Check if the first argument is a folder
-	if (fs::exists(args[1]) && fs::is_directory(args[1]))
+	if (fs::exists(files.front()) && fs::is_directory(files.front()))
 	{
-		for (const auto& entry : fs::directory_iterator(args[1]))
+		for (const auto& entry : fs::directory_iterator(files.front()))
 		{
 			if (entry.is_regular_file())
 				paths.push_back({ FS_PATH_TO_TSTRING(entry.path()) });
@@ -92,10 +147,10 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-		for (size_t i = 1; i < args.size(); i++)
+		for (size_t i = 0; i < files.size(); i++)
 		{
-			if (fs::exists(args[i]) && fs::is_regular_file(args[i]))
-				paths.push_back({ args[i] });
+			if (fs::exists(files[i]) && fs::is_regular_file(files[i]))
+				paths.push_back({ StringToWString(files[i]) });
 		}
 	}
 

@@ -49,7 +49,7 @@ enum class UWLExitCode
 
 class UberWolfLib
 {
-	inline static const tString UWL_VERSION = _T("0.4.0");
+	inline static const tString UWL_VERSION = _T("0.4.1");
 	struct Config
 	{
 		bool useInject = false;
@@ -81,7 +81,7 @@ public:
 	UWLExitCode UnpackDataVec(const tStrings& paths);
 	UWLExitCode UnpackArchive(const tString& archivePath);
 
-	UWLExitCode FindDxArcKey();
+	UWLExitCode FindDxArcKey(const bool& quiet = false);
 	UWLExitCode FindProtectionKey(std::string& key);
 	UWLExitCode FindProtectionKey(std::wstring& key);
 
@@ -96,16 +96,21 @@ public:
 		return UWL_VERSION;
 	}
 
-	static tStrings GetEncryptions()
+	static tStrings GetEncryptionsW()
+	{
+		return WolfDec::GetEncryptionsW();
+	}
+
+	static Strings GetEncryptions()
 	{
 		return WolfDec::GetEncryptions();
 	}
 
 private:
 	UWLExitCode packData(const tString& dataPath);
-	UWLExitCode unpackArchive(const tString& archivePath);
+	UWLExitCode unpackArchive(const tString& archivePath, const bool& quiet = false, const bool& secondRun = false);
 	bool findDataFolder();
-	UWLExitCode findDxArcKeyFile();
+	UWLExitCode findDxArcKeyFile(const bool& quiet = false);
 	UWLExitCode findDxArcKeyInject();
 	void updateConfig(const bool& useOldDxArc, const Key& key);
 	bool findGameFromArchive(const tString& archivePath);
