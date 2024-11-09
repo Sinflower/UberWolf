@@ -33,7 +33,7 @@
 uint8_t g_specialKey[768] = {};
 bool g_newCrypt           = false;
 
-static WCHAR *sjis2utf8(const char *sjis, const int &len);
+static WCHAR *sjis2utf8(const char *sjis, const int32_t &len);
 static char *utf82sjis(const WCHAR *utf8);
 
 // struct -----------------------------
@@ -348,7 +348,7 @@ TCHAR *DXArchive::GetOriginalFileName(u8 *FileNameTable)
 	const char *pName = ((char *)FileNameTable + *((u16 *)&FileNameTable[0]) * 4 + 4);
 
 	bool isMultiByte = false;
-	size_t nameLen   = strlen(pName);
+	int32_t nameLen   = static_cast<int32_t>(strlen(pName));
 	return sjis2utf8(pName, nameLen);
 }
 
@@ -4086,7 +4086,7 @@ s64 DXArchiveFile::Size(void)
 	return this->FileData->DataSize;
 }
 
-static WCHAR *sjis2utf8(const char *sjis, const int &len)
+static WCHAR *sjis2utf8(const char *sjis, const int32_t &len)
 {
 	WCHAR *pUTF8 = new WCHAR[len + 1]();
 	MultiByteToWideChar(932, 0, (LPCCH)sjis, -1, pUTF8, len);

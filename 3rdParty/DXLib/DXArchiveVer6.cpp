@@ -14,6 +14,7 @@
 #include "DXArchiveVer6.h"
 #include <stdio.h>
 #include <windows.h>
+#include <stdint.h>
 #include <string.h>
 
 // define -----------------------------
@@ -25,7 +26,7 @@
 #define MAX_ADDRESSLISTNUM	(1024 * 1024 * 1)		// スライド辞書の最大サイズ
 #define MAX_POSITION		(1 << 24)				// 参照可能な最大相対アドレス( 16MB )
 
-static WCHAR *sjis2utf8(const char *sjis, const int &len);
+static WCHAR *sjis2utf8(const char *sjis, const int32_t &len);
 static char *utf82sjis(const WCHAR *utf8);
 
 // struct -----------------------------
@@ -315,7 +316,7 @@ TCHAR *DXArchive_VER6::GetOriginalFileName( u8 *FileNameTable )
 	const char *pName = ((char *)FileNameTable + *((u16 *)&FileNameTable[0]) * 4 + 4);
 
 	bool isMultiByte = false;
-	size_t nameLen = strlen(pName);
+	int32_t nameLen  = static_cast<int32_t>(strlen(pName));
 	return sjis2utf8(pName, nameLen);
 }
 
@@ -2713,7 +2714,7 @@ s64 DXArchiveFile_VER6::Size( void )
 
 
 
-static WCHAR *sjis2utf8(const char *sjis, const int &len)
+static WCHAR *sjis2utf8(const char *sjis, const int32_t &len)
 {
 	WCHAR *pUTF8 = new WCHAR[len + 1]();
 	MultiByteToWideChar(932, 0, (LPCCH)sjis, -1, pUTF8, len);

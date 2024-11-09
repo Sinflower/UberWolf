@@ -72,7 +72,7 @@ static inline void calcSalt(const char *pStr, uint8_t *pSalt)
 	if (!pSalt)
 		return;
 
-	uint32_t len = strlen(pStr);
+	uint32_t len = static_cast<uint32_t>(strlen(pStr));
 
 	for (uint32_t i = 0; i < 128; i++)
 		pSalt[i] = (i / len) + pStr[i % len];

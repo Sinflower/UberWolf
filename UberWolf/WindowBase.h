@@ -238,7 +238,7 @@ private:
 					if (m_slotMap[id][code]->HasNoParam())
 						m_threadList.push_back(m_slotMap[id][code]->operator()());
 					else
-						m_threadList.push_back(m_slotMap[id][code]->operator()(reinterpret_cast<void*>(id)));
+						m_threadList.push_back(m_slotMap[id][code]->operator()(reinterpret_cast<void*>(static_cast<DWORD_PTR>(id))));
 				}
 				else
 					m_threadList.push_back(m_slotMap[id][code]->operator()(reinterpret_cast<void*>(wParam)));

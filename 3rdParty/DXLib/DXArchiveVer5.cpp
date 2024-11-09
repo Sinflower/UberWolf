@@ -14,8 +14,8 @@
 #include "DXArchiveVer5.h"
 #include <stdio.h>
 #include <windows.h>
-#include <string.h>
 #include <stdint.h>
+#include <string.h>
 
 // define -----------------------------
 
@@ -26,7 +26,7 @@
 #define MAX_ADDRESSLISTNUM_VER5	(1024 * 1024 * 1)		// スライド辞書の最大サイズ
 #define MAX_POSITION_VER5		(1 << 24)				// 参照可能な最大相対アドレス( 16MB )
 
-static WCHAR *sjis2utf8(const char *sjis, const int &len);
+static WCHAR *sjis2utf8(const char *sjis, const int32_t &len);
 static char *utf82sjis(const WCHAR *utf8);
 
 // struct -----------------------------
@@ -287,7 +287,7 @@ int DXArchive_VER5::AddFileNameData(const TCHAR *FileName, u8 *FileNameTable)
 	char *fN = utf82sjis(FileName);
 
 	// サイズをセット
-	Length = strlen(fN);
+	Length = static_cast<int>(strlen(fN));
 
 	// 一文字も無かった場合の処理
 	if (Length == 0)
@@ -426,7 +426,7 @@ TCHAR *DXArchive_VER5::GetOriginalFileName( u8 *FileNameTable )
 	const char *pName = ((char *)FileNameTable + *((u16 *)&FileNameTable[0]) * 4 + 4);
 
 	bool isMultiByte = false;
-	size_t nameLen   = strlen(pName);
+	int32_t nameLen  = static_cast<int32_t>(strlen(pName));
 	return sjis2utf8(pName, nameLen);
 }
 
@@ -1439,7 +1439,7 @@ NOENCODE:
 			if( srcaddress + maxconbo < SrcSize )
 			{
 				sp2 = &sp[1] ;
-				for( j = 1 ; j < maxconbo && (u32)&sp2[2] - (u32)srcp < SrcSize ; j ++, sp2 ++ )
+				for (j = 1; j < maxconbo && (u64)&sp2[2] - (u64)srcp < SrcSize; j++, sp2++)
 				{
 					code = *((u16 *)sp2) ;
 					list = (LZ_LIST_VER5 *)( listfirsttable + code * sizeof( u32 ) ) ;
@@ -3007,7 +3007,7 @@ int DXArchiveFile_VER5::Size( void )
 
 
 
-static WCHAR *sjis2utf8(const char *sjis, const int &len)
+static WCHAR *sjis2utf8(const char *sjis, const int32_t &len)
 {
 	WCHAR *pUTF8 = new WCHAR[len + 1]();
 	MultiByteToWideChar(932, 0, (LPCCH)sjis, -1, pUTF8, len);

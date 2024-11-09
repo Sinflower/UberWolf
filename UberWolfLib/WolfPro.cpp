@@ -212,6 +212,7 @@ bool WolfPro::RemoveProtection()
 		return false;
 	}
 
+	// TODO: Implement this
 	if (m_proVersion == 2) return false;
 
 	// Check if the unprotected folder exists in the data folder and create it if it doesn't
@@ -435,7 +436,7 @@ bool WolfPro::writeFile(const tString& filePath, std::vector<uint8_t>& bytes) co
 
 	DWORD dwBytesWritten = 0;
 
-	BOOL bResult = WriteFile(hFile, bytes.data(), bytes.size(), &dwBytesWritten, NULL);
+	BOOL bResult = WriteFile(hFile, bytes.data(), static_cast<DWORD>(bytes.size()), &dwBytesWritten, NULL);
 	CloseHandle(hFile);
 
 	if (!bResult)
@@ -588,7 +589,7 @@ std::vector<uint8_t> WolfPro::removeProtectionFromDat(const tString& filePath, c
 		return std::vector<uint8_t>();
 	}
 
-	const uint32_t oldSize = bytes.size();
+	const uint32_t oldSize = static_cast<uint32_t>(bytes.size());
 
 	// Remove the first bytes until after the key
 	bytes.erase(bytes.begin(), bytes.begin() + ProtKey::KEY_OFFSET + keyLen);
@@ -625,5 +626,5 @@ void WolfPro::gameDatUpdateSize(std::vector<uint8_t>& bytes, const uint32_t& old
 	while (*reinterpret_cast<uint32_t*>(&bytes[offset]) != (oldSize - 1))
 		offset += *reinterpret_cast<uint32_t*>(&bytes[offset]) + 4; // ?
 
-	*reinterpret_cast<uint32_t*>(&bytes[offset]) = bytes.size() - 1;
+	*reinterpret_cast<uint32_t*>(&bytes[offset]) = static_cast<uint32_t>(bytes.size()) - 1;
 }

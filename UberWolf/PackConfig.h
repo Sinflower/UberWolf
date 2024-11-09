@@ -58,7 +58,7 @@ public:
 		if (!cbHWnd)
 			return m_selectedIndex;
 
-		return SendMessage(cbHWnd, CB_GETCURSEL, 0, 0);
+		return static_cast<int32_t>(SendMessage(cbHWnd, CB_GETCURSEL, 0, 0));
 	}
 
 	void SetParent(const HWND& hWndParent)

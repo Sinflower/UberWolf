@@ -419,5 +419,5 @@ private:
 	OptionDialog m_optionsDialog;
 	PackConfig m_packConfig;
 	std::mutex m_mutex;
-	int32_t m_logIndex = -1;
+	std::size_t m_logIndex = -1;
 };

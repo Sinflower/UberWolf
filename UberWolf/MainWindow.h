@@ -64,7 +64,7 @@ public:
 
 		initLanguages();
 
-		onLanguageChanged(reinterpret_cast<void*>(getSaveValue<int32_t>("language", DEFAULT_LANG_ID)));
+		onLanguageChanged(reinterpret_cast<void*>(static_cast<DWORD_PTR>(getSaveValue<int32_t>("language", DEFAULT_LANG_ID))));
 
 		return true;
 	}
@@ -101,7 +101,7 @@ private:
 				// Get the language ID
 				if (IS_INTRESOURCE(lpszName))
 				{
-					langID = LOWORD(reinterpret_cast<uint32_t>(lpszName));
+					langID = LOWORD(reinterpret_cast<DWORD_PTR>(lpszName));
 					pLangIDs->push_back(langID);
 				}
 
@@ -117,7 +117,7 @@ private:
 		// Get the submenu handle
 		HMENU hLangMenu = CreateMenu();
 
-		UINT_PTR idx = ID_LANGUAGE_EN;
+		int32_t idx = ID_LANGUAGE_EN;
 
 		for (const uint16_t& langID : langIDs)
 		{
@@ -162,7 +162,7 @@ private:
 
 	void onLanguageChanged(void* langID)
 	{
-		const int32_t lID = reinterpret_cast<int32_t>(langID);
+		const int32_t lID = static_cast<int32_t>(reinterpret_cast<DWORD_PTR>(langID));
 
 		// Get the main menu handle
 		HMENU hMenu = GetMenu(hWnd());
