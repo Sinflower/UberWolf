@@ -23,7 +23,7 @@
 #define IDC_PACK                        1005
 #define IDC_PROTECTION_KEY              1006
 #define IDC_CHECK_OVERWRITE             1007
-#define IDC_CHECK_USE_INJECT            1008
+#define IDC_CHECK_UNPROTECT             1008
 #define IDC_OPTIONS                     1009
 #define IDC_LABEL_PROTECTION_KEY        1010
 #define IDC_LABEL_GAME_LOCATION         1011

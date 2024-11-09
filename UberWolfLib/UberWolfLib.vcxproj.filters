@@ -16,12 +16,6 @@
     <Filter Include="3rdParty">
       <UniqueIdentifier>{7114fa71-e97a-493e-bf5b-ff4389e38adf}</UniqueIdentifier>
     </Filter>
-    <Filter Include="3rdParty\Detours">
-      <UniqueIdentifier>{ce70c604-46ff-4a7c-81d2-5b129ee96a19}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="3rdParty\Detours\Logging">
-      <UniqueIdentifier>{2c7245f0-dc57-4024-9ef2-52fc8573619e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="3rdParty\nlohmann">
       <UniqueIdentifier>{cdc4b5f8-cd02-4ecc-97a7-951f6288adbb}</UniqueIdentifier>
     </Filter>
@@ -32,42 +26,6 @@
   <ItemGroup>
     <ClCompile Include="UberWolfLib.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WolfKeyFinder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SyeLog.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\3rdParty\Detours\src\creatwth.cpp">
-      <Filter>3rdParty\Detours</Filter>
-    </ClCompile>
-    <ClCompile Include="..\3rdParty\Detours\src\detours.cpp">
-      <Filter>3rdParty\Detours</Filter>
-    </ClCompile>
-    <ClCompile Include="..\3rdParty\Detours\src\disasm.cpp">
-      <Filter>3rdParty\Detours</Filter>
-    </ClCompile>
-    <ClCompile Include="..\3rdParty\Detours\src\disolarm.cpp">
-      <Filter>3rdParty\Detours</Filter>
-    </ClCompile>
-    <ClCompile Include="..\3rdParty\Detours\src\disolarm64.cpp">
-      <Filter>3rdParty\Detours</Filter>
-    </ClCompile>
-    <ClCompile Include="..\3rdParty\Detours\src\disolia64.cpp">
-      <Filter>3rdParty\Detours</Filter>
-    </ClCompile>
-    <ClCompile Include="..\3rdParty\Detours\src\disolx64.cpp">
-      <Filter>3rdParty\Detours</Filter>
-    </ClCompile>
-    <ClCompile Include="..\3rdParty\Detours\src\disolx86.cpp">
-      <Filter>3rdParty\Detours</Filter>
-    </ClCompile>
-    <ClCompile Include="..\3rdParty\Detours\src\image.cpp">
-      <Filter>3rdParty\Detours</Filter>
-    </ClCompile>
-    <ClCompile Include="..\3rdParty\Detours\src\modules.cpp">
-      <Filter>3rdParty\Detours</Filter>
     </ClCompile>
     <ClCompile Include="WolfDec.cpp">
       <Filter>Source Files</Filter>
@@ -107,23 +65,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="WolfKeyFinder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Utils.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SyeLog.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\3rdParty\Detours\logging\syelog.h">
-      <Filter>3rdParty\Detours\Logging</Filter>
-    </ClInclude>
-    <ClInclude Include="..\3rdParty\Detours\src\detours.h">
-      <Filter>3rdParty\Detours</Filter>
-    </ClInclude>
-    <ClInclude Include="..\3rdParty\Detours\src\detver.h">
-      <Filter>3rdParty\Detours</Filter>
     </ClInclude>
     <ClInclude Include="WolfDec.h">
       <Filter>Header Files</Filter>

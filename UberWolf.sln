@@ -9,11 +9,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UberWolf", "UberWolf\UberWo
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UberWolfLib", "UberWolfLib\UberWolfLib.vcxproj", "{BFE77E57-9C02-4D34-B3AD-93203A711111}"
-	ProjectSection(ProjectDependencies) = postProject
-		{4FAC1181-7EA2-489A-B069-F53E8F0CA73E} = {4FAC1181-7EA2-489A-B069-F53E8F0CA73E}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KeyHook", "KeyHook\KeyHook.vcxproj", "{4FAC1181-7EA2-489A-B069-F53E8F0CA73E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UberWolfCli", "UberWolfCli\UberWolfCli.vcxproj", "{88307DB4-7272-4B16-8373-DC3D057091CC}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -44,14 +39,6 @@ Global
 		{BFE77E57-9C02-4D34-B3AD-93203A711111}.Release|x64.Build.0 = Release|x64
 		{BFE77E57-9C02-4D34-B3AD-93203A711111}.Release|x86.ActiveCfg = Release|Win32
 		{BFE77E57-9C02-4D34-B3AD-93203A711111}.Release|x86.Build.0 = Release|Win32
-		{4FAC1181-7EA2-489A-B069-F53E8F0CA73E}.Debug|x64.ActiveCfg = Debug|x64
-		{4FAC1181-7EA2-489A-B069-F53E8F0CA73E}.Debug|x64.Build.0 = Debug|x64
-		{4FAC1181-7EA2-489A-B069-F53E8F0CA73E}.Debug|x86.ActiveCfg = Debug|Win32
-		{4FAC1181-7EA2-489A-B069-F53E8F0CA73E}.Debug|x86.Build.0 = Debug|Win32
-		{4FAC1181-7EA2-489A-B069-F53E8F0CA73E}.Release|x64.ActiveCfg = Release|x64
-		{4FAC1181-7EA2-489A-B069-F53E8F0CA73E}.Release|x64.Build.0 = Release|x64
-		{4FAC1181-7EA2-489A-B069-F53E8F0CA73E}.Release|x86.ActiveCfg = Release|Win32
-		{4FAC1181-7EA2-489A-B069-F53E8F0CA73E}.Release|x86.Build.0 = Release|Win32
 		{88307DB4-7272-4B16-8373-DC3D057091CC}.Debug|x64.ActiveCfg = Debug|x64
 		{88307DB4-7272-4B16-8373-DC3D057091CC}.Debug|x64.Build.0 = Debug|x64
 		{88307DB4-7272-4B16-8373-DC3D057091CC}.Debug|x86.ActiveCfg = Debug|Win32

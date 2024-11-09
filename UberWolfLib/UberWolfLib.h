@@ -52,8 +52,8 @@ class UberWolfLib
 	inline static const tString UWL_VERSION = _T("0.4.1");
 	struct Config
 	{
-		bool useInject = false;
 		bool override  = false;
+		bool unprotect = false;
 	};
 
 public:
@@ -65,10 +65,10 @@ public:
 		return m_valid;
 	}
 
-	void Configure(const bool& override = false, const bool& useInject = false)
+	void Configure(const bool& override = false, const bool& unprotect = false)
 	{
 		m_config.override  = override;
-		m_config.useInject = useInject;
+		m_config.unprotect = unprotect;
 	}
 
 	bool InitGame(const tString& gameExePath);
@@ -111,10 +111,8 @@ private:
 	UWLExitCode unpackArchive(const tString& archivePath, const bool& quiet = false, const bool& secondRun = false);
 	bool findDataFolder();
 	UWLExitCode findDxArcKeyFile(const bool& quiet = false);
-	UWLExitCode findDxArcKeyInject();
 	void updateConfig(const bool& useOldDxArc, const Key& key);
 	bool findGameFromArchive(const tString& archivePath);
-	bool copyDllFromResource(const tString& outDir) const;
 
 private:
 	WolfDec m_wolfDec;

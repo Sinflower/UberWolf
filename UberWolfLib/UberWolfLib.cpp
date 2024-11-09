@@ -29,7 +29,6 @@
 #include "UberLog.h"
 #include "Utils.h"
 #include "WolfDec.h"
-#include "WolfKeyFinder.h"
 #include "WolfPro.h"
 #include "WolfUtils.h"
 #include "resource.h"
@@ -222,9 +221,6 @@ UWLExitCode UberWolfLib::FindDxArcKey(const bool& quiet)
 	if (findDxArcKeyFile(quiet) == UWLExitCode::SUCCESS)
 		return UWLExitCode::SUCCESS;
 
-	if (m_config.useInject)
-		return findDxArcKeyInject();
-
 	return UWLExitCode::KEY_DETECT_FAILED;
 }
 
@@ -259,7 +255,8 @@ UWLExitCode UberWolfLib::FindProtectionKey(std::string& key)
 	for (const uint8_t& byte : keyVec)
 		key += static_cast<char>(byte);
 
-	m_wolfPro.RemoveProtection();
+	if (m_config.unprotect)
+		m_wolfPro.RemoveProtection();
 
 	return UWLExitCode::SUCCESS;
 }
@@ -425,32 +422,6 @@ UWLExitCode UberWolfLib::findDxArcKeyFile(const bool& quiet)
 	return UWLExitCode::SUCCESS;
 }
 
-UWLExitCode UberWolfLib::findDxArcKeyInject()
-{
-	INFO_LOG << LOCALIZE("det_key_inj_msg") << std::endl;
-	WolfKeyFinder wkf(m_gameExePath);
-
-	const tString tmpPath = FS_PATH_TO_TSTRING(fs::temp_directory_path());
-
-	// Copy the dll into the temp directory
-	if (!copyDllFromResource(tmpPath))
-		return UWLExitCode::KEY_DETECT_FAILED;
-
-	INFO_LOG << LOCALIZE("exec_game_inj_msg") << std::endl;
-	std::vector<BYTE> key;
-	if (!wkf.Inject(tmpPath))
-	{
-		INFO_LOG << LOCALIZE("inj_error_msg") << std::endl;
-		return UWLExitCode::KEY_DETECT_FAILED;
-	}
-
-	m_wolfDec.AddKey("UNKNOWN", 0x0, wkf.UseOldDxArc(), wkf.GetKey());
-	updateConfig(wkf.UseOldDxArc(), wkf.GetKey());
-	INFO_LOG << LOCALIZE("det_key_found_msg") << std::endl;
-
-	return UWLExitCode::SUCCESS;
-}
-
 void UberWolfLib::updateConfig(const bool& useOldDxArc, const Key& key)
 {
 	nlohmann::json data;
@@ -516,41 +487,3 @@ bool UberWolfLib::findGameFromArchive(const tString& archivePath)
 	return false;
 }
 
-bool UberWolfLib::copyDllFromResource(const tString& outDir) const
-{
-	INFO_LOG << vFormat(LOCALIZE("dll_copy_msg"), outDir) << std::endl;
-
-	const HRSRC hResource = FindResource(NULL, MAKEINTRESOURCE(IDR_KEY_HOOK), RT_RCDATA);
-	if (hResource == NULL)
-	{
-		ERROR_LOG << LOCALIZE("dll_error_msg_1") << std::endl;
-		return false;
-	}
-
-	const HGLOBAL hResData = LoadResource(NULL, hResource);
-	if (hResData == NULL)
-	{
-		ERROR_LOG << LOCALIZE("dll_error_msg_2") << std::endl;
-		return false;
-	}
-
-	const LPVOID lpResourceData = LockResource(hResData);
-	const DWORD dwResourceSize  = SizeofResource(NULL, hResource);
-
-	const tString dllPath = outDir + TEXT("/") + WolfKeyFinder::DLL_NAME;
-
-	HANDLE hFile = CreateFile(dllPath.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	if (hFile == INVALID_HANDLE_VALUE)
-	{
-		ERROR_LOG << LOCALIZE("dll_error_msg_3") << std::endl;
-		return false;
-	}
-
-	DWORD bytesWritten = 0;
-	WriteFile(hFile, lpResourceData, dwResourceSize, &bytesWritten, NULL);
-
-	CloseHandle(hFile);
-	INFO_LOG << LOCALIZE("dll_copied_msg") << std::endl;
-
-	return true;
-}

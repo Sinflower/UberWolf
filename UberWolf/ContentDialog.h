@@ -257,7 +257,7 @@ private:
 		setButtonStates(FALSE);
 
 		UberWolfLib uwl;
-		uwl.Configure(m_optionsDialog.Overwrite(), m_optionsDialog.UseInject());
+		uwl.Configure(m_optionsDialog.Overwrite(), m_optionsDialog.Unprotect());
 		uwl.InitGame(exePath);
 		std::wstring protKey;
 		UWLExitCode result = uwl.UnpackData();
@@ -323,7 +323,7 @@ private:
 		}
 
 		UberWolfLib uwl;
-		uwl.Configure(m_optionsDialog.Overwrite(), m_optionsDialog.UseInject());
+		uwl.Configure(m_optionsDialog.Overwrite(), m_optionsDialog.Unprotect());
 
 		for (const tString& file : files)
 		{

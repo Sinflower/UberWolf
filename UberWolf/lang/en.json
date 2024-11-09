@@ -13,7 +13,7 @@
 	"protection_key": "Protection Key",
 	"open_file": "Open File",
 	"not_protected": "Not Protected",
-	"use_dll_label": "Use DLL injection",
+	"unprotect_label": "Unprotect Pro files",
 	"overwrite_label": "Overwrite existing extracted data",
 	"drop_label": "\r\nDrop Game .exe Here for Auto Detect\r\nDrop wolf Archive Here for Auto Extract",
 	"select_file": "Please select a file to process.",

@@ -70,6 +70,9 @@ int main(int argc, char* argv[])
 	bool override = false;
 	app.add_flag("-o,--override", override, "Override existing files");
 
+	bool unprotect = false;
+	app.add_flag("-u,--unprotect", unprotect, "Unprotect Pro files");
+
 	std::string packVersion = "";
 	app.add_option("-p,--pack", packVersion, buildPackInfo())->type_name("VER_IDX");
 
@@ -84,10 +87,11 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
+	uwl.Configure(override, unprotect);
+
 	// Check if the first argument is an executable
 	if (fs::exists(files.front()) && fs::is_regular_file(files.front()) && fs::path(files.front()).extension() == ".exe")
 	{
-		uwl.Configure(override);
 		uwl.InitGame(StringToWString(files.front()));
 
 		if (packVersion.empty())

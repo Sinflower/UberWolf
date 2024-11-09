@@ -45,22 +45,22 @@ public:
 		registerSlot(IDOK, BN_CLICKED, [this]() { onOKClicked(); });
 		registerSlot(IDCANCEL, BN_CLICKED, [this]() { onCancelClicked(); });
 		registerSlot(IDC_CHECK_OVERWRITE, BN_CLICKED, [this]() { onOverwriteClicked(); });
-		registerSlot(IDC_CHECK_USE_INJECT, BN_CLICKED, [this]() { onUseInjectClicked(); });
+		registerSlot(IDC_CHECK_UNPROTECT, BN_CLICKED, [this]() { onUnprotectClicked(); });
 
 		registerCheckBoxState(IDC_CHECK_OVERWRITE, [this]() { return m_overwrite; });
-		registerCheckBoxState(IDC_CHECK_USE_INJECT, [this]() { return m_useInject; });
+		registerCheckBoxState(IDC_CHECK_UNPROTECT, [this]() { return m_unprotect; });
 
 		m_overwrite = getSaveValue<bool>(IDC_CHECK_OVERWRITE, false);
-		m_useInject = getSaveValue<bool>(IDC_CHECK_USE_INJECT, false);
+		m_unprotect = getSaveValue<bool>(IDC_CHECK_UNPROTECT, true);
 	}
 
 	~OptionDialog()
 	{
 	}
 
-	const bool& UseInject() const
+	const bool& Unprotect() const
 	{
-		return m_useInject;
+		return m_unprotect;
 	}
 
 	const bool& Overwrite() const
@@ -88,7 +88,7 @@ public:
 	{
 		int32_t maxWidth = 0;
 		maxWidth         = max(maxWidth, adjustCheckBox(IDC_CHECK_OVERWRITE));
-		maxWidth         = max(maxWidth, adjustCheckBox(IDC_CHECK_USE_INJECT));
+		maxWidth         = max(maxWidth, adjustCheckBox(IDC_CHECK_UNPROTECT));
 
 		// Add the static width for the dialog
 		maxWidth += STATIC_WIDTH;
@@ -117,10 +117,10 @@ private:
 		updateSaveValue<bool>(IDC_CHECK_OVERWRITE, m_overwrite);
 	}
 
-	void onUseInjectClicked()
+	void onUnprotectClicked()
 	{
-		m_useInject = IsDlgButtonChecked(hWnd(), IDC_CHECK_USE_INJECT);
-		updateSaveValue<bool>(IDC_CHECK_USE_INJECT, m_useInject);
+		m_unprotect = IsDlgButtonChecked(hWnd(), IDC_CHECK_UNPROTECT);
+		updateSaveValue<bool>(IDC_CHECK_UNPROTECT, m_unprotect);
 	}
 
 	int32_t adjustCheckBox(const int32_t& id)
@@ -147,10 +147,10 @@ private:
 			case WM_INITDIALOG:
 				WindowBase* pWnd = reinterpret_cast<WindowBase*>(lParam);
 				SendDlgItemMessage(hWnd, IDC_CHECK_OVERWRITE, BM_SETCHECK, pWnd->GetCheckBoxState(IDC_CHECK_OVERWRITE), 0);
-				SendDlgItemMessage(hWnd, IDC_CHECK_USE_INJECT, BM_SETCHECK, pWnd->GetCheckBoxState(IDC_CHECK_USE_INJECT), 0);
+				SendDlgItemMessage(hWnd, IDC_CHECK_UNPROTECT, BM_SETCHECK, pWnd->GetCheckBoxState(IDC_CHECK_UNPROTECT), 0);
 
 				SendDlgItemMessage(hWnd, IDC_CHECK_OVERWRITE, WM_SETTEXT, 0, (LPARAM)LOCW("overwrite_label"));
-				SendDlgItemMessage(hWnd, IDC_CHECK_USE_INJECT, WM_SETTEXT, 0, (LPARAM)LOCW("use_dll_label"));
+				SendDlgItemMessage(hWnd, IDC_CHECK_UNPROTECT, WM_SETTEXT, 0, (LPARAM)LOCW("unprotect_label"));
 
 				pWnd->SetHandle(hWnd);
 				pWnd->AdjustSizes();
@@ -162,5 +162,5 @@ private:
 
 private:
 	bool m_overwrite = false;
-	bool m_useInject = false;
+	bool m_unprotect = false;
 };

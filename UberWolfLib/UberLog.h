@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <mutex>
 #include <format>
+#include <mutex>
 
 #include "Types.h"
 
