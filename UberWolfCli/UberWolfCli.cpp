@@ -36,7 +36,7 @@
 
 namespace fs = std::filesystem;
 
-static const std::string UWCLI_VERSION = "0.3.0";
+static const std::string UWCLI_VERSION = "0.3.1";
 static const std::string UWCLI_NAME    = "UberWolfCli";
 
 std::string buildPackInfo()
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 	CLI::App app{ UWCLI_NAME + " v" + UWCLI_VERSION };
 	argv = app.ensure_utf8(argv);
 
-	std::vector<std::string> files;
+	tStrings files;
 	app.add_option("FILE[s]", files, "<Game[Pro].exe>\n<data_folder>\n<.wolf-files>")->required();
 
 	bool override = false;
@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
 	// Check if the first argument is an executable
 	if (fs::exists(files.front()) && fs::is_regular_file(files.front()) && fs::path(files.front()).extension() == ".exe")
 	{
-		uwl.InitGame(StringToWString(files.front()));
+		uwl.InitGame(files.front());
 
 		if (packVersion.empty())
 		{
@@ -154,7 +154,7 @@ int main(int argc, char* argv[])
 		for (size_t i = 0; i < files.size(); i++)
 		{
 			if (fs::exists(files[i]) && fs::is_regular_file(files[i]))
-				paths.push_back({ StringToWString(files[i]) });
+				paths.push_back({ files[i] });
 		}
 	}
 
