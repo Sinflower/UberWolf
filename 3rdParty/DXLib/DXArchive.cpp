@@ -32,6 +32,8 @@
 
 uint8_t g_specialKey[768] = {};
 bool g_newCrypt           = false;
+bool g_chacha20           = false;
+uint16_t g_cryptVersion   = 0;
 
 static WCHAR *sjis2utf8(const char *sjis, const int32_t &len);
 static char *utf82sjis(const WCHAR *utf8);
@@ -348,7 +350,7 @@ TCHAR *DXArchive::GetOriginalFileName(u8 *FileNameTable)
 	const char *pName = ((char *)FileNameTable + *((u16 *)&FileNameTable[0]) * 4 + 4);
 
 	bool isMultiByte = false;
-	int32_t nameLen   = static_cast<int32_t>(strlen(pName));
+	int32_t nameLen  = static_cast<int32_t>(strlen(pName));
 	return sjis2utf8(pName, nameLen);
 }
 
@@ -565,7 +567,23 @@ void DXArchive::KeyConv(void *Data, s64 Size, s64 Position, unsigned char *Key)
 {
 	if (g_newCrypt)
 	{
-		wolfCrypt(g_specialKey, reinterpret_cast<uint8_t *>(Data), Position, Position + Size);
+		wolfCrypt(g_specialKey, reinterpret_cast<uint8_t *>(Data), Position, Position + Size, false, g_cryptVersion);
+		return;
+	}
+
+	if (g_chacha20)
+	{
+		uint32_t state[16];
+		uint32_t keystream32[16];
+
+		std::memset(state, 0, sizeof(state));
+		std::memset(keystream32, 0, sizeof(keystream32));
+
+		const uint8_t key[32]   = { 0xC9, 0x82, 0xF8, 0xB4, 0x2C, 0x93, 0x9E, 0x83, 0x0E, 0xBC, 0xBC, 0x92, 0x68, 0x8D, 0x59, 0xA1, 0x4A, 0x9E, 0x7F, 0xB0, 0xAC, 0xAF, 0x1D, 0x8F, 0x8E, 0xB8, 0x3B, 0x9E, 0xE8, 0x89, 0xD9, 0xAD };
+		const uint8_t nonce[12] = { 0xFF, 0xBC, 0x2D, 0xAB, 0x9D, 0x8B, 0x0F, 0xB4, 0xBB, 0x9A, 0x69, 0x85 };
+
+		chacha20_init_block(state, key, nonce);
+		chacha20_xor(state, keystream32, static_cast<uint32_t>(Position), reinterpret_cast<uint8_t *>(Data), Size);
 		return;
 	}
 
@@ -1254,6 +1272,76 @@ int DXArchive::DirectoryDecode(u8 *NameP, u8 *DirP, u8 *FileP, DARC_HEAD *Head, 
 
 				// バッファを開放する
 				free(Buffer);
+
+				//////////////////////////////
+				///// Remove Unpack Protection
+				if (isV35(g_cryptVersion))
+				{
+					const std::vector<std::wstring> UNPACK_PROTECTION_FILES = { L"game.dat", L"cdatabase.dat", L"database.dat", L"commonevent.dat" };
+					const uint8_t ANTI_UNPACK_DATA[62]                      = { 0x45, 0x78, 0x74, 0x72, 0x61, 0x63, 0x74, 0x69, 0x6E, 0x67, 0x20, 0x64, 0x61, 0x74, 0x61, 0x20, 0x66, 0x72, 0x6F, 0x6D, 0x20, 0x65, 0x6E, 0x63, 0x72, 0x79, 0x70, 0x74, 0x65, 0x64, 0x20, 0x66, 0x69, 0x6C, 0x65, 0x73, 0x20, 0x76, 0x69, 0x6F, 0x6C, 0x61, 0x74, 0x65, 0x73, 0x20, 0x74, 0x68, 0x65, 0x20, 0x67, 0x75, 0x69, 0x64, 0x65, 0x6C, 0x69, 0x6E, 0x65, 0x73, 0x2E, 0x00 };
+					const uint32_t ANTI_UNPACK_DATA_SIZE                    = 62;
+
+					pName = GetOriginalFileName(NameP + File->NameAddress);
+
+					std::wstring fileName = std::wstring(pName);
+					std::transform(fileName.begin(), fileName.end(), fileName.begin(), ::tolower);
+
+					// As I am not sure if the file name will contain only the actual file name or also a directory
+					// check if the file name ends with any of the unpack protection files
+					bool isUnpackProtectionFile = false;
+
+					for (const std::wstring &unpackProtectionFile : UNPACK_PROTECTION_FILES)
+					{
+						if (fileName.ends_with(unpackProtectionFile))
+						{
+							isUnpackProtectionFile = true;
+							break;
+						}
+					}
+
+					if (isUnpackProtectionFile)
+					{
+						DestP = _tfopen(pName, TEXT("rb"));
+
+						// Get the file size
+						_fseeki64(DestP, 0, SEEK_END);
+						int64_t fileSize = _ftelli64(DestP);
+
+						if (fileSize >= ANTI_UNPACK_DATA_SIZE)
+						{
+							// Check if the file begins with the anti-unpack data
+							_fseeki64(DestP, 0, SEEK_SET);
+
+							void *pFileBeginning = malloc(ANTI_UNPACK_DATA_SIZE);
+							fread64(pFileBeginning, ANTI_UNPACK_DATA_SIZE, DestP);
+
+							if (pFileBeginning && std::memcmp(pFileBeginning, ANTI_UNPACK_DATA, ANTI_UNPACK_DATA_SIZE) == 0)
+							{
+								fileSize -= ANTI_UNPACK_DATA_SIZE;
+
+								// Remove the first 62 bytes from the file
+								_fseeki64(DestP, ANTI_UNPACK_DATA_SIZE, SEEK_SET);
+
+								std::vector<uint8_t> buffer(fileSize);
+								fread64(buffer.data(), fileSize, DestP);
+								fclose(DestP);
+
+								DestP = _tfopen(pName, TEXT("wb"));
+
+								fwrite64(buffer.data(), fileSize, DestP);
+							}
+
+							free(pFileBeginning);
+						}
+
+						fclose(DestP);
+					}
+
+					delete[] pName;
+				}
+
+				///// Remove Unpack Protection
+				//////////////////////////////
 
 				// ファイルのタイムスタンプを設定する
 				{
@@ -2073,7 +2161,10 @@ int DXArchive::EncodeArchive(const TCHAR *OutputFileName, const std::vector<std:
 	// 出力ファイルを開く
 	DestFp = _tfopen(OutputFileName, TEXT("wb+"));
 
-	g_newCrypt   = (cryptVersion >= 331 && cryptVersion < 1000 || cryptVersion >= 1010);
+	g_cryptVersion = cryptVersion;
+	g_newCrypt     = (cryptVersion >= 331 && cryptVersion < 1000 || cryptVersion >= 1010);
+	g_chacha20     = cryptVersion == 0x64;
+
 	uint8_t *pK2 = nullptr;
 
 	if (g_newCrypt)
@@ -2085,7 +2176,7 @@ int DXArchive::EncodeArchive(const TCHAR *OutputFileName, const std::vector<std:
 		if (cryptVersion >= 1010)
 			pK2 = (uint8_t *)KeyString_ + KeyStringBytes + 1;
 
-		initWolfCrypt(Head.Reserve, g_specialKey, pK2);
+		initWolfCrypt(cryptVersion, Head.Reserve, g_specialKey, pK2);
 	}
 
 	// アーカイブのヘッダを出力する
@@ -2098,7 +2189,7 @@ int DXArchive::EncodeArchive(const TCHAR *OutputFileName, const std::vector<std:
 		Head.FileNameTableStartAddress  = 0xffffffffffffffff;
 		Head.DirectoryTableStartAddress = 0xffffffffffffffff;
 		Head.FileTableStartAddress      = 0xffffffffffffffff;
-		Head.CharCodeFormat             = GetACP();
+		Head.CharCodeFormat             = 0x3A4; // GetACP();
 		Head.Flags                      = cryptVersion << 16;
 		Head.HuffmanEncodeKB            = HuffmanEncodeKB;
 		if (NoKey) Head.Flags |= DXA_FLAG_NO_KEY;
@@ -2540,6 +2631,8 @@ int DXArchive::EncodeArchive(const TCHAR *OutputFileName, const std::vector<std:
 	{
 		uint8_t roundKey[AES_ROUND_KEY_SIZE] = { 0 };
 
+		const uint8_t *pPwd = Head.Reserve;
+
 		fseek(DestFp, 0, SEEK_END);
 		int32_t size = ftell(DestFp);
 		fseek(DestFp, 0, SEEK_SET);
@@ -2548,21 +2641,35 @@ int DXArchive::EncodeArchive(const TCHAR *OutputFileName, const std::vector<std:
 
 		size_t ret = fread(pFileData, 1, size, DestFp);
 
-		if (cryptVersion >= 1010)
-			initAES128Pro(roundKey, Head.Reserve, pK2);
+		initAES128(roundKey, pPwd, pK2, cryptVersion);
+
+		if ((size - 64) < 0x400)
+			return 0;
+
+		uint32_t seed = 0;
+
+		if (cryptVersion >= 1020)                                  // Pro version -- TODO
+			seed = pK2[0] * pK2[1] + pPwd[2] * pPwd[4] + pPwd[11]; // First two values are not pPwd probably pK2 but not sure -- call is: v28 = (unsigned __int8)*a3 * (unsigned __int8)a3[1] + a2[2] * a2[4] + a2[11]; -- some_wolf_crypt:190
 		else
-			initAES128(roundKey, Head.Reserve);
+			seed = pPwd[2] * pPwd[4] + pPwd[12]; // xorShift32 seed
 
-		uint32_t cryptSize = size - 64;
-		if (cryptSize >= 0x400)
-			cryptSize = 0x400;
+		if (!seed) seed = 1;
+		xorshift32(seed);
 
-		aesCtrXCrypt(pFileData + 64, roundKey, cryptSize);
+		if (size >= static_cast<int32_t>(xorshift32() % 500 + 800))
+			xorshift32();
+
+		uint32_t bodySize = size - 64; // 64 is the header size -- maybe replace with a constant
+
+		if (bodySize >= (xorshift32() % 500 + 800))
+			bodySize = (xorshift32() % 500) + 800;
+
+		aesCtrXCrypt(pFileData + 64, roundKey, bodySize); // For v3.31 this has to be 0x400
 		aesCtrXCrypt(pFileData + Head.FileNameTableStartAddress, roundKey, size - static_cast<int32_t>(Head.FileNameTableStartAddress));
 
-		initWolfCrypt(Head.Reserve, g_specialKey, nullptr, pFileData, 64, size - 64, true, KeyString_);
+		initWolfCrypt(cryptVersion, pPwd, g_specialKey, nullptr, pFileData, 64, size - 64, true, KeyString_);
 
-		cryptAddresses(pFileData, Head.Reserve);
+		cryptAddresses(pFileData, pPwd, cryptVersion);
 
 		fseek(DestFp, 0, SEEK_SET);
 		fwrite64(pFileData, size, DestFp);
@@ -2646,12 +2753,16 @@ int DXArchive::DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const 
 
 		const uint16_t cryptVersion = Head.Flags >> 16;
 
-		g_newCrypt = (cryptVersion >= 331 && cryptVersion < 1000 || cryptVersion >= 1010);
+		g_cryptVersion = cryptVersion;
+		g_newCrypt     = (cryptVersion >= 331 && cryptVersion < 1000 || cryptVersion >= 1010);
+		g_chacha20     = cryptVersion == 0x64;
 
 		if (g_newCrypt)
 		{
+			const uint8_t *pPwd = Head.Reserve;
+
 			memset(g_specialKey, 0, 768);
-			cryptAddresses((uint8_t *)&Head, Head.Reserve);
+			cryptAddresses((uint8_t *)&Head, pPwd, cryptVersion);
 
 			fseek(ArcP, 0, SEEK_END);
 			int32_t size = ftell(ArcP);
@@ -2661,23 +2772,46 @@ int DXArchive::DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const 
 
 			size_t ret = fread(pFileData, 1, size, ArcP);
 
+			// Replace the beginning of the file data with the decrypted header
+			std::memcpy(pFileData, &Head, sizeof(DARC_HEAD));
+
 			uint8_t roundKey[AES_ROUND_KEY_SIZE] = { 0 };
-			initWolfCrypt(Head.Reserve, g_specialKey, nullptr, pFileData, 64, size - 64, true, KeyString_);
+			initWolfCrypt(cryptVersion, pPwd, g_specialKey, nullptr, pFileData, 64, size - 64, true, KeyString_);
 
 			uint8_t *pK2 = nullptr;
 
 			if (cryptVersion >= 1010)
-			{
 				pK2 = (uint8_t *)KeyString_ + KeyStringBytes + 1;
-				initAES128Pro(roundKey, Head.Reserve, pK2);
-			}
-			else
-				initAES128(roundKey, Head.Reserve);
+
+			initAES128(roundKey, pPwd, pK2, cryptVersion);
 
 			if ((size - 64) < 0x400)
 				return 0;
 
-			aesCtrXCrypt(pFileData + 64, roundKey, 0x400);
+			uint32_t bodySize = 0x400;
+
+			if (isV35(cryptVersion))
+			{
+				uint32_t seed = 0;
+
+				if (cryptVersion >= 1020) // Pro version -- TODO
+					seed = pPwd[0] * pPwd[1] + pPwd[2] * pPwd[4] + pPwd[11];
+				else
+					seed = pPwd[2] * pPwd[4] + pPwd[12]; // xorShift32 seed
+
+				if (!seed) seed = 1;
+				xorshift32(seed);
+
+				if (size >= static_cast<int32_t>(xorshift32() % 500 + 800))
+					xorshift32();
+
+				bodySize = size - 64; // 64 is the header size -- maybe replace with a constant
+
+				if (bodySize >= (xorshift32() % 500 + 800))
+					bodySize = (xorshift32() % 500) + 800;
+			}
+
+			aesCtrXCrypt(pFileData + 64, roundKey, bodySize); // For v3.31 this has to be 0x400
 			aesCtrXCrypt(pFileData + Head.FileNameTableStartAddress, roundKey, size - static_cast<int32_t>(Head.FileNameTableStartAddress));
 
 			// Write to file
@@ -2693,7 +2827,7 @@ int DXArchive::DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const 
 			ArcP = fopen("decrypt_temp", "rb");
 			fseek(ArcP, sizeof(DARC_HEAD), SEEK_SET);
 
-			initWolfCrypt(Head.Reserve, g_specialKey, pK2);
+			initWolfCrypt(cryptVersion, pPwd, g_specialKey, pK2);
 		}
 
 		// 鍵処理が行われていないかを取得する

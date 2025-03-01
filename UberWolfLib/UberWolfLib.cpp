@@ -424,13 +424,13 @@ UWLExitCode UberWolfLib::findDxArcKeyFile(const bool& quiet)
 
 void UberWolfLib::updateConfig(const bool& useOldDxArc, const Key& key)
 {
-	nlohmann::json data;
+	nlohmann::ordered_json data;
 
 	// Load the config file if it exists and is not empty
 	if (fs::exists(WolfDec::CONFIG_FILE_NAME) && fs::file_size(WolfDec::CONFIG_FILE_NAME) > 0)
 	{
 		std::ifstream f(WolfDec::CONFIG_FILE_NAME);
-		data = nlohmann::json::parse(f);
+		data = nlohmann::ordered_json::parse(f);
 	}
 	// Create a new config file
 	else
