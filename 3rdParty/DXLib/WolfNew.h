@@ -234,14 +234,14 @@ static inline void initWolfCrypt(const uint16_t &cryptVersion, const uint8_t *pP
 						if (cryptVersion < 0x154 || (cryptVersion > 0x3E8 && cryptVersion < 0x3FC))
 							break;
 
-						if (((round + j) % 0x33) == 0)
+						if ((((round + j) % 0x33) == 0) || cryptVersion >= 0x3FC)
 							newK ^= curS;
 						break;
 					case 8:
 						if (cryptVersion < 0x154 || (cryptVersion > 0x3E8 && cryptVersion < 0x3FC))
 							break;
 
-						if ((curS % 0x1D) == 0)
+						if (((curS % 0x1D) == 0) || cryptVersion >= 0x3FC)
 							newK ^= curS;
 						break;
 					default:
@@ -412,7 +412,7 @@ static inline void initAES128(uint8_t *pRoundKey, const uint8_t *pPwd, uint8_t *
 			iv[i] ^= ((pPwd[pwIdxIv] >> (i % 2)) + ((i * i) ^ pProKey[(i + 2) % 4])) % 0xF6;
 
 			key[PW_SIZE] ^= 7 * (pPwd[i] + ((i + 1) ^ proKeyElem)) % 0xFD;
-			iv[PW_SIZE] ^= 11 * (pPwd[i] - ((i * 2) ^ proKeyElem)) % 0x100;
+			iv[PW_SIZE] ^= 11 * static_cast<uint16_t>((pPwd[i] - ((i * 2) ^ pProKey[(i + 2) % 4]))) % 0x100;
 		}
 	}
 	else if (cryptVersion == 0x3F2)

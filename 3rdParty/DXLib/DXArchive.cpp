@@ -2646,25 +2646,30 @@ int DXArchive::EncodeArchive(const TCHAR *OutputFileName, const std::vector<std:
 		if ((size - 64) < 0x400)
 			return 0;
 
-		uint32_t seed = 0;
+		uint32_t bodySize = 0x400;
 
-		if (cryptVersion >= 1020)                                  // Pro version -- TODO
-			seed = pK2[0] * pK2[1] + pPwd[2] * pPwd[4] + pPwd[11]; // First two values are not pPwd probably pK2 but not sure -- call is: v28 = (unsigned __int8)*a3 * (unsigned __int8)a3[1] + a2[2] * a2[4] + a2[11]; -- some_wolf_crypt:190
-		else
-			seed = pPwd[2] * pPwd[4] + pPwd[12]; // xorShift32 seed
+		if (isV35(cryptVersion))
+		{
+			uint32_t seed = 0;
 
-		if (!seed) seed = 1;
-		xorshift32(seed);
+			if (cryptVersion >= 1020)
+				seed = pK2[0] * pK2[1] + pPwd[2] * pPwd[4] + pPwd[11];
+			else
+				seed = pPwd[2] * pPwd[4] + pPwd[12]; // xorShift32 seed
 
-		if (size >= static_cast<int32_t>(xorshift32() % 500 + 800))
-			xorshift32();
+			if (!seed) seed = 1;
+			xorshift32(seed);
 
-		uint32_t bodySize = size - 64; // 64 is the header size -- maybe replace with a constant
+			if (size >= static_cast<int32_t>(xorshift32() % 500 + 800))
+				xorshift32();
 
-		if (bodySize >= (xorshift32() % 500 + 800))
-			bodySize = (xorshift32() % 500) + 800;
+			bodySize = size - 64; // 64 is the header size -- maybe replace with a constant
 
-		aesCtrXCrypt(pFileData + 64, roundKey, bodySize); // For v3.31 this has to be 0x400
+			if (bodySize >= (xorshift32() % 500 + 800))
+				bodySize = (xorshift32() % 500) + 800;
+		}
+
+		aesCtrXCrypt(pFileData + 64, roundKey, bodySize);
 		aesCtrXCrypt(pFileData + Head.FileNameTableStartAddress, roundKey, size - static_cast<int32_t>(Head.FileNameTableStartAddress));
 
 		initWolfCrypt(cryptVersion, pPwd, g_specialKey, nullptr, pFileData, 64, size - 64, true, KeyString_);
@@ -2794,8 +2799,8 @@ int DXArchive::DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const 
 			{
 				uint32_t seed = 0;
 
-				if (cryptVersion >= 1020) // Pro version -- TODO
-					seed = pPwd[0] * pPwd[1] + pPwd[2] * pPwd[4] + pPwd[11];
+				if (cryptVersion >= 1020)
+					seed = pK2[0] * pK2[1] + pPwd[2] * pPwd[4] + pPwd[11];
 				else
 					seed = pPwd[2] * pPwd[4] + pPwd[12]; // xorShift32 seed
 
