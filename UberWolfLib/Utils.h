@@ -32,7 +32,17 @@
 
 #include "Types.h"
 
-static inline std::wstring StringToWString(const std::string& str)
+struct ProcessInfo
+{
+	DWORD pid;
+	DWORD parentPid;
+	std::wstring name;
+	std::wstring parentName;
+};
+
+namespace
+{
+std::wstring StringToWString(const std::string& str)
 {
 	std::wstring wstr;
 	std::size_t size;
@@ -41,7 +51,7 @@ static inline std::wstring StringToWString(const std::string& str)
 	return wstr;
 }
 
-static inline std::string WStringToString(const std::wstring& wstr)
+std::string WStringToString(const std::wstring& wstr)
 {
 	std::string str;
 	std::size_t size;
@@ -50,7 +60,7 @@ static inline std::string WStringToString(const std::wstring& wstr)
 	return str;
 }
 
-static inline tStrings argvToList(int argc, char* argv[])
+tStrings argvToList(int argc, char* argv[])
 {
 	tStrings args;
 #if UNICODE || _UNICODE
@@ -68,23 +78,15 @@ static inline tStrings argvToList(int argc, char* argv[])
 	return args;
 }
 
-static inline std::string ByteToHexString(const uint8_t& byte)
+std::string ByteToHexString(const uint8_t& byte)
 {
 	char hex[3];
 	sprintf_s(hex, "%02X", byte);
 	return std::string(hex);
 }
 
-struct ProcessInfo
-{
-	DWORD pid;
-	DWORD parentPid;
-	std::wstring name;
-	std::wstring parentName;
-};
-
 // Function to get the parent process ID
-static inline ProcessInfo GetProcessInfo(const DWORD& pid)
+ProcessInfo GetProcessInfo(const DWORD& pid)
 {
 	PROCESSENTRY32 processEntry;
 	processEntry.dwSize = sizeof(PROCESSENTRY32);
@@ -118,10 +120,11 @@ static inline ProcessInfo GetProcessInfo(const DWORD& pid)
 	return ProcessInfo{};
 }
 
-static inline bool IsSubProcess()
+bool IsSubProcess()
 {
 	const DWORD pid               = GetCurrentProcessId(); // Get the PID of the current process
 	const ProcessInfo processInfo = GetProcessInfo(pid);
 
 	return (processInfo.name == processInfo.parentName);
 }
+} // namespace

@@ -45,8 +45,10 @@
 
 namespace fs = std::filesystem;
 
+namespace
+{
 // Function to open a file selection dialog
-static inline bool OpenFile(HWND hwndParent, LPTSTR lpstrFile, LPCTSTR lpstrFilter, LPCTSTR lpstrTitle)
+bool OpenFile(HWND hwndParent, LPTSTR lpstrFile, LPCTSTR lpstrFilter, LPCTSTR lpstrTitle)
 {
 	OPENFILENAME ofn;
 	ZeroMemory(&ofn, sizeof(ofn));
@@ -65,7 +67,7 @@ static inline bool OpenFile(HWND hwndParent, LPTSTR lpstrFile, LPCTSTR lpstrFilt
 	return GetOpenFileName(&ofn) == TRUE;
 }
 
-static inline std::wstring ReplaceAll(const std::wstring& str, const std::wstring& from, const std::wstring& to)
+std::wstring ReplaceAll(const std::wstring& str, const std::wstring& from, const std::wstring& to)
 {
 	std::wstring result = str;
 	size_t startPos     = 0;
@@ -77,6 +79,7 @@ static inline std::wstring ReplaceAll(const std::wstring& str, const std::wstrin
 
 	return result;
 }
+} // namespace
 
 class ContentDialog : public WindowBase
 {

@@ -35,12 +35,14 @@
 #include <string>
 #include <vector>
 
-static inline bool isV35(const uint16_t &cryptVersion)
+namespace
+{
+bool isV35(const uint16_t &cryptVersion)
 {
 	return (cryptVersion >= 0x15E && cryptVersion < 0x3E8) || cryptVersion >= 0x3FC;
 }
 
-static inline void wolfCrypt(const uint8_t *pKey, uint8_t *pData, const int64_t &start, const int64_t &end, const bool &updateDataPos, const uint16_t &cryptVersion)
+void wolfCrypt(const uint8_t *pKey, uint8_t *pData, const int64_t &start, const int64_t &end, const bool &updateDataPos, const uint16_t &cryptVersion)
 {
 	if (updateDataPos)
 		pData += start;
@@ -54,7 +56,7 @@ static inline void wolfCrypt(const uint8_t *pKey, uint8_t *pData, const int64_t 
 	if (isV35(cryptVersion))
 	{
 		uint8_t moddedKey[512];
-		for (uint32_t i = 0; i < 512; ++i)
+		for (uint32_t i = 0; i < 512; i++)
 			moddedKey[i] = pKey[i % 256] ^ (7 * i);
 
 		for (uint64_t i = 0; i < length; i++)
@@ -77,7 +79,7 @@ static inline void wolfCrypt(const uint8_t *pKey, uint8_t *pData, const int64_t 
 			if (v1Cnt == 256)
 			{
 				v1Cnt = 0;
-				++v2Cnt;
+				v2Cnt++;
 
 				if (v2Cnt == 256)
 				{
@@ -89,7 +91,7 @@ static inline void wolfCrypt(const uint8_t *pKey, uint8_t *pData, const int64_t 
 	}
 }
 
-static inline void calcSalt(const char *pStr, uint8_t *pSalt)
+void calcSalt(const char *pStr, uint8_t *pSalt)
 {
 	if (!pSalt)
 		return;
@@ -100,7 +102,7 @@ static inline void calcSalt(const char *pStr, uint8_t *pSalt)
 		pSalt[i] = (i / len) + pStr[i % len];
 }
 
-static uint32_t xorshift32(const uint32_t &seed = 0)
+uint32_t xorshift32(const uint32_t &seed = 0)
 {
 	static uint32_t state = 0;
 
@@ -113,7 +115,7 @@ static uint32_t xorshift32(const uint32_t &seed = 0)
 	return state;
 }
 
-static inline void initWolfCrypt(const uint16_t &cryptVersion, const uint8_t *pPW, uint8_t *pKey, uint8_t *pKey2 = nullptr, uint8_t *pData = nullptr, const int64_t &start = -1, const int64_t &end = -1, const bool &other = false, const char *pKeyString = nullptr)
+void initWolfCrypt(const uint16_t &cryptVersion, const uint8_t *pPW, uint8_t *pKey, uint8_t *pKey2 = nullptr, uint8_t *pData = nullptr, const int64_t &start = -1, const int64_t &end = -1, const bool &other = false, const char *pKeyString = nullptr)
 {
 	uint8_t fac[3] = { 0 };
 
@@ -157,7 +159,7 @@ static inline void initWolfCrypt(const uint16_t &cryptVersion, const uint8_t *pP
 
 	if (pKey2)
 	{
-		for (uint32_t j = 0; j < 128; ++j)
+		for (uint32_t j = 0; j < 128; j++)
 		{
 			int16_t rn = rand() & 0xFFFF;
 
@@ -265,7 +267,7 @@ static inline void initWolfCrypt(const uint16_t &cryptVersion, const uint8_t *pP
 
 // --------------------------------------------------------------
 
-static inline void cryptAddresses(uint8_t *pData, const uint8_t *pKey, const uint32_t cryptVersion)
+void cryptAddresses(uint8_t *pData, const uint8_t *pKey, const uint32_t cryptVersion)
 {
 	uint16_t *pDataB16 = reinterpret_cast<uint16_t *>(pData);
 
@@ -347,7 +349,7 @@ using AesKey      = std::array<uint8_t, AES_KEY_SIZE>;
 using AesIV       = std::array<uint8_t, AES_IV_SIZE>;
 
 // Init the AES RoundKey
-static inline void keyExpansion(uint8_t *pRoundKey, const uint8_t *pKey)
+void keyExpansion(uint8_t *pRoundKey, const uint8_t *pKey)
 {
 	uint8_t tempa[4] = { 0 };
 
@@ -395,7 +397,7 @@ static inline void keyExpansion(uint8_t *pRoundKey, const uint8_t *pKey)
 	}
 }
 
-static inline void initAES128(uint8_t *pRoundKey, const uint8_t *pPwd, uint8_t *pProKey, const uint16_t &cryptVersion)
+void initAES128(uint8_t *pRoundKey, const uint8_t *pPwd, uint8_t *pProKey, const uint16_t &cryptVersion)
 {
 	uint8_t proKeyZero[4] = { 0 };
 	if (pProKey == nullptr)
@@ -463,19 +465,19 @@ static inline void initAES128(uint8_t *pRoundKey, const uint8_t *pPwd, uint8_t *
 // While this code should be a normal AES CTR implementation, the keyExpansion implementation above is not standard AES
 // it contains minor changes when the tempa values are modified using the sbox values
 
-static inline void addRoundKey(uint8_t *pState, const uint8_t &round, const uint8_t *pRoundKey)
+void addRoundKey(uint8_t *pState, const uint8_t &round, const uint8_t *pRoundKey)
 {
 	for (uint32_t i = 0; i < AES_KEY_SIZE; i++)
 		pState[i] ^= pRoundKey[(round * AES_KEY_SIZE) + i];
 }
 
-static inline void subBytes(uint8_t *pState)
+void subBytes(uint8_t *pState)
 {
 	for (uint32_t i = 0; i < AES_KEY_SIZE; i++)
 		pState[i] = sbox[pState[i]];
 }
 
-static inline void shiftRows(uint8_t *pState)
+void shiftRows(uint8_t *pState)
 {
 	uint8_t temp;
 
@@ -500,12 +502,12 @@ static inline void shiftRows(uint8_t *pState)
 	pState[7]  = temp;
 }
 
-static inline uint8_t xtime(const uint8_t &x)
+uint8_t xtime(const uint8_t &x)
 {
 	return ((x << 1) ^ (((x >> 7) & 1) * 0x1b));
 }
 
-static inline void mixColumns(uint8_t *pState)
+void mixColumns(uint8_t *pState)
 {
 	uint8_t tmp;
 	uint8_t t;
@@ -525,7 +527,7 @@ static inline void mixColumns(uint8_t *pState)
 }
 
 // AES Cipher
-static inline void cipher(uint8_t *pState, const uint8_t *pRoundKey)
+void cipher(uint8_t *pState, const uint8_t *pRoundKey)
 {
 	addRoundKey(pState, 0, pRoundKey);
 
@@ -543,13 +545,13 @@ static inline void cipher(uint8_t *pState, const uint8_t *pRoundKey)
 }
 
 // AES_CTR_xcrypt
-static inline void aesCtrXCrypt(uint8_t *pData, uint8_t *pKey, const uint32_t &size)
+void aesCtrXCrypt(uint8_t *pData, uint8_t *pKey, const std::size_t &size)
 {
 	uint8_t state[AES_BLOCKLEN];
 	uint8_t *pIv = pKey + AES_KEY_EXP_SIZE;
 	int32_t bi   = AES_BLOCKLEN;
 
-	for (uint32_t i = 0; i < size; i++, bi++)
+	for (std::size_t i = 0; i < size; i++, bi++)
 	{
 		if (bi == AES_BLOCKLEN)
 		{
@@ -612,7 +614,7 @@ struct RngData
 	}
 };
 
-static inline uint32_t customRng1(RngData &rd)
+uint32_t customRng1(RngData &rd)
 {
 	uint32_t state;
 	uint32_t stateMod;
@@ -649,7 +651,7 @@ static inline uint32_t customRng1(RngData &rd)
 	return state;
 }
 
-static inline uint32_t customRng2(RngData &rd)
+uint32_t customRng2(RngData &rd)
 {
 	uint32_t stateMod;
 	uint32_t state;
@@ -681,7 +683,7 @@ static inline uint32_t customRng2(RngData &rd)
 	return state;
 }
 
-static inline uint32_t customRng3(RngData &rd)
+uint32_t customRng3(RngData &rd)
 {
 	uint32_t state;
 	uint32_t seed = rd.seed2;
@@ -705,7 +707,7 @@ static inline uint32_t customRng3(RngData &rd)
 	return state;
 }
 
-static inline void rngChain(RngData &rd, std::vector<uint32_t> &data)
+void rngChain(RngData &rd, std::vector<uint32_t> &data)
 {
 	uint32_t i = 0;
 	for (uint32_t &d : data)
@@ -751,7 +753,7 @@ static inline void rngChain(RngData &rd, std::vector<uint32_t> &data)
 	}
 }
 
-static inline void runCrypt(RngData &rd, const uint32_t &seed1, const uint32_t &seed2)
+void runCrypt(RngData &rd, const uint32_t &seed1, const uint32_t &seed2)
 {
 	rd.seed1   = seed1;
 	rd.seed2   = seed2;
@@ -763,7 +765,7 @@ static inline void runCrypt(RngData &rd, const uint32_t &seed1, const uint32_t &
 		rngChain(rd, rd.data[i]);
 }
 
-static inline void aLotOfRngStuff(RngData &rd, uint32_t a2, uint32_t a3, const uint32_t &idx, std::vector<uint8_t> &cryptData)
+void aLotOfRngStuff(RngData &rd, uint32_t a2, uint32_t a3, const uint32_t &idx, std::vector<uint8_t> &cryptData)
 {
 	uint32_t itrs = 20;
 
@@ -812,7 +814,7 @@ static inline void aLotOfRngStuff(RngData &rd, uint32_t a2, uint32_t a3, const u
 	cryptData[idx] += a3;
 }
 
-static inline void initCrypt(CryptData &cd)
+void initCrypt(CryptData &cd)
 {
 	const uint32_t HEADER_SIZE = 31;
 
@@ -839,7 +841,7 @@ static inline void initCrypt(CryptData &cd)
 	cd.seed2 = val3;
 }
 
-static inline void aesKeyGen(CryptData &cd, RngData &rd, std::array<uint8_t, AES_KEY_SIZE> &aesKey, std::array<uint8_t, AES_IV_SIZE> &aesIv)
+void aesKeyGen(CryptData &cd, RngData &rd, std::array<uint8_t, AES_KEY_SIZE> &aesKey, std::array<uint8_t, AES_IV_SIZE> &aesIv)
 {
 	runCrypt(rd, cd.seedBytes[0], cd.seedBytes[1]);
 
@@ -856,7 +858,7 @@ static inline void aesKeyGen(CryptData &cd, RngData &rd, std::array<uint8_t, AES
 
 	srand(seed);
 
-	for (uint32_t i = 0; i < RngData::DATA_VEC_LEN; ++i)
+	for (uint32_t i = 0; i < RngData::DATA_VEC_LEN; i++)
 	{
 		uint32_t rn = rand();
 		uint8_t old = indexes[i];
@@ -874,7 +876,7 @@ static inline void aesKeyGen(CryptData &cd, RngData &rd, std::array<uint8_t, AES
 	std::copy(ivBegin, ivBegin + AES_IV_SIZE, aesIv.begin());
 }
 
-static inline CryptData decryptV2File(const std::vector<uint8_t> &gameDataBytes)
+CryptData decryptV2File(const std::vector<uint8_t> &gameDataBytes)
 {
 	CryptData cd;
 	RngData rd;
@@ -900,7 +902,7 @@ static inline CryptData decryptV2File(const std::vector<uint8_t> &gameDataBytes)
 	return cd;
 }
 
-static inline std::vector<uint8_t> calcKey(const std::vector<uint8_t> &gameDataBytes)
+std::vector<uint8_t> calcKey(const std::vector<uint8_t> &gameDataBytes)
 {
 	std::vector<uint8_t> key;
 	CryptData cd = decryptV2File(gameDataBytes);
@@ -939,7 +941,7 @@ static inline std::vector<uint8_t> calcKey(const std::vector<uint8_t> &gameDataB
 	return key;
 }
 
-static inline uint32_t genMTSeed(const std::array<uint8_t, 3> &seeds)
+uint32_t genMTSeed(const std::array<uint8_t, 3> &seeds)
 {
 	uint32_t x = (seeds[0] << 16) | (seeds[1] << 8) | seeds[2];
 	uint32_t y = (x << 13) ^ x;
@@ -948,7 +950,7 @@ static inline uint32_t genMTSeed(const std::array<uint8_t, 3> &seeds)
 	return z ^ (z << 5);
 }
 
-static inline void decrpytProV2P1(std::vector<uint8_t> &data, const uint32_t &seed)
+void decrpytProV2P1(std::vector<uint8_t> &data, const uint32_t &seed)
 {
 	const uint32_t NUM_RNDS = 128;
 
@@ -964,7 +966,7 @@ static inline void decrpytProV2P1(std::vector<uint8_t> &data, const uint32_t &se
 		data[i] ^= rnds[i % NUM_RNDS];
 }
 
-static inline void initCryptProt(CryptData &cd)
+void initCryptProt(CryptData &cd)
 {
 	uint32_t fileSize = static_cast<uint32_t>(cd.gameDatBytes.size());
 
@@ -988,7 +990,7 @@ static inline void initCryptProt(CryptData &cd)
 
 static constexpr uint32_t ENCRYPTED_KEY_SIZE = 128;
 
-static inline bool validateKey(const std::vector<uint8_t> &key, const std::array<uint8_t, ENCRYPTED_KEY_SIZE> &tarKey)
+bool validateKey(const std::vector<uint8_t> &key, const std::array<uint8_t, ENCRYPTED_KEY_SIZE> &tarKey)
 {
 	if (key.empty()) return false;
 
@@ -1009,7 +1011,7 @@ static inline bool validateKey(const std::vector<uint8_t> &key, const std::array
 	return std::equal(keyBytes.begin(), keyBytes.end(), tarKey.begin());
 }
 
-static inline std::vector<uint8_t> findKey(const std::array<uint8_t, ENCRYPTED_KEY_SIZE> &encKey)
+std::vector<uint8_t> findKey(const std::array<uint8_t, ENCRYPTED_KEY_SIZE> &encKey)
 {
 	const uint32_t MIN_KEY_LEN = 4;
 	for (uint32_t i = MIN_KEY_LEN; i < ENCRYPTED_KEY_SIZE; i++)
@@ -1024,7 +1026,7 @@ static inline std::vector<uint8_t> findKey(const std::array<uint8_t, ENCRYPTED_K
 	return {};
 }
 
-static inline std::vector<uint8_t> calcKeyProt(const std::vector<uint8_t> &gameDatBytes)
+std::vector<uint8_t> calcKeyProt(const std::vector<uint8_t> &gameDatBytes)
 {
 	CryptData cd;
 	RngData rd;
@@ -1066,10 +1068,12 @@ static inline std::vector<uint8_t> calcKeyProt(const std::vector<uint8_t> &gameD
 	return findKey(encryptedKey);
 }
 
+// TODO: Move ChaCha20 into a class
+////////////////////////////
 // ChaCha20 implementation
 // Based on: https://github.com/Ginurx/chacha20-c
 
-static uint32_t pack4(const uint8_t *a)
+uint32_t pack4(const uint8_t *a)
 {
 	uint32_t res = 0;
 	res |= (uint32_t)a[0] << 0 * 8;
@@ -1079,7 +1083,7 @@ static uint32_t pack4(const uint8_t *a)
 	return res;
 }
 
-static void chacha20_init_block(uint32_t *pState, const uint8_t *pKey, const uint8_t *pNonce)
+void chacha20_init_block(uint32_t *pState, const uint8_t *pKey, const uint8_t *pNonce)
 {
 	const uint8_t *magic_constant = (uint8_t *)"expand 32-byte k";
 
@@ -1102,12 +1106,12 @@ static void chacha20_init_block(uint32_t *pState, const uint8_t *pKey, const uin
 	pState[15] = pack4(pNonce + 2 * 4);
 }
 
-static uint32_t rotl32(uint32_t x, int n)
+uint32_t rotl32(uint32_t x, int n)
 {
 	return (x << n) | (x >> (32 - n));
 }
 
-static void chacha20_block_next(uint32_t *pState, uint32_t *pKeyStream)
+void chacha20_block_next(uint32_t *pState, uint32_t *pKeyStream)
 {
 	// This is where the crazy voodoo magic happens.
 	// Mix the bytes a lot and hope that nobody finds out how to undo it.
@@ -1152,7 +1156,7 @@ static void chacha20_block_next(uint32_t *pState, uint32_t *pKeyStream)
 // - The number of steps done can vary at the beginning or end of the function, depending on startPos
 //   - For startPos % 64 != 0, the first block will not process 64 bit
 //   - For length % 64 != 0, the last block will not process 64 bit
-static void chacha20_xor(uint32_t *pState, uint32_t *pKeyStream, const uint32_t &startPos, uint8_t *bytes, const uint64_t &length)
+void chacha20_xor(uint32_t *pState, uint32_t *pKeyStream, const uint32_t &startPos, uint8_t *bytes, const uint64_t &length)
 {
 	uint8_t *keystream8 = (uint8_t *)pKeyStream;
 	uint64_t position   = 0;
@@ -1173,7 +1177,7 @@ static void chacha20_xor(uint32_t *pState, uint32_t *pKeyStream, const uint32_t 
 	}
 }
 
-inline void chacha20_keySetup(const std::array<uint8_t, 4> &data, std::array<uint8_t, 64> &key)
+void chacha20_keySetup(const std::array<uint8_t, 4> &data, std::array<uint8_t, 64> &key)
 {
 	static constexpr uint8_t mod1[4] = { 0x3F, 0xA7, 0xD2, 0x1C };
 	static constexpr uint8_t mod2[4] = { 0xB4, 0xE1, 0x9D, 0x58 };
@@ -1195,3 +1199,4 @@ inline void chacha20_keySetup(const std::array<uint8_t, 4> &data, std::array<uin
 		key[i] = ~(temp ^ data[index] ^ mod3[index]);
 	}
 }
+} // namespace
