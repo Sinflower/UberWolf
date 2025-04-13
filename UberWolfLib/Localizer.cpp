@@ -76,7 +76,8 @@ Localizer::LocMapT Localizer::s_localizationT = {
 	{ "find_file_error_msg", TEXT("ERROR: Unable to find file \"{}\".") },
 	{ "decrypt_error_msg", TEXT("ERROR: Unable to decrypt protected file") },
 	{ "unprot_file_loc", TEXT("Unprotected files can be found in: {}") },
-	{ "remove_prot", TEXT("Removing protection from: {} ... ") }
+	{ "remove_prot", TEXT("Removing protection from: {} ... ") },
+	{ "calc_prot_key_error_msg", TEXT("ERROR: Unable to calculate protection key") }
 };
 
 tString Localizer::s_errorStringT = TEXT("NO DEFAULT FOUND");

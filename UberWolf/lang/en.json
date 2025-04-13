@@ -56,5 +56,6 @@
 	"find_file_error_msg": "ERROR: Unable to find file \"{}\".",
 	"decrypt_error_msg": "ERROR: Unable to decrypt protected file",
 	"unprot_file_loc": "Unprotected files can be found in: {}",
-	"remove_prot": "Removing protection from: {} ... "
+	"remove_prot": "Removing protection from: {} ... ",
+	"calc_prot_key_error_msg": "ERROR: Unable to calculate protection key"
 }
