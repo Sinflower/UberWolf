@@ -35,6 +35,11 @@ bool g_newCrypt           = false;
 bool g_chacha20           = false;
 uint16_t g_cryptVersion   = 0;
 
+uint8_t g_cc20Key[32]   = { 0xC9, 0x82, 0xF8, 0xB4, 0x2C, 0x93, 0x9E, 0x83, 0x0E, 0xBC, 0xBC, 0x92, 0x68, 0x8D, 0x59, 0xA1, 0x4A, 0x9E, 0x7F, 0xB0, 0xAC, 0xAF, 0x1D, 0x8F, 0x8E, 0xB8, 0x3B, 0x9E, 0xE8, 0x89, 0xD9, 0xAD };
+uint8_t g_cc20Nonce[12] = { 0xFF, 0xBC, 0x2D, 0xAB, 0x9D, 0x8B, 0x0F, 0xB4, 0xBB, 0x9A, 0x69, 0x85 };
+
+
+
 static WCHAR *sjis2utf8(const char *sjis, const int32_t &len);
 static char *utf82sjis(const WCHAR *utf8);
 
@@ -579,10 +584,7 @@ void DXArchive::KeyConv(void *Data, s64 Size, s64 Position, unsigned char *Key)
 		std::memset(state, 0, sizeof(state));
 		std::memset(keystream32, 0, sizeof(keystream32));
 
-		const uint8_t key[32]   = { 0xC9, 0x82, 0xF8, 0xB4, 0x2C, 0x93, 0x9E, 0x83, 0x0E, 0xBC, 0xBC, 0x92, 0x68, 0x8D, 0x59, 0xA1, 0x4A, 0x9E, 0x7F, 0xB0, 0xAC, 0xAF, 0x1D, 0x8F, 0x8E, 0xB8, 0x3B, 0x9E, 0xE8, 0x89, 0xD9, 0xAD };
-		const uint8_t nonce[12] = { 0xFF, 0xBC, 0x2D, 0xAB, 0x9D, 0x8B, 0x0F, 0xB4, 0xBB, 0x9A, 0x69, 0x85 };
-
-		chacha20_init_block(state, key, nonce);
+		chacha20_init_block(state, g_cc20Key, g_cc20Nonce);
 		chacha20_xor(state, keystream32, static_cast<uint32_t>(Position), reinterpret_cast<uint8_t *>(Data), Size);
 		return;
 	}
@@ -2163,7 +2165,19 @@ int DXArchive::EncodeArchive(const TCHAR *OutputFileName, const std::vector<std:
 
 	g_cryptVersion = cryptVersion;
 	g_newCrypt     = (cryptVersion >= 331 && cryptVersion < 1000 || cryptVersion >= 1010);
-	g_chacha20     = cryptVersion == 0x64;
+	g_chacha20     = cryptVersion == 0x64 || cryptVersion == 0xC8;
+
+	if (cryptVersion == 0xC8)
+	{
+		std::array<uint8_t, 4> data;
+		std::array<uint8_t, 64> key;
+
+		std::memcpy(data.data(), (uint8_t *)KeyString_ + KeyStringBytes + 1, 4);
+		chacha20_keySetup(data, key);
+
+		std::memcpy(g_cc20Key, key.data(), 32);
+		std::memcpy(g_cc20Nonce, key.data() + 34, 12);
+	}
 
 	uint8_t *pK2 = nullptr;
 
@@ -2760,7 +2774,19 @@ int DXArchive::DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const 
 
 		g_cryptVersion = cryptVersion;
 		g_newCrypt     = (cryptVersion >= 331 && cryptVersion < 1000 || cryptVersion >= 1010);
-		g_chacha20     = cryptVersion == 0x64;
+		g_chacha20     = cryptVersion == 0x64 || cryptVersion == 0xC8;
+
+		if (cryptVersion == 0xC8)
+		{
+			std::array<uint8_t, 4> data;
+			std::array<uint8_t, 64> key;
+
+			std::memcpy(data.data(), (uint8_t *)KeyString_ + KeyStringBytes + 1, 4);
+			chacha20_keySetup(data, key);
+
+			std::memcpy(g_cc20Key, key.data(), 32);
+			std::memcpy(g_cc20Nonce, key.data() + 34, 12);
+		}
 
 		if (g_newCrypt)
 		{

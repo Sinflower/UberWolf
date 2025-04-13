@@ -52,6 +52,7 @@
 namespace fs = std::filesystem;
 
 static constexpr uint16_t PRO_CRYPT_VERSION = 1000;
+static constexpr uint16_t CC2_PRO_VERSION   = 0xC8;
 
 const CryptModes DEFAULT_CRYPT_MODES = {
 	{ "Wolf RPG v2.01", 0x0, &DXArchive_VER5::DecodeArchive, &DXArchive_VER5::EncodeArchiveOneDirectory, std::vector<unsigned char>{ 0x0f, 0x53, 0xe1, 0x3e, 0x04, 0x37, 0x12, 0x17, 0x60, 0x0f, 0x53, 0xe1 } },
@@ -198,6 +199,8 @@ bool WolfDec::UnpackArchive(const tString& filePath, const bool& override)
 			return detectMode(filePath, override);
 		// For Pro Games always return false and let UberWolfLib calculate the key
 		else if (cryptVersion >= PRO_CRYPT_VERSION)
+			return false;
+		else if (cryptVersion == CC2_PRO_VERSION)
 			return false;
 		else if (!detectCrypt(filePath))
 			return false;

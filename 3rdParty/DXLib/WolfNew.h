@@ -342,6 +342,10 @@ static constexpr uint8_t Rcon[11] = { 0x8D, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 
 
 #define PW_SIZE 15
 
+using AesRoundKey = std::array<uint8_t, AES_ROUND_KEY_SIZE>;
+using AesKey      = std::array<uint8_t, AES_KEY_SIZE>;
+using AesIV       = std::array<uint8_t, AES_IV_SIZE>;
+
 // Init the AES RoundKey
 static inline void keyExpansion(uint8_t *pRoundKey, const uint8_t *pKey)
 {
@@ -881,12 +885,12 @@ static inline CryptData decryptV2File(const std::vector<uint8_t> &gameDataBytes)
 
 	runCrypt(rd, cd.seed1, cd.seed2);
 
-	std::array<uint8_t, AES_KEY_SIZE> aesKey;
-	std::array<uint8_t, AES_IV_SIZE> aesIv;
+	AesKey aesKey;
+	AesIV aesIv;
 
 	aesKeyGen(cd, rd, aesKey, aesIv);
 
-	std::array<uint8_t, AES_ROUND_KEY_SIZE> roundKey;
+	AesRoundKey roundKey;
 
 	keyExpansion(roundKey.data(), aesKey.data());
 	std::copy(aesIv.begin(), aesIv.end(), roundKey.begin() + AES_KEY_EXP_SIZE);
@@ -937,11 +941,11 @@ static inline std::vector<uint8_t> calcKey(const std::vector<uint8_t> &gameDataB
 
 static inline uint32_t genMTSeed(const std::array<uint8_t, 3> &seeds)
 {
-	int32_t seedP1  = (seeds[1] | (seeds[0] << 8)) << 8;
-	uint32_t seedP2 = ((((seeds[2] | seedP1) << 13) ^ (seeds[2] | (uint32_t)seedP1)) >> 17) ^ ((seeds[2] | seedP1) << 13) ^ (seeds[2] | seedP1);
-	uint32_t seed   = (32 * seedP2) ^ seedP2;
+	uint32_t x = (seeds[0] << 16) | (seeds[1] << 8) | seeds[2];
+	uint32_t y = (x << 13) ^ x;
+	uint32_t z = (y >> 17) ^ y;
 
-	return seed;
+	return z ^ (z << 5);
 }
 
 static inline void decrpytProV2P1(std::vector<uint8_t> &data, const uint32_t &seed)
@@ -1030,12 +1034,12 @@ static inline std::vector<uint8_t> calcKeyProt(const std::vector<uint8_t> &gameD
 
 	runCrypt(rd, cd.seed1, cd.seed2);
 
-	std::array<uint8_t, AES_KEY_SIZE> aesKey;
-	std::array<uint8_t, AES_IV_SIZE> aesIv;
+	AesKey aesKey;
+	AesIV aesIv;
 
 	aesKeyGen(cd, rd, aesKey, aesIv);
 
-	std::array<uint8_t, AES_ROUND_KEY_SIZE> roundKey;
+	AesRoundKey roundKey;
 
 	keyExpansion(roundKey.data(), aesKey.data());
 	std::copy(aesIv.begin(), aesIv.end(), roundKey.begin() + AES_KEY_EXP_SIZE);
@@ -1158,7 +1162,7 @@ static void chacha20_xor(uint32_t *pState, uint32_t *pKeyStream, const uint32_t 
 
 	while (position < length)
 	{
-		uint32_t steps = static_cast<uint32_t>(min(64 - offset, length - position));
+		uint32_t steps = static_cast<uint32_t>(std::min(64 - offset, length - position));
 		chacha20_block_next(pState, pKeyStream);
 
 		for (uint32_t i = 0; i < steps; i++)
@@ -1166,5 +1170,28 @@ static void chacha20_xor(uint32_t *pState, uint32_t *pKeyStream, const uint32_t 
 
 		position += steps;
 		offset = 0;
+	}
+}
+
+inline void chacha20_keySetup(const std::array<uint8_t, 4> &data, std::array<uint8_t, 64> &key)
+{
+	static constexpr uint8_t mod1[4] = { 0x3F, 0xA7, 0xD2, 0x1C };
+	static constexpr uint8_t mod2[4] = { 0xB4, 0xE1, 0x9D, 0x58 };
+	static constexpr uint8_t mod3[4] = { 0x6A, 0x2B, 0x4C, 0x8E };
+
+	key = { 0 };
+
+	// Only go to < 63 because the last byte is hard set to 0
+	for (uint32_t i = 0; i < 63; i++)
+	{
+		uint8_t index = i % 4;
+		uint8_t temp  = (data[index] + mod2[index]) ^ (mod1[index] + i + (16 * i));
+
+		if ((i % 2) == 0)
+			temp = (temp >> 5) | (temp << 3);
+		else
+			temp = (temp >> 2) | (temp << 6);
+
+		key[i] = ~(temp ^ data[index] ^ mod3[index]);
 	}
 }
