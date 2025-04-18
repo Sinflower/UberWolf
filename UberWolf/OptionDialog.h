@@ -151,6 +151,9 @@ private:
 
 				SendDlgItemMessage(hWnd, IDC_CHECK_OVERWRITE, WM_SETTEXT, 0, (LPARAM)LOCW("overwrite_label"));
 				SendDlgItemMessage(hWnd, IDC_CHECK_UNPROTECT, WM_SETTEXT, 0, (LPARAM)LOCW("unprotect_label"));
+				SendDlgItemMessage(hWnd, IDOK, WM_SETTEXT, 0, (LPARAM)LOCW("ok"));
+				SendDlgItemMessage(hWnd, IDCANCEL, WM_SETTEXT, 0, (LPARAM)LOCW("cancel"));
+				SetWindowText(hWnd, LOCW("options"));
 
 				pWnd->SetHandle(hWnd);
 				pWnd->AdjustSizes();
