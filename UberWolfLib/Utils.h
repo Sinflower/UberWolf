@@ -40,9 +40,7 @@ struct ProcessInfo
 	std::wstring parentName;
 };
 
-namespace
-{
-std::wstring StringToWString(const std::string& str)
+inline std::wstring StringToWString(const std::string& str)
 {
 	std::wstring wstr;
 	std::size_t size;
@@ -51,7 +49,7 @@ std::wstring StringToWString(const std::string& str)
 	return wstr;
 }
 
-std::string WStringToString(const std::wstring& wstr)
+inline std::string WStringToString(const std::wstring& wstr)
 {
 	std::string str;
 	std::size_t size;
@@ -60,7 +58,7 @@ std::string WStringToString(const std::wstring& wstr)
 	return str;
 }
 
-tStrings argvToList(int argc, char* argv[])
+inline tStrings argvToList(int argc, char* argv[])
 {
 	tStrings args;
 #if UNICODE || _UNICODE
@@ -78,7 +76,7 @@ tStrings argvToList(int argc, char* argv[])
 	return args;
 }
 
-std::string ByteToHexString(const uint8_t& byte)
+inline std::string ByteToHexString(const uint8_t& byte)
 {
 	char hex[3];
 	sprintf_s(hex, "%02X", byte);
@@ -86,7 +84,7 @@ std::string ByteToHexString(const uint8_t& byte)
 }
 
 // Function to get the parent process ID
-ProcessInfo GetProcessInfo(const DWORD& pid)
+inline ProcessInfo GetProcessInfo(const DWORD& pid)
 {
 	PROCESSENTRY32 processEntry;
 	processEntry.dwSize = sizeof(PROCESSENTRY32);
@@ -120,11 +118,10 @@ ProcessInfo GetProcessInfo(const DWORD& pid)
 	return ProcessInfo{};
 }
 
-bool IsSubProcess()
+inline bool IsSubProcess()
 {
 	const DWORD pid               = GetCurrentProcessId(); // Get the PID of the current process
 	const ProcessInfo processInfo = GetProcessInfo(pid);
 
 	return (processInfo.name == processInfo.parentName);
 }
-} // namespace
