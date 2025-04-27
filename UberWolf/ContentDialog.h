@@ -43,8 +43,6 @@
 #include "WolfUtils.h"
 #include "resource.h"
 
-namespace fs = std::filesystem;
-
 namespace
 {
 // Function to open a file selection dialog
@@ -206,7 +204,7 @@ private:
 
 	void onPackClicked()
 	{
-		const fs::path exePath = getExePath();
+		const std::filesystem::path exePath = getExePath();
 
 		if (exePath.empty())
 			return;
@@ -242,16 +240,16 @@ private:
 
 	void onProcessClicked()
 	{
-		const fs::path exePath = getExePath();
+		const std::filesystem::path exePath = getExePath();
 
 		if (exePath.empty())
 			return;
 
-		const fs::path basePath = exePath.parent_path();
+		const std::filesystem::path basePath = exePath.parent_path();
 		const tString dataPath  = FS_PATH_TO_TSTRING(basePath) + TEXT("/") + GetWolfDataFolder();
 
 		// Check if the data folder or data.wolf file exist
-		if (!fs::exists(dataPath) && !ExistsWolfDataFile(basePath))
+		if (!std::filesystem::exists(dataPath) && !ExistsWolfDataFile(basePath))
 		{
 			MessageBox(hWnd(), LOCW("error_msg_2"), LOCW("error"), MB_OK | MB_ICONERROR);
 			return;
@@ -351,7 +349,7 @@ private:
 		SendDlgItemMessage(hWnd(), IDC_LOG, EM_REPLACESEL, FALSE, (LPARAM)msg.c_str());
 	}
 
-	fs::path getExePath() const
+	std::filesystem::path getExePath() const
 	{
 		// Make sure that the user has selected a file
 		WCHAR szFile[MAX_PATH];
@@ -360,16 +358,16 @@ private:
 		if (szFile[0] == '\0')
 		{
 			MessageBox(hWnd(), LOCW("select_file"), LOCW("error"), MB_OK | MB_ICONERROR);
-			return fs::path();
+			return std::filesystem::path();
 		}
 
-		fs::path exePath = szFile;
+		std::filesystem::path exePath = szFile;
 
 		// Make sure that the file exists
-		if (!fs::exists(exePath))
+		if (!std::filesystem::exists(exePath))
 		{
 			MessageBox(hWnd(), LOCW("error_msg_1"), LOCW("error"), MB_OK | MB_ICONERROR);
-			return fs::path();
+			return std::filesystem::path();
 		}
 
 		return exePath;

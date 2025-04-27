@@ -44,8 +44,6 @@
 #define LOC_ADD_LANG(_LANG_, _RES_) Localizer::GetInstance().AddLanguage(_LANG_, _RES_)
 #define LOC_INIT()                  Localizer::GetInstance().Init()
 
-namespace fs = std::filesystem;
-
 class Localizer
 {
 	static inline const std::string LOC_FILE_FOLDER = "langs";
@@ -157,13 +155,13 @@ public:
 	{
 		std::vector<std::pair<std::wstring, std::string>> langCodes;
 
-		fs::path path = fs::current_path() / LOC_FILE_FOLDER;
+		std::filesystem::path path = std::filesystem::current_path() / LOC_FILE_FOLDER;
 
 		// Check if the folder exists
-		if (!fs::exists(path) || !fs::is_directory(path))
+		if (!std::filesystem::exists(path) || !std::filesystem::is_directory(path))
 			return langCodes;
 
-		for (const auto& entry : fs::directory_iterator(path))
+		for (const auto& entry : std::filesystem::directory_iterator(path))
 		{
 			if (entry.is_regular_file() && entry.path().extension() == ".json")
 			{
@@ -268,8 +266,8 @@ private:
 		mapW.clear();
 
 		// Make sure the file exists
-		fs::path path = fs::current_path() / LOC_FILE_FOLDER / (lang + ".json");
-		if (!fs::exists(path))
+		std::filesystem::path path = std::filesystem::current_path() / LOC_FILE_FOLDER / (lang + ".json");
+		if (!std::filesystem::exists(path))
 		{
 			const std::wstring errMsg = L"Failed to find localization file: " + path.wstring();
 			MessageBox(NULL, errMsg.c_str(), L"Error", MB_OK | MB_ICONERROR);

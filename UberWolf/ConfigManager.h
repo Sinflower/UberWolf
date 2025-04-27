@@ -34,8 +34,6 @@
 
 #include <nlohmann/json.hpp>
 
-namespace fs = std::filesystem;
-
 class ConfigManager
 {
 	inline static const std::wstring CONFIG_FOLDER_NAME = L"UberWolf";
@@ -110,11 +108,11 @@ private:
 			return;
 
 		// Check if the config folder exists
-		if (!fs::exists(m_configFolder))
+		if (!std::filesystem::exists(m_configFolder))
 			return;
 
 		// Check if the config file exists
-		if (!fs::exists(m_configFile))
+		if (!std::filesystem::exists(m_configFile))
 			return;
 
 		// Load the config file
@@ -130,8 +128,8 @@ private:
 			return;
 
 		// Check if the config folder exists
-		if (!fs::exists(m_configFolder))
-			fs::create_directory(m_configFolder);
+		if (!std::filesystem::exists(m_configFolder))
+			std::filesystem::create_directory(m_configFolder);
 
 		// Save the config file
 		std::ofstream file(m_configFile);
