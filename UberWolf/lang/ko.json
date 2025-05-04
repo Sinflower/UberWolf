@@ -7,12 +7,13 @@
 	"ok": "확인",
 	"cancel": "취소",
 	"process": "실행",
+	"pack": "Pack",
 	"select_game": "게임 선택",
 	"game_location": "게임 위치",
 	"protection_key": "보호 키",
 	"open_file": "파일 열기",
 	"not_protected": "보호되지 않음",
-	"use_dll_label": "DLL 인젝션 사용",
+	"unprotect_label": "Unprotect Pro files",
 	"overwrite_label": "추출된 파일 덮어쓰기",
 	"drop_label": "\r\nGame.exe 드랍으로 자동 감지\r\n.wolf 파일 드랍으로 자동분해",
 	"select_file": "작업을 진행할 파일을 선택하십시요.",
@@ -22,6 +23,7 @@
 	"error_msg_4": "보호키를 찾지 못했습니다.",
 	"dec_key_search_msg": "복호화 키를 찾는중 ...",
 	"unpacked_msg": "{} 는 이미 언팩되어있습니다, 건너뛰기",
+	"packing_msg": "Packing: {} ... ",
 	"unpacking_msg": "언팩중: {} ... ",
 	"done_msg": "완료",
 	"failed_msg": "실패",
@@ -54,5 +56,7 @@
 	"find_file_error_msg": "에러: 파일을 찾을수 없습니다 \"{}\".",
 	"decrypt_error_msg": "에러: 파일을 복호화 할수 없습니다",
 	"unprot_file_loc": "보호되지 않은 파일은 해당 위치에서 찾을수 있습니다: {}",
-	"remove_prot": "해당 파일 보호화 제거중: {} ... "
+	"remove_prot": "해당 파일 보호화 제거중: {} ... ",
+	"calc_prot_key_error_msg": "ERROR: Unable to calculate protection key",
+	"dec_wolfx_label": "Decrypt WolfX files"
 }

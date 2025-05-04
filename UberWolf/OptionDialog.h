@@ -46,12 +46,15 @@ public:
 		registerSlot(IDCANCEL, BN_CLICKED, [this]() { onCancelClicked(); });
 		registerSlot(IDC_CHECK_OVERWRITE, BN_CLICKED, [this]() { onOverwriteClicked(); });
 		registerSlot(IDC_CHECK_UNPROTECT, BN_CLICKED, [this]() { onUnprotectClicked(); });
+		registerSlot(IDC_CHECK_DEC_WOLFX, BN_CLICKED, [this]() { onDecWolfXClicked(); });
 
 		registerCheckBoxState(IDC_CHECK_OVERWRITE, [this]() { return m_overwrite; });
 		registerCheckBoxState(IDC_CHECK_UNPROTECT, [this]() { return m_unprotect; });
+		registerCheckBoxState(IDC_CHECK_DEC_WOLFX, [this]() { return m_decWolfX; });
 
 		m_overwrite = getSaveValue<bool>(IDC_CHECK_OVERWRITE, false);
 		m_unprotect = getSaveValue<bool>(IDC_CHECK_UNPROTECT, true);
+		m_decWolfX  = getSaveValue<bool>(IDC_CHECK_DEC_WOLFX, false);
 	}
 
 	~OptionDialog()
@@ -66,6 +69,11 @@ public:
 	const bool& Overwrite() const
 	{
 		return m_overwrite;
+	}
+
+	const bool& DecWolfX() const
+	{
+		return m_decWolfX;
 	}
 
 	void SetParent(const HWND& hWndParent)
@@ -87,8 +95,10 @@ public:
 	void AdjustSizes()
 	{
 		int32_t maxWidth = 0;
-		maxWidth         = max(maxWidth, adjustCheckBox(IDC_CHECK_OVERWRITE));
-		maxWidth         = max(maxWidth, adjustCheckBox(IDC_CHECK_UNPROTECT));
+
+		maxWidth = max(maxWidth, adjustCheckBox(IDC_CHECK_OVERWRITE));
+		maxWidth = max(maxWidth, adjustCheckBox(IDC_CHECK_UNPROTECT));
+		maxWidth = max(maxWidth, adjustCheckBox(IDC_CHECK_DEC_WOLFX));
 
 		// Add the static width for the dialog
 		maxWidth += STATIC_WIDTH;
@@ -123,6 +133,12 @@ private:
 		updateSaveValue<bool>(IDC_CHECK_UNPROTECT, m_unprotect);
 	}
 
+	void onDecWolfXClicked()
+	{
+		m_decWolfX = IsDlgButtonChecked(hWnd(), IDC_CHECK_DEC_WOLFX);
+		updateSaveValue<bool>(IDC_CHECK_DEC_WOLFX, m_decWolfX);
+	}
+
 	int32_t adjustCheckBox(const int32_t& id)
 	{
 		// Get the handle of the checkbox
@@ -148,9 +164,11 @@ private:
 				WindowBase* pWnd = reinterpret_cast<WindowBase*>(lParam);
 				SendDlgItemMessage(hWnd, IDC_CHECK_OVERWRITE, BM_SETCHECK, pWnd->GetCheckBoxState(IDC_CHECK_OVERWRITE), 0);
 				SendDlgItemMessage(hWnd, IDC_CHECK_UNPROTECT, BM_SETCHECK, pWnd->GetCheckBoxState(IDC_CHECK_UNPROTECT), 0);
+				SendDlgItemMessage(hWnd, IDC_CHECK_DEC_WOLFX, BM_SETCHECK, pWnd->GetCheckBoxState(IDC_CHECK_DEC_WOLFX), 0);
 
 				SendDlgItemMessage(hWnd, IDC_CHECK_OVERWRITE, WM_SETTEXT, 0, (LPARAM)LOCW("overwrite_label"));
 				SendDlgItemMessage(hWnd, IDC_CHECK_UNPROTECT, WM_SETTEXT, 0, (LPARAM)LOCW("unprotect_label"));
+				SendDlgItemMessage(hWnd, IDC_CHECK_DEC_WOLFX, WM_SETTEXT, 0, (LPARAM)LOCW("dec_wolfx_label"));
 				SendDlgItemMessage(hWnd, IDOK, WM_SETTEXT, 0, (LPARAM)LOCW("ok"));
 				SendDlgItemMessage(hWnd, IDCANCEL, WM_SETTEXT, 0, (LPARAM)LOCW("cancel"));
 				SetWindowText(hWnd, LOCW("options"));
@@ -166,4 +184,5 @@ private:
 private:
 	bool m_overwrite = false;
 	bool m_unprotect = false;
+	bool m_decWolfX  = false;
 };

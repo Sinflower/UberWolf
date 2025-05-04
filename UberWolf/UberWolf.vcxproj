@@ -191,6 +191,7 @@
     <Image Include="UberWolf.ico" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="lang\cn.json" />
     <None Include="lang\en.json" />
     <None Include="lang\jp.json" />
     <None Include="lang\ko.json" />

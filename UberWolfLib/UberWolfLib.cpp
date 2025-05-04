@@ -192,7 +192,7 @@ UWLExitCode UberWolfLib::UnpackData()
 	if (rc != UWLExitCode::SUCCESS) return rc;
 
 	// Unpack the WolfX files if needed
-	if (m_config.decWolfX && m_wolfPro.IsWolfPro())
+	if (m_config.decWolfX)
 	{
 		if (!m_wolfPro.DecryptWolfXFiles())
 			return UWLExitCode::UNKNOWN_ERROR;

@@ -30,6 +30,7 @@
 #define IDC_LABEL_GAME_LOCATION         1011
 #define IDC_COMBO_ENCRYPTION            1012
 #define IDC_LABEL_ENCRYPTION            1013
+#define IDC_CHECK_DEC_WOLFX             1014
 
 // Next default values for new objects
 // 

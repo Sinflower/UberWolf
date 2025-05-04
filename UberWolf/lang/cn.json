@@ -57,5 +57,6 @@
 	"decrypt_error_msg": "ERROR: 无法解密该受保护的文件",
 	"unprot_file_loc": "解除保护的文件已被提取到: {}",
 	"remove_prot": "正在解除文件保护: {} ... ",
-	"calc_prot_key_error_msg": "ERROR: 无法推算保护密钥"
+	"calc_prot_key_error_msg": "ERROR: 无法推算保护密钥",
+	"dec_wolfx_label": "Decrypt WolfX files"
 }

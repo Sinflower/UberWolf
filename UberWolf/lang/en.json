@@ -57,5 +57,6 @@
 	"decrypt_error_msg": "ERROR: Unable to decrypt protected file",
 	"unprot_file_loc": "Unprotected files can be found in: {}",
 	"remove_prot": "Removing protection from: {} ... ",
-	"calc_prot_key_error_msg": "ERROR: Unable to calculate protection key"
+	"calc_prot_key_error_msg": "ERROR: Unable to calculate protection key",
+	"dec_wolfx_label": "Decrypt WolfX files"
 }

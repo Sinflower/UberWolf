@@ -258,7 +258,7 @@ private:
 		setButtonStates(FALSE);
 
 		UberWolfLib uwl;
-		uwl.Configure(m_optionsDialog.Overwrite(), m_optionsDialog.Unprotect());
+		uwl.Configure(m_optionsDialog.Overwrite(), m_optionsDialog.Unprotect(), m_optionsDialog.DecWolfX());
 		uwl.InitGame(exePath);
 		std::wstring protKey;
 		UWLExitCode result = uwl.UnpackData();

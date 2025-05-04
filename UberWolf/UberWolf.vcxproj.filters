@@ -74,5 +74,8 @@
     <None Include="lang\ko.json">
       <Filter>Resource Files\langs</Filter>
     </None>
+    <None Include="lang\cn.json">
+      <Filter>Resource Files\langs</Filter>
+    </None>
   </ItemGroup>
 </Project>

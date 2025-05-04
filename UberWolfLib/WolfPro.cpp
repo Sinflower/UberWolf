@@ -125,7 +125,7 @@ WolfPro::WolfPro(const tString& dataFolder, const bool& dataInBaseFolder) :
 
 	if (m_dxArcKeyFile.empty())
 	{
-		//ERROR_LOG << LOCALIZE("key_file_warn_msg") << std::endl;
+		// ERROR_LOG << LOCALIZE("key_file_warn_msg") << std::endl;
 		return;
 	}
 	else
@@ -141,7 +141,7 @@ Key WolfPro::GetProtectionKey()
 
 	Key key = findProtectionKey(m_protKeyFile);
 
-	if (!validateProtectionKey(key))
+	if (m_proVersion != 3 && !validateProtectionKey(key))
 	{
 		ERROR_LOG << LOCALIZE("inv_prot_key_error_msg") << std::endl;
 		return Key();
@@ -251,19 +251,9 @@ bool WolfPro::RemoveProtection()
 
 bool WolfPro::DecryptWolfXFiles()
 {
-	if (!m_isWolfPro)
-	{
-		ERROR_LOG << LOCALIZE("decrypt_error_msg") << std::endl;
-		return false;
-	}
 	if (m_dataFolder.empty())
 	{
 		ERROR_LOG << LOCALIZE("data_dir_error_msg") << std::endl;
-		return false;
-	}
-	if (m_proVersion < 3)
-	{
-		ERROR_LOG << LOCALIZE("invalid_pro_error_msg") << std::endl;
 		return false;
 	}
 
@@ -354,16 +344,29 @@ Key WolfPro::findProtectionKey(const tString& filePath)
 
 	if (!readFile(filePath, bytes, fileSize)) return Key();
 
-	if (bytes[1] == 0x50 && bytes[5] == 0x55)
+	if (bytes[1] == 0x50)
 	{
-		m_proVersion = 2;
-		return findProtectionKeyV2(bytes);
+		if (bytes[5] == 0x55)
+		{
+			m_proVersion = 2;
+			return findProtectionKeyV2(bytes);
+		}
+		else if (bytes[5] >= 0x57)
+		{
+			// For v3 it is not possible to determine the key as only a hash is stored
+			m_proVersion = 3;
+
+			std::string notPossible = "NOT POSSIBLE FOR WolfRPG v3.5";
+			return Key({ notPossible.begin(), notPossible.end() });
+		}
 	}
 	else
 	{
 		m_proVersion = 1;
 		return findProtectionKeyV1(bytes);
 	}
+
+	return Key();
 }
 
 Key WolfPro::findProtectionKeyV1(std::vector<uint8_t>& byteData) const

@@ -36,7 +36,7 @@
 
 namespace fs = std::filesystem;
 
-static const std::string UWCLI_VERSION = "0.3.1";
+static const std::string UWCLI_VERSION = "0.4.0";
 static const std::string UWCLI_NAME    = "UberWolfCli";
 
 std::string buildPackInfo()
@@ -73,6 +73,9 @@ int main(int argc, char* argv[])
 	bool unprotect = false;
 	app.add_flag("-u,--unprotect", unprotect, "Unprotect Pro files");
 
+	bool decWolfX = false;
+	app.add_flag("-x,--wolfx", decWolfX, "Decrypt WolfX files if present");
+
 	std::string packVersion = "";
 	app.add_option("-p,--pack", packVersion, buildPackInfo())->type_name("VER_IDX");
 
@@ -87,7 +90,7 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	uwl.Configure(override, unprotect);
+	uwl.Configure(override, unprotect, decWolfX);
 
 	// Check if the first argument is an executable
 	if (fs::exists(files.front()) && fs::is_regular_file(files.front()) && fs::path(files.front()).extension() == ".exe")
