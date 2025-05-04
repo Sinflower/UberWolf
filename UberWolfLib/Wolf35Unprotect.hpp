@@ -33,7 +33,8 @@
 #include <vector>
 
 // This depends on WolfRPG for the WolfFileType enum
-#include "WolfRPG/WolfRPG.h"
+#include "WolfRPG/Types.h"
+#include "WolfRPG/WolfRPGUtils.h"
 
 #include "WolfSha512.hpp"
 
@@ -147,7 +148,7 @@ inline bool decryptProV3Dat(std::vector<uint8_t> &buffer, const WolfFileType &da
 	return true;
 }
 
-void gameDatUpdateSize(std::vector<uint8_t> &bytes, const uint32_t &oldSize)
+inline void gameDatUpdateSize(std::vector<uint8_t> &bytes, const uint32_t &oldSize)
 {
 	std::size_t offset = 10;                                     // Size of the header
 	offset += *reinterpret_cast<uint32_t *>(&bytes[offset]) + 4; // Bytes
@@ -172,7 +173,7 @@ static const std::vector<std::string> PROTECTED_FILES = {
 	"TileSetData.dat"
 };
 
-void unprotectProject(std::vector<uint8_t> &projData)
+inline void unprotectProject(std::vector<uint8_t> &projData)
 {
 	// ¯\_(ツ)_/¯ So far it looks like this is how it is done
 	srand(0);
@@ -180,7 +181,7 @@ void unprotectProject(std::vector<uint8_t> &projData)
 		byte ^= static_cast<uint8_t>(rand());
 }
 
-void unprotectProFiles(const std::wstring &folder)
+inline void unprotectProFiles(const std::wstring &folder)
 {
 	// Create a backup folder and copy the original file
 	const std::filesystem::path backupFolder = std::filesystem::path(folder) / "backup";

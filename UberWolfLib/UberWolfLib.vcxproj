@@ -212,6 +212,7 @@
     <ClCompile Include="WolfDec.cpp" />
     <ClCompile Include="WolfPro.cpp" />
     <ClCompile Include="WolfUtils.cpp" />
+    <ClCompile Include="WolfXWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\3rdParty\DXLib\CharCode.h" />
@@ -249,6 +250,7 @@
     <ClInclude Include="WolfRPG\WolfRPGUtils.h" />
     <ClInclude Include="WolfSha512.hpp" />
     <ClInclude Include="WolfUtils.h" />
+    <ClInclude Include="WolfXWrapper.h" />
     <ClInclude Include="WolfX\Benchmark.hpp" />
     <ClInclude Include="WolfX\Crack.hpp" />
     <ClInclude Include="WolfX\DataManip.hpp" />

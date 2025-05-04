@@ -81,6 +81,13 @@ struct WolfXDecryptCollection
 	WolfXDecryptKeys decryptKeys;
 	StringSets stringValues;
 	IntegerSets intValues;
+
+	void clear()
+	{
+		decryptKeys.clear();
+		stringValues.clear();
+		intValues.clear();
+	}
 };
 
 struct WolfXFile

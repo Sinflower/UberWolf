@@ -78,6 +78,9 @@
     <ClCompile Include="..\3rdParty\lz4\lz4.c">
       <Filter>3rdParty\lz4</Filter>
     </ClCompile>
+    <ClCompile Include="WolfXWrapper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utils.h">
@@ -226,6 +229,9 @@
     </ClInclude>
     <ClInclude Include="..\3rdParty\lz4\lz4.h">
       <Filter>3rdParty\lz4</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfXWrapper.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

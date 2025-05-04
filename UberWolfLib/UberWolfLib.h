@@ -54,6 +54,7 @@ class UberWolfLib
 	{
 		bool override  = false;
 		bool unprotect = false;
+		bool decWolfX  = false;
 	};
 
 public:
@@ -65,10 +66,11 @@ public:
 		return m_valid;
 	}
 
-	void Configure(const bool& override = false, const bool& unprotect = false)
+	void Configure(const bool& override = false, const bool& unprotect = false, const bool decWolfX = false)
 	{
 		m_config.override  = override;
 		m_config.unprotect = unprotect;
+		m_config.decWolfX  = decWolfX;
 	}
 
 	bool InitGame(const tString& gameExePath);

@@ -184,4 +184,4 @@ inline bool FilenameAnyOf(const std::filesystem::path& path, const std::vector<s
 	return false;
 }
 
-extern tString g_activeFile = L"";
+inline tString g_activeFile = L"";

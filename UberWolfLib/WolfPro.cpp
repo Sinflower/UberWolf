@@ -41,9 +41,8 @@
 #include "Utils.h"
 #include "WolfUtils.h"
 
-#include "WolfX/WolfX.hpp"
-#include "WolfRPG/WolfRPG.h"
 #include "Wolf35Unprotect.hpp"
+#include "WolfXWrapper.h"
 
 namespace fs = std::filesystem;
 
@@ -99,7 +98,7 @@ WolfPro::WolfPro(const tString& dataFolder, const bool& dataInBaseFolder) :
 	if (!fs::exists(m_dataFolder))
 	{
 		m_dataFolder = TEXT("");
-		ERROR_LOG << std::format(TEXT("ERROR: Data folder \"{}\" does not exist, exiting ..."), m_dataFolder) << std::endl;
+		ERROR_LOG << std::format(TEXT("ERROR: Data folder \"{}\" does not exist, stopping ..."), m_dataFolder) << std::endl;
 		return;
 	}
 
@@ -107,7 +106,7 @@ WolfPro::WolfPro(const tString& dataFolder, const bool& dataInBaseFolder) :
 	if (!fs::is_directory(m_dataFolder))
 	{
 		m_dataFolder = TEXT("");
-		ERROR_LOG << std::format(TEXT("ERROR: Data folder \"{}\" is not a directory, exiting ..."), m_dataFolder) << std::endl;
+		ERROR_LOG << std::format(TEXT("ERROR: Data folder \"{}\" is not a directory, stopping ..."), m_dataFolder) << std::endl;
 		return;
 	}
 
@@ -126,7 +125,7 @@ WolfPro::WolfPro(const tString& dataFolder, const bool& dataInBaseFolder) :
 
 	if (m_dxArcKeyFile.empty())
 	{
-		ERROR_LOG << LOCALIZE("key_file_warn_msg") << std::endl;
+		//ERROR_LOG << LOCALIZE("key_file_warn_msg") << std::endl;
 		return;
 	}
 	else
@@ -268,8 +267,13 @@ bool WolfPro::DecryptWolfXFiles()
 		return false;
 	}
 
+	tString dataFolder = m_dataFolder;
 
-	return true;
+	if (m_dataInBaseFolder)
+		dataFolder = m_dataFolder + TEXT("/") + GetWolfDataFolder();
+
+	WolfXWrapper wolfXWrapper(dataFolder);
+	return wolfXWrapper.DecryptAll();
 }
 
 /////////////////////////////////////////

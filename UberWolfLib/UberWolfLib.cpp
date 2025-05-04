@@ -188,7 +188,17 @@ UWLExitCode UberWolfLib::UnpackData()
 			paths.push_back(FS_PATH_TO_TSTRING(dirEntry.path()));
 	}
 
-	return UnpackDataVec(paths);
+	UWLExitCode rc = UnpackDataVec(paths);
+	if (rc != UWLExitCode::SUCCESS) return rc;
+
+	// Unpack the WolfX files if needed
+	if (m_config.decWolfX && m_wolfPro.IsWolfPro())
+	{
+		if (!m_wolfPro.DecryptWolfXFiles())
+			return UWLExitCode::UNKNOWN_ERROR;
+	}
+
+	return UWLExitCode::SUCCESS;
 }
 
 UWLExitCode UberWolfLib::UnpackDataVec(const tStrings& paths)
