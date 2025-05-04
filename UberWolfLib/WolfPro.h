@@ -67,6 +67,7 @@ public:
 	}
 
 	bool RemoveProtection();
+	bool DecryptWolfXFiles();
 
 private:
 	Key findProtectionKey(const tString& filePath);

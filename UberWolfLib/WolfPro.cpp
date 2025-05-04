@@ -41,6 +41,10 @@
 #include "Utils.h"
 #include "WolfUtils.h"
 
+#include "WolfX/WolfX.hpp"
+#include "WolfRPG/WolfRPG.h"
+#include "Wolf35Unprotect.hpp"
+
 namespace fs = std::filesystem;
 
 namespace ProtKey
@@ -215,6 +219,12 @@ bool WolfPro::RemoveProtection()
 	// TODO: Implement this
 	if (m_proVersion == 2) return false;
 
+	if (m_proVersion == 3)
+	{
+		wolf::v3_5::unprotect::unprotectProFiles(m_dataFolder + L"BasicData");
+		return true;
+	}
+
 	// Check if the unprotected folder exists in the data folder and create it if it doesn't
 	if (!fs::exists(m_unprotectedFolder))
 	{
@@ -236,6 +246,28 @@ bool WolfPro::RemoveProtection()
 	removeProtection(ProtKey::COM_EVENT, BasicDataFiles::COM_EVENT);
 
 	INFO_LOG << vFormat(LOCALIZE("unprot_file_loc"), m_unprotectedFolder) << std::endl;
+
+	return true;
+}
+
+bool WolfPro::DecryptWolfXFiles()
+{
+	if (!m_isWolfPro)
+	{
+		ERROR_LOG << LOCALIZE("decrypt_error_msg") << std::endl;
+		return false;
+	}
+	if (m_dataFolder.empty())
+	{
+		ERROR_LOG << LOCALIZE("data_dir_error_msg") << std::endl;
+		return false;
+	}
+	if (m_proVersion < 3)
+	{
+		ERROR_LOG << LOCALIZE("invalid_pro_error_msg") << std::endl;
+		return false;
+	}
+
 
 	return true;
 }

@@ -22,6 +22,18 @@
     <Filter Include="3rdParty\DXLib">
       <UniqueIdentifier>{1a0deb33-63d8-450b-94b1-5a5d40c13f28}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\WolfRPG">
+      <UniqueIdentifier>{8b4c3dfb-ee3d-4817-b993-c52124bbc8fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\WolfX">
+      <UniqueIdentifier>{059cbfaa-5bcd-424a-a836-e1eb64c518a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\WolfX\detail">
+      <UniqueIdentifier>{3aa75ddd-9b11-489a-bd3b-069d2c98d65e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rdParty\lz4">
+      <UniqueIdentifier>{d9024af3-9c22-4b85-b9ea-098969a92b6c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="UberWolfLib.cpp">
@@ -62,6 +74,9 @@
     </ClCompile>
     <ClCompile Include="Localizer.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\3rdParty\lz4\lz4.c">
+      <Filter>3rdParty\lz4</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -121,6 +136,96 @@
     </ClInclude>
     <ClInclude Include="..\3rdParty\DXLib\WolfNew.h">
       <Filter>3rdParty\DXLib</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfX\Benchmark.hpp">
+      <Filter>Header Files\WolfX</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfX\Crack.hpp">
+      <Filter>Header Files\WolfX</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfX\DataManip.hpp">
+      <Filter>Header Files\WolfX</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfX\SimdFeatures.hpp">
+      <Filter>Header Files\WolfX</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfX\Types.hpp">
+      <Filter>Header Files\WolfX</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfX\Utils.hpp">
+      <Filter>Header Files\WolfX</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfX\Validate.hpp">
+      <Filter>Header Files\WolfX</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfX\WolfX.hpp">
+      <Filter>Header Files\WolfX</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfX\detail\BenchmarkDetail.hpp">
+      <Filter>Header Files\WolfX\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfX\detail\CrackDetail.hpp">
+      <Filter>Header Files\WolfX\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfX\detail\DataManipDetail.hpp">
+      <Filter>Header Files\WolfX\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfX\detail\GeneratorDetail.hpp">
+      <Filter>Header Files\WolfX\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfX\detail\UtilsDetail.hpp">
+      <Filter>Header Files\WolfX\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfX\detail\ValidateDetail.hpp">
+      <Filter>Header Files\WolfX\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfRPG\Command.h">
+      <Filter>Header Files\WolfRPG</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfRPG\CommonEvents.h">
+      <Filter>Header Files\WolfRPG</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfRPG\Database.h">
+      <Filter>Header Files\WolfRPG</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfRPG\FileAccess.h">
+      <Filter>Header Files\WolfRPG</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfRPG\FileCoder.h">
+      <Filter>Header Files\WolfRPG</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfRPG\GameDat.h">
+      <Filter>Header Files\WolfRPG</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfRPG\Map.h">
+      <Filter>Header Files\WolfRPG</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfRPG\RouteCommand.h">
+      <Filter>Header Files\WolfRPG</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfRPG\Types.h">
+      <Filter>Header Files\WolfRPG</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfRPG\WolfDataBase.h">
+      <Filter>Header Files\WolfRPG</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfRPG\WolfRPG.h">
+      <Filter>Header Files\WolfRPG</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfRPG\WolfRPGException.h">
+      <Filter>Header Files\WolfRPG</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfRPG\WolfRPGUtils.h">
+      <Filter>Header Files\WolfRPG</Filter>
+    </ClInclude>
+    <ClInclude Include="Wolf35Unprotect.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfSha512.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\3rdParty\lz4\lz4.h">
+      <Filter>3rdParty\lz4</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

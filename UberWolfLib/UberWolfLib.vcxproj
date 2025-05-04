@@ -99,6 +99,7 @@
       <AdditionalIncludeDirectories>..\3rdParty;</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ExceptionHandling>Async</ExceptionHandling>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -127,6 +128,7 @@
       <DebugInformationFormat>None</DebugInformationFormat>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <ExceptionHandling>Async</ExceptionHandling>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -152,6 +154,7 @@
       <AdditionalIncludeDirectories>..\3rdParty;</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ExceptionHandling>Async</ExceptionHandling>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -180,6 +183,7 @@
       <DebugInformationFormat>None</DebugInformationFormat>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <ExceptionHandling>Async</ExceptionHandling>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -201,6 +205,7 @@
     <ClCompile Include="..\3rdParty\DXLib\DXArchiveVer6.cpp" />
     <ClCompile Include="..\3rdParty\DXLib\FileLib.cpp" />
     <ClCompile Include="..\3rdParty\DXLib\Huffman.cpp" />
+    <ClCompile Include="..\3rdParty\lz4\lz4.c" />
     <ClCompile Include="Localizer.cpp" />
     <ClCompile Include="UberLog.cpp" />
     <ClCompile Include="UberWolfLib.cpp" />
@@ -217,6 +222,7 @@
     <ClInclude Include="..\3rdParty\DXLib\FileLib.h" />
     <ClInclude Include="..\3rdParty\DXLib\Huffman.h" />
     <ClInclude Include="..\3rdParty\DXLib\WolfNew.h" />
+    <ClInclude Include="..\3rdParty\lz4\lz4.h" />
     <ClInclude Include="..\3rdParty\nlohmann\json.hpp" />
     <ClInclude Include="Defines.h" />
     <ClInclude Include="Localizer.h" />
@@ -225,9 +231,38 @@
     <ClInclude Include="Types.h" />
     <ClInclude Include="UberWolfLib.h" />
     <ClInclude Include="Utils.h" />
+    <ClInclude Include="Wolf35Unprotect.hpp" />
     <ClInclude Include="WolfDec.h" />
     <ClInclude Include="WolfPro.h" />
+    <ClInclude Include="WolfRPG\Command.h" />
+    <ClInclude Include="WolfRPG\CommonEvents.h" />
+    <ClInclude Include="WolfRPG\Database.h" />
+    <ClInclude Include="WolfRPG\FileAccess.h" />
+    <ClInclude Include="WolfRPG\FileCoder.h" />
+    <ClInclude Include="WolfRPG\GameDat.h" />
+    <ClInclude Include="WolfRPG\Map.h" />
+    <ClInclude Include="WolfRPG\RouteCommand.h" />
+    <ClInclude Include="WolfRPG\Types.h" />
+    <ClInclude Include="WolfRPG\WolfDataBase.h" />
+    <ClInclude Include="WolfRPG\WolfRPG.h" />
+    <ClInclude Include="WolfRPG\WolfRPGException.h" />
+    <ClInclude Include="WolfRPG\WolfRPGUtils.h" />
+    <ClInclude Include="WolfSha512.hpp" />
     <ClInclude Include="WolfUtils.h" />
+    <ClInclude Include="WolfX\Benchmark.hpp" />
+    <ClInclude Include="WolfX\Crack.hpp" />
+    <ClInclude Include="WolfX\DataManip.hpp" />
+    <ClInclude Include="WolfX\detail\BenchmarkDetail.hpp" />
+    <ClInclude Include="WolfX\detail\CrackDetail.hpp" />
+    <ClInclude Include="WolfX\detail\DataManipDetail.hpp" />
+    <ClInclude Include="WolfX\detail\GeneratorDetail.hpp" />
+    <ClInclude Include="WolfX\detail\UtilsDetail.hpp" />
+    <ClInclude Include="WolfX\detail\ValidateDetail.hpp" />
+    <ClInclude Include="WolfX\SimdFeatures.hpp" />
+    <ClInclude Include="WolfX\Types.hpp" />
+    <ClInclude Include="WolfX\Utils.hpp" />
+    <ClInclude Include="WolfX\Validate.hpp" />
+    <ClInclude Include="WolfX\WolfX.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="UberWolfLib.rc" />

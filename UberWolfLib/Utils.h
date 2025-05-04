@@ -27,8 +27,13 @@
 #pragma once
 
 #include <Windows.h>
+#include <cstdint>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 #include <map>
 #include <tlhelp32.h>
+#include <vector>
 
 #include "Types.h"
 
@@ -124,4 +129,38 @@ inline bool IsSubProcess()
 	const ProcessInfo processInfo = GetProcessInfo(pid);
 
 	return (processInfo.name == processInfo.parentName);
+}
+
+inline std::vector<uint8_t> file2Buffer(const std::filesystem::path& filePath)
+{
+	std::ifstream inFile(filePath, std::ios::binary);
+	if (!inFile)
+		throw std::runtime_error("Failed to open file: " + filePath.string());
+
+	std::vector<uint8_t> buffer((std::istreambuf_iterator<char>(inFile)), std::istreambuf_iterator<char>());
+	inFile.close();
+
+	if (buffer.empty())
+		throw std::runtime_error("File is empty: " + filePath.string());
+
+	return buffer;
+}
+
+inline void buffer2File(const std::filesystem::path& filePath, const std::vector<uint8_t>& buffer)
+{
+	std::ofstream outFile(filePath, std::ios::binary);
+	if (!outFile)
+		throw std::runtime_error("Failed to open output file: " + filePath.string());
+	outFile.write(reinterpret_cast<const char*>(buffer.data()), buffer.size());
+	outFile.close();
+}
+
+inline void backupFile(const std::filesystem::path& filePath, const std::filesystem::path& backupFolder)
+{
+	std::filesystem::path backupFilePath = backupFolder / filePath.filename();
+	if (!std::filesystem::exists(backupFilePath))
+	{
+		std::filesystem::copy_file(filePath, backupFilePath, std::filesystem::copy_options::overwrite_existing);
+		std::cout << "Backup created: " << backupFilePath << std::endl;
+	}
 }
