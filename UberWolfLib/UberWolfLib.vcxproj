@@ -96,7 +96,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\3rdParty;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\3rdParty;..\3rdParty\SelfUpdater</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ExceptionHandling>Async</ExceptionHandling>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
@@ -110,6 +110,9 @@
       <ResourceOutputFileName>$(SolutionDir)build\$(Platform)\$(Configuration)\%(Filename).res</ResourceOutputFileName>
       <PreprocessorDefinitions>_UNICODE;UNICODE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
+    <PreBuildEvent>
+      <Command>"$(SolutionDir)3rdParty\SelfUpdater\tools\IncResVer.exe" "$(ProjectDir)$(ProjectName).rc"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -123,7 +126,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\3rdParty;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\3rdParty;..\3rdParty\SelfUpdater</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DebugInformationFormat>None</DebugInformationFormat>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -140,6 +143,9 @@
     <ResourceCompile>
       <ResourceOutputFileName>$(SolutionDir)build\$(Platform)\$(Configuration)\%(Filename).res</ResourceOutputFileName>
     </ResourceCompile>
+    <PreBuildEvent>
+      <Command>"$(SolutionDir)3rdParty\SelfUpdater\tools\IncResVer.exe" "$(ProjectDir)$(ProjectName).rc"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -151,7 +157,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\3rdParty;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\3rdParty;..\3rdParty\SelfUpdater</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ExceptionHandling>Async</ExceptionHandling>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
@@ -165,6 +171,9 @@
       <ResourceOutputFileName>$(SolutionDir)build\$(Platform)\$(Configuration)\%(Filename).res</ResourceOutputFileName>
       <PreprocessorDefinitions>_DEBUG;_WIN64;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
+    <PreBuildEvent>
+      <Command>"$(SolutionDir)3rdParty\SelfUpdater\tools\IncResVer.exe" "$(ProjectDir)$(ProjectName).rc"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -178,7 +187,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\3rdParty;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\3rdParty;..\3rdParty\SelfUpdater</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DebugInformationFormat>None</DebugInformationFormat>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -196,6 +205,9 @@
       <ResourceOutputFileName>$(SolutionDir)build\$(Platform)\$(Configuration)\%(Filename).res</ResourceOutputFileName>
       <PreprocessorDefinitions>_WIN64;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
+    <PreBuildEvent>
+      <Command>"$(SolutionDir)3rdParty\SelfUpdater\tools\IncResVer.exe" "$(ProjectDir)$(ProjectName).rc"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\3rdParty\DXLib\CharCode.cpp" />

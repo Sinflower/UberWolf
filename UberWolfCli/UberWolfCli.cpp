@@ -34,9 +34,12 @@
 #include <UberWolfLib.h>
 #include <Utils.h>
 
+#define SU_BASE_URL L"https://github.com/Sinflower/UberWolf/releases/latest/download/"
+
+#include <SelfUpdater/SelfUpdater.hpp>
+
 namespace fs = std::filesystem;
 
-static const std::string UWCLI_VERSION = "0.4.0";
 static const std::string UWCLI_NAME    = "UberWolfCli";
 
 std::string buildPackInfo()
@@ -61,7 +64,7 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	CLI::App app{ UWCLI_NAME + " v" + UWCLI_VERSION };
+	CLI::App app{ UWCLI_NAME + " v" + selfUpdater::version::GetVersionInfo() };
 	argv = app.ensure_utf8(argv);
 
 	tStrings files;

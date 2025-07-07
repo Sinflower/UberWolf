@@ -90,7 +90,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeaderFile />
-      <AdditionalIncludeDirectories>..\UberWolfLib\;..\3rdParty</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\UberWolfLib\;..\3rdParty;..\3rdParty\SelfUpdater</AdditionalIncludeDirectories>
       <ExceptionHandling>Async</ExceptionHandling>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
@@ -98,9 +98,12 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)build\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>UberWolfLib.lib;UberWolfLib.res;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UberWolfLib.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
+    <PreBuildEvent>
+      <Command>"$(SolutionDir)3rdParty\SelfUpdater\tools\IncResVer.exe" "$(ProjectDir)$(ProjectName).rc"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -112,7 +115,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeaderFile />
-      <AdditionalIncludeDirectories>..\UberWolfLib\;..\3rdParty</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\UberWolfLib\;..\3rdParty;..\3rdParty\SelfUpdater</AdditionalIncludeDirectories>
       <DebugInformationFormat>None</DebugInformationFormat>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <ExceptionHandling>Async</ExceptionHandling>
@@ -124,9 +127,12 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)build\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>UberWolfLib.lib;UberWolfLib.res;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UberWolfLib.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
+    <PreBuildEvent>
+      <Command>"$(SolutionDir)3rdParty\SelfUpdater\tools\IncResVer.exe" "$(ProjectDir)$(ProjectName).rc"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -136,7 +142,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeaderFile />
-      <AdditionalIncludeDirectories>..\UberWolfLib\;..\3rdParty</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\UberWolfLib\;..\3rdParty;..\3rdParty\SelfUpdater</AdditionalIncludeDirectories>
       <ExceptionHandling>Async</ExceptionHandling>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
@@ -144,8 +150,11 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)build\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>UberWolfLib.lib;UberWolfLib.res;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UberWolfLib.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>"$(SolutionDir)3rdParty\SelfUpdater\tools\IncResVer.exe" "$(ProjectDir)$(ProjectName).rc"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -157,7 +166,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeaderFile />
-      <AdditionalIncludeDirectories>..\UberWolfLib\;..\3rdParty</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\UberWolfLib\;..\3rdParty;..\3rdParty\SelfUpdater</AdditionalIncludeDirectories>
       <DebugInformationFormat>None</DebugInformationFormat>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <ExceptionHandling>Async</ExceptionHandling>
@@ -169,8 +178,11 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)build\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>UberWolfLib.lib;UberWolfLib.res;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UberWolfLib.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>"$(SolutionDir)3rdParty\SelfUpdater\tools\IncResVer.exe" "$(ProjectDir)$(ProjectName).rc"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="UberWolfCli.cpp" />

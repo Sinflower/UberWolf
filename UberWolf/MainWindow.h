@@ -42,20 +42,19 @@ class MainWindow : public WindowBase
 	static const int32_t LANGUAGE_MENU_IDX = 0;
 	static const int32_t DEFAULT_LANG_ID   = ID_LANGUAGE_EN;
 
-	inline static const std::wstring WINDOW_TITLE = L"Uberwolf v0.5.0";
-
 public:
-	MainWindow(const HINSTANCE hInstance) :
-		WindowBase(hInstance)
+	MainWindow(const HINSTANCE hInstance, const std::wstring& winTitle = L"") :
+		WindowBase(hInstance),
+		m_windowTitle(winTitle)
 	{
 		LoadStringW(m_hInstance, IDC_UBERWOLF, m_szWindowClass, MAX_LOADSTRING);
 
 		registerClass();
 	}
 
-	bool InitInstance(int nCmdShow)
+	bool InitInstance(const int& nCmdShow)
 	{
-		setHandle(CreateWindowW(m_szWindowClass, WINDOW_TITLE.c_str(), WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, m_hInstance, nullptr));
+		setHandle(CreateWindowW(m_szWindowClass, m_windowTitle.c_str(), WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, m_hInstance, nullptr));
 
 		if (!hWnd()) return false;
 
@@ -219,6 +218,7 @@ private:
 	}
 
 private:
+	std::wstring m_windowTitle = L"";
 	WCHAR m_szWindowClass[MAX_LOADSTRING];
 
 	std::map<int32_t, std::string> m_menuLangStrMap = {};

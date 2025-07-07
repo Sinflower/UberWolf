@@ -399,3 +399,6 @@ FodyWeavers.xsd
 UberWolfConfig.json
 
 3rdParty_bak
+/UberWolf/UberWolf.rc.bak
+/UberWolfCli/UberWolfCli.rc.bak
+/UberWolfLib/UberWolfLib.rc.bak

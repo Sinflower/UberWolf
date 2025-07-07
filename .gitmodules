@@ -1,0 +1,3 @@
+[submodule "3rdParty/SelfUpdater"]
+	path = 3rdParty/SelfUpdater
+	url = https://github.com/Sinflower/SelfUpdater.git

@@ -28,6 +28,10 @@
 #include <Utils.h>
 #include <windows.h>
 
+#define SU_BASE_URL L"https://github.com/Sinflower/UberWolf/releases/latest/download/"
+
+#include <SelfUpdater/SelfUpdater.hpp>
+
 #include "ContentDialog.h"
 #include "MainWindow.h"
 
@@ -45,7 +49,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ [[maybe_unused]] HINSTA
 		return 0;
 	}
 
-	MainWindow mainWindow(hInstance);
+	std::wstring title = L"UberWolf v" + selfUpdater::version::GetVersionInfo();
+
+	MainWindow mainWindow(hInstance, title);
 
 	if (!mainWindow.InitInstance(nCmdShow))
 		return -1;

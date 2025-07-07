@@ -39,6 +39,8 @@
 #include <fstream>
 #include <nlohmann/json.hpp>
 
+#include <SelfUpdater/Version.hpp>
+
 namespace fs = std::filesystem;
 
 static const tStrings GAME_EXE_NAMES = {
@@ -299,6 +301,15 @@ void UberWolfLib::UnregisterLogCallback(const std::size_t& idx)
 void UberWolfLib::RegisterLocQueryFunc(const LocalizerQuery& queryFunc)
 {
 	uberWolfLib::Localizer::GetInstance().RegisterLocQuery(queryFunc);
+}
+
+tString UberWolfLib::GetVersion()
+{
+#ifdef _UNICODE
+		return selfUpdater::version::GetVersionInfo().ToWString();
+#else
+		return selfUpdater::version::GetVersionInfo().ToString();
+#endif
 }
 
 UWLExitCode UberWolfLib::packData(const tString& dataPath)
