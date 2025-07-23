@@ -360,13 +360,9 @@ Key WolfPro::findProtectionKey(const tString& filePath)
 			return Key({ notPossible.begin(), notPossible.end() });
 		}
 	}
-	else
-	{
-		m_proVersion = 1;
-		return findProtectionKeyV1(bytes);
-	}
 
-	return Key();
+	m_proVersion = 1;
+	return findProtectionKeyV1(bytes);
 }
 
 Key WolfPro::findProtectionKeyV1(std::vector<uint8_t>& byteData) const
