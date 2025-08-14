@@ -34,8 +34,6 @@
 #include <UberWolfLib.h>
 #include <Utils.h>
 
-#define SU_BASE_URL L"https://github.com/Sinflower/UberWolf/releases/latest/download/"
-
 #include <SelfUpdater/SelfUpdater.hpp>
 
 namespace fs = std::filesystem;
@@ -63,6 +61,8 @@ int main(int argc, char* argv[])
 		UberWolfLib uwl;
 		return 0;
 	}
+
+	SelfUpdater::SetBaseUrlGitHub(L"Sinflower", L"UberWolf");
 
 	CLI::App app{ UWCLI_NAME + " v" + selfUpdater::version::GetVersionInfo() };
 	argv = app.ensure_utf8(argv);

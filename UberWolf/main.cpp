@@ -28,8 +28,6 @@
 #include <Utils.h>
 #include <windows.h>
 
-#define SU_BASE_URL L"https://github.com/Sinflower/UberWolf/releases/latest/download/"
-
 #include <SelfUpdater/SelfUpdater.hpp>
 
 #include "ContentDialog.h"
@@ -40,37 +38,56 @@
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ [[maybe_unused]] HINSTANCE hPrevInstance, _In_ [[maybe_unused]] LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
-	// For the archive extraction a subprocess is created, which will be terminated after the extraction is done.
-	// Therefore, check if the current process is a subprocess and if so, create an instance of UberWolfLib which will
-	// directly call the unpack function and then terminate the process
-	if (IsSubProcess())
+	try
 	{
-		[[maybe_unused]] UberWolfLib uwl;
-		return 0;
-	}
-
-	std::wstring title = L"UberWolf v" + selfUpdater::version::GetVersionInfo();
-
-	MainWindow mainWindow(hInstance, title);
-
-	if (!mainWindow.InitInstance(nCmdShow))
-		return -1;
-
-	ContentDialog contentDialog(hInstance, mainWindow.GetHandle());
-	contentDialog.SetupLog();
-
-	HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_UBERWOLF));
-
-	MSG msg;
-
-	while (GetMessage(&msg, nullptr, 0, 0))
-	{
-		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+		// For the archive extraction a subprocess is created, which will be terminated after the extraction is done.
+		// Therefore, check if the current process is a subprocess and if so, create an instance of UberWolfLib which will
+		// directly call the unpack function and then terminate the process
+		if (IsSubProcess())
 		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
+			[[maybe_unused]] UberWolfLib uwl;
+			return 0;
 		}
-	}
 
-	return static_cast<int>(msg.wParam);
+#ifdef _DEBUG
+		selfUpdater::utils::SetupConsole();
+#endif
+		SelfUpdater::SetBaseUrlGitHub(L"Sinflower", L"UberWolf");
+
+		std::wstring title = L"UberWolf v" + selfUpdater::version::GetVersionInfo();
+
+		MainWindow mainWindow(hInstance, title);
+
+		if (!mainWindow.InitInstance(nCmdShow))
+		{
+			// Show an error message if the window could not be created
+			MessageBox(nullptr, L"Failed to create the main window.", L"Error", MB_OK | MB_ICONERROR);
+			return -1;
+		}
+
+		ContentDialog contentDialog(hInstance, mainWindow.GetHandle());
+		contentDialog.SetupLog();
+
+		SelfUpdater::CheckForUpdates(SelfUpdater::UpdateType::Window, SelfUpdater::UpdateMode::NonBlocking);
+
+		HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_UBERWOLF));
+
+		MSG msg;
+
+		while (GetMessage(&msg, nullptr, 0, 0))
+		{
+			if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+			{
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
+		}
+
+		return static_cast<int>(msg.wParam);
+	}
+	catch (const std::exception& e)
+	{
+		MessageBox(nullptr, std::wstring(L"An error occurred: " + selfUpdater::utils::s2ws(e.what())).c_str(), L"Error", MB_OK | MB_ICONERROR);
+		return -1;
+	}
 }

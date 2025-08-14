@@ -163,6 +163,13 @@ private:
 	{
 		const int32_t lID = static_cast<int32_t>(reinterpret_cast<DWORD_PTR>(langID));
 
+		// Make sure the language ID is valid
+		if (m_menuLangStrMap.count(lID) == 0)
+		{
+			MessageBox(hWnd(), LOCW("language_not_supported"), LOCW("error"), MB_OK | MB_ICONERROR);
+			return;
+		}
+
 		// Get the main menu handle
 		HMENU hMenu = GetMenu(hWnd());
 
