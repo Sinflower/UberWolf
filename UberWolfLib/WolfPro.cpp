@@ -220,7 +220,9 @@ bool WolfPro::RemoveProtection()
 
 	if (m_proVersion == 3)
 	{
-		wolf::v3_5::unprotect::unprotectProFiles(m_dataFolder + L"BasicData");
+		std::filesystem::path basePath = m_dataFolder;
+
+		wolf::v3_5::unprotect::unprotectProFiles(basePath / L"BasicData");
 		return true;
 	}
 

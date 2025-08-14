@@ -184,14 +184,14 @@ inline void unprotectProject(std::vector<uint8_t> &projData)
 inline void unprotectProFiles(const std::wstring &folder)
 {
 	// Create a backup folder and copy the original file
-	const std::filesystem::path backupFolder = std::filesystem::path(folder) / "backup";
+	const std::filesystem::path backupFolder = std::filesystem::path(folder) / L"backup";
 	if (!std::filesystem::exists(backupFolder))
 		std::filesystem::create_directory(backupFolder);
 
 	for (const std::string &file : PROTECTED_FILES)
 	{
 		const std::filesystem::path filePath = std::filesystem::path(folder) / file;
-		const WolfFileType datType           = getWolfFileType(filePath.string());
+		const WolfFileType datType           = getWolfFileType(filePath);
 
 		if (!std::filesystem::exists(filePath))
 		{
