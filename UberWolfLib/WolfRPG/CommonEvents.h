@@ -166,6 +166,14 @@ public:
 		}
 	}
 
+	void FixPro35Description()
+	{
+		// Remove all Ascii characters < 0x20 from the description
+		m_description.erase(std::remove_if(m_description.begin(), m_description.end(),
+										   [](const wchar_t& c) { return c < 0x20 && c != 0x0A && c != 0x0D; }),
+							m_description.end());
+	}
+
 	const bool& IsValid() const
 	{
 		return m_valid;
@@ -346,6 +354,13 @@ public:
 			ev.Patch(j);
 		}
 	}
+	
+	void FixPro35EventDescriptions()
+	{
+		for (CommonEvent& ev : m_events)
+			ev.FixPro35Description();
+	}
+	
 	const CommonEvent::CommonEvents& GetEvents() const
 	{
 		return m_events;

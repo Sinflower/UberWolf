@@ -196,9 +196,12 @@ public:
 		DumpData(coder);
 		DumpTerminator(coder);
 
-		// v3.5 has a final 0x0 terminator, no idea if this changes in the future, but for now it is fixed at 0x0
 		if (s_v35)
-			coder.WriteByte(0);
+		{
+			coder.WriteByte(static_cast<uint8_t>(m_v35Unknown.size()));
+			if (!m_v35Unknown.empty())
+				coder.Write(m_v35Unknown);
+		}
 	}
 
 	virtual nlohmann::ordered_json ToJson() const
@@ -432,18 +435,22 @@ public:
 		coder.WriteByte(TERMINATOR);
 	}
 
-	static bool s_v35;
+	void SetV35Unknown(const Bytes& unknown)
+	{
+		m_v35Unknown = unknown;
+	}
+
+	inline static bool s_v35 = false;
 
 protected:
 	uInts m_args;
 	CommandType m_cid;
 	tStrings m_stringArgs;
 	uint8_t m_indent;
+	Bytes m_v35Unknown;
 
 	static const uint8_t TERMINATOR = 0x0;
 };
-
-bool Command::s_v35 = false;
 
 namespace CommandSpecialClasses
 {
@@ -741,10 +748,14 @@ inline CommandShPtr::Command Command::Command::Init(FileCoder& coder)
 
 	if (s_v35)
 	{
-		uint8_t unknown = coder.ReadByte();
+		uint8_t unknownSize = coder.ReadByte();
 
-		if (unknown != 0x0)
-			throw WolfRPGException(ERROR_TAG + "Unexpected command unknown byte: " + std::to_string(unknown));
+		Bytes v35Unknown = {};
+
+		if (unknownSize > 0)
+			v35Unknown = coder.Read(unknownSize);
+
+		cmd->SetV35Unknown(v35Unknown);
 	}
 
 	return cmd;

@@ -88,6 +88,11 @@ public:
 		coder.WriteInt(m_indexInfo);
 	}
 
+	bool IsValid() const
+	{
+		return m_indexInfo >= INT_START;
+	}
+
 	bool IsString() const
 	{
 		return m_indexInfo >= STRING_START;
@@ -206,10 +211,15 @@ public:
 			nlohmann::ordered_json fieldData;
 			fieldData["name"] = ToUTF8(field.GetName());
 
-			if (field.IsString())
-				fieldData["value"] = ToUTF8(m_stringValues[field.Index()]);
+			if (field.IsValid())
+			{
+				if (field.IsString())
+					fieldData["value"] = ToUTF8(m_stringValues[field.Index()]);
+				else
+					fieldData["value"] = m_intValues[field.Index()];
+			}
 			else
-				fieldData["value"] = m_intValues[field.Index()];
+				fieldData["value"] = "INVALID_IGNORE";
 
 			j["data"].push_back(fieldData);
 		}
@@ -233,6 +243,8 @@ public:
 
 			const Field& field    = m_pFields->at(i);
 			std::string fieldName = ToUTF8(field.GetName());
+
+			if (!field.IsValid()) continue;
 
 			CHECK_JSON_KEY(fieldData, "name", dataStr);
 			CHECK_JSON_KEY(fieldData, "value", dataStr);
@@ -467,6 +479,14 @@ public:
 			m_data[i].Patch(j["data"][i]);
 	}
 
+	void FixPro35Description()
+	{
+		// Remove all Ascii characters < 0x20 from the description
+		m_description.erase(std::remove_if(m_description.begin(), m_description.end(),
+										   [](const wchar_t& c) { return c < 0x20 && c != 0x0A && c != 0x0D; }),
+							m_description.end());
+	}
+
 	const Datas& GetData() const
 	{
 		return m_data;
@@ -583,6 +603,12 @@ public:
 
 		for (std::size_t i = 0; i < m_types.size(); i++)
 			m_types[i].Patch(j["types"][i]);
+	}
+
+	void FixPro35TypeDescriptions()
+	{
+		for (Type& type : m_types)
+			type.FixPro35Description();
 	}
 
 	const Types& GetTypes() const

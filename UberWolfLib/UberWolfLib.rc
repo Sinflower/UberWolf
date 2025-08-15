@@ -50,8 +50,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,6,0,21
- PRODUCTVERSION 0,6,0,21
+ FILEVERSION 0,6,0,51
+ PRODUCTVERSION 0,6,0,51
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -68,12 +68,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Sin Corp."
             VALUE "FileDescription", "UberWolf Library"
-            VALUE "FileVersion", "0.6.0.21"
+            VALUE "FileVersion", "0.6.0.51"
             VALUE "InternalName", "UberWolfLib.lib"
             VALUE "LegalCopyright", "Copyright (C) 2025 Sinflower"
             VALUE "OriginalFilename", "UberWolfLib.lib"
             VALUE "ProductName", "UberWolfLib"
-            VALUE "ProductVersion", "0.6.0.21"
+            VALUE "ProductVersion", "0.6.0.51"
         END
     END
     BLOCK "VarFileInfo"

@@ -609,11 +609,7 @@ private:
 	FileReader m_reader = {};
 	FileWriter m_writer = {};
 
-	static bool s_isUTF8;
-	static uint32_t s_projKey;
-	static bool s_createBackup;
+	inline static bool s_isUTF8       = false;
+	inline static uint32_t s_projKey  = -1;
+	inline static bool s_createBackup = false;
 };
-
-bool FileCoder::s_isUTF8       = false;
-uint32_t FileCoder::s_projKey  = -1;
-bool FileCoder::s_createBackup = false;

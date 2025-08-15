@@ -221,6 +221,7 @@
     <ClCompile Include="Localizer.cpp" />
     <ClCompile Include="UberLog.cpp" />
     <ClCompile Include="UberWolfLib.cpp" />
+    <ClCompile Include="Wolf35Unprotect.cpp" />
     <ClCompile Include="WolfDec.cpp" />
     <ClCompile Include="WolfPro.cpp" />
     <ClCompile Include="WolfUtils.cpp" />
