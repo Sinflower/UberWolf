@@ -1277,70 +1277,67 @@ int DXArchive::DirectoryDecode(u8 *NameP, u8 *DirP, u8 *FileP, DARC_HEAD *Head, 
 
 				//////////////////////////////
 				///// Remove Unpack Protection
-				if (isV35(g_cryptVersion))
+				const std::vector<std::wstring> UNPACK_PROTECTION_FILES = { L"game.dat", L"cdatabase.dat", L"database.dat", L"commonevent.dat" };
+				const uint8_t ANTI_UNPACK_DATA[62]                      = { 0x45, 0x78, 0x74, 0x72, 0x61, 0x63, 0x74, 0x69, 0x6E, 0x67, 0x20, 0x64, 0x61, 0x74, 0x61, 0x20, 0x66, 0x72, 0x6F, 0x6D, 0x20, 0x65, 0x6E, 0x63, 0x72, 0x79, 0x70, 0x74, 0x65, 0x64, 0x20, 0x66, 0x69, 0x6C, 0x65, 0x73, 0x20, 0x76, 0x69, 0x6F, 0x6C, 0x61, 0x74, 0x65, 0x73, 0x20, 0x74, 0x68, 0x65, 0x20, 0x67, 0x75, 0x69, 0x64, 0x65, 0x6C, 0x69, 0x6E, 0x65, 0x73, 0x2E, 0x00 };
+				const uint32_t ANTI_UNPACK_DATA_SIZE                    = 62;
+
+				pName = GetOriginalFileName(NameP + File->NameAddress);
+
+				std::wstring fileName = std::wstring(pName);
+				std::transform(fileName.begin(), fileName.end(), fileName.begin(), ::tolower);
+
+				// As I am not sure if the file name will contain only the actual file name or also a directory
+				// check if the file name ends with any of the unpack protection files
+				bool isUnpackProtectionFile = false;
+
+				for (const std::wstring &unpackProtectionFile : UNPACK_PROTECTION_FILES)
 				{
-					const std::vector<std::wstring> UNPACK_PROTECTION_FILES = { L"game.dat", L"cdatabase.dat", L"database.dat", L"commonevent.dat" };
-					const uint8_t ANTI_UNPACK_DATA[62]                      = { 0x45, 0x78, 0x74, 0x72, 0x61, 0x63, 0x74, 0x69, 0x6E, 0x67, 0x20, 0x64, 0x61, 0x74, 0x61, 0x20, 0x66, 0x72, 0x6F, 0x6D, 0x20, 0x65, 0x6E, 0x63, 0x72, 0x79, 0x70, 0x74, 0x65, 0x64, 0x20, 0x66, 0x69, 0x6C, 0x65, 0x73, 0x20, 0x76, 0x69, 0x6F, 0x6C, 0x61, 0x74, 0x65, 0x73, 0x20, 0x74, 0x68, 0x65, 0x20, 0x67, 0x75, 0x69, 0x64, 0x65, 0x6C, 0x69, 0x6E, 0x65, 0x73, 0x2E, 0x00 };
-					const uint32_t ANTI_UNPACK_DATA_SIZE                    = 62;
-
-					pName = GetOriginalFileName(NameP + File->NameAddress);
-
-					std::wstring fileName = std::wstring(pName);
-					std::transform(fileName.begin(), fileName.end(), fileName.begin(), ::tolower);
-
-					// As I am not sure if the file name will contain only the actual file name or also a directory
-					// check if the file name ends with any of the unpack protection files
-					bool isUnpackProtectionFile = false;
-
-					for (const std::wstring &unpackProtectionFile : UNPACK_PROTECTION_FILES)
+					if (fileName.ends_with(unpackProtectionFile))
 					{
-						if (fileName.ends_with(unpackProtectionFile))
-						{
-							isUnpackProtectionFile = true;
-							break;
-						}
+						isUnpackProtectionFile = true;
+						break;
 					}
-
-					if (isUnpackProtectionFile)
-					{
-						DestP = _tfopen(pName, TEXT("rb"));
-
-						// Get the file size
-						_fseeki64(DestP, 0, SEEK_END);
-						int64_t fileSize = _ftelli64(DestP);
-
-						if (fileSize >= ANTI_UNPACK_DATA_SIZE)
-						{
-							// Check if the file begins with the anti-unpack data
-							_fseeki64(DestP, 0, SEEK_SET);
-
-							void *pFileBeginning = malloc(ANTI_UNPACK_DATA_SIZE);
-							fread64(pFileBeginning, ANTI_UNPACK_DATA_SIZE, DestP);
-
-							if (pFileBeginning && std::memcmp(pFileBeginning, ANTI_UNPACK_DATA, ANTI_UNPACK_DATA_SIZE) == 0)
-							{
-								fileSize -= ANTI_UNPACK_DATA_SIZE;
-
-								// Remove the first 62 bytes from the file
-								_fseeki64(DestP, ANTI_UNPACK_DATA_SIZE, SEEK_SET);
-
-								std::vector<uint8_t> buffer(fileSize);
-								fread64(buffer.data(), fileSize, DestP);
-								fclose(DestP);
-
-								DestP = _tfopen(pName, TEXT("wb"));
-
-								fwrite64(buffer.data(), fileSize, DestP);
-							}
-
-							free(pFileBeginning);
-						}
-
-						fclose(DestP);
-					}
-
-					delete[] pName;
 				}
+
+				if (isUnpackProtectionFile)
+				{
+					DestP = _tfopen(pName, TEXT("rb"));
+
+					// Get the file size
+					_fseeki64(DestP, 0, SEEK_END);
+					int64_t fileSize = _ftelli64(DestP);
+
+					if (fileSize >= ANTI_UNPACK_DATA_SIZE)
+					{
+						// Check if the file begins with the anti-unpack data
+						_fseeki64(DestP, 0, SEEK_SET);
+
+						void *pFileBeginning = malloc(ANTI_UNPACK_DATA_SIZE);
+						fread64(pFileBeginning, ANTI_UNPACK_DATA_SIZE, DestP);
+
+						if (pFileBeginning && std::memcmp(pFileBeginning, ANTI_UNPACK_DATA, ANTI_UNPACK_DATA_SIZE) == 0)
+						{
+							fileSize -= ANTI_UNPACK_DATA_SIZE;
+
+							// Remove the first 62 bytes from the file
+							_fseeki64(DestP, ANTI_UNPACK_DATA_SIZE, SEEK_SET);
+
+							std::vector<uint8_t> buffer(fileSize);
+							fread64(buffer.data(), fileSize, DestP);
+							fclose(DestP);
+
+							DestP = _tfopen(pName, TEXT("wb"));
+
+							fwrite64(buffer.data(), fileSize, DestP);
+						}
+
+						free(pFileBeginning);
+					}
+
+					fclose(DestP);
+				}
+
+				delete[] pName;
 
 				///// Remove Unpack Protection
 				//////////////////////////////
