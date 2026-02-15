@@ -46,6 +46,11 @@
 
 namespace fs = std::filesystem;
 
+namespace WolfFolders
+{
+static const tString BASIC_DATA_FOLDER = TEXT("BasicData");
+}
+
 namespace ProtKey
 {
 static const uint32_t KEY_SEED          = 0x5D93EBF;
@@ -59,7 +64,7 @@ static const std::vector<uint8_t> DEC_START = { 0x00, 0x57, 0x00, 0x00, 0x4F, 0x
 
 static const tString GAME_DAT = TEXT("Game.dat");
 
-static const tString PROTECTION_KEY_ARCHIVE = TEXT("BasicData");
+static const tString PROTECTION_KEY_ARCHIVE = WolfFolders::BASIC_DATA_FOLDER;
 
 static const tString UNPROTECTED_FOLDER = TEXT("unprotected");
 
@@ -178,13 +183,7 @@ bool WolfPro::RecheckProtFileState()
 	m_protKeyFile    = TEXT("");
 	m_needsUnpacking = false;
 
-	// Check if the data folder contains the protection key file
-	if (m_dataInBaseFolder)
-		m_basicDataFolder = m_dataFolder + TEXT("/") + GetWolfDataFolder() + TEXT("/");
-	else
-		m_basicDataFolder = m_dataFolder + TEXT("/");
-
-	m_basicDataFolder += ProtKey::PROTECTION_KEY_ARCHIVE;
+	m_basicDataFolder = getBasicDataFolder();
 
 	const tString protKeyFile = m_basicDataFolder + TEXT("/") + ProtKey::GAME_DAT;
 
@@ -220,9 +219,9 @@ bool WolfPro::RemoveProtection()
 
 	if (m_proVersion == 3)
 	{
-		std::filesystem::path basePath = m_dataFolder;
+		std::filesystem::path basicDataPath = getBasicDataFolder();
 
-		wolf::v3_5::unprotect::unprotectProFiles(basePath / L"BasicData");
+		wolf::v3_5::unprotect::unprotectProFiles(basicDataPath);
 		return true;
 	}
 
@@ -664,4 +663,15 @@ void WolfPro::gameDatUpdateSize(std::vector<uint8_t>& bytes, const uint32_t& old
 		offset += *reinterpret_cast<uint32_t*>(&bytes[offset]) + 4; // ?
 
 	*reinterpret_cast<uint32_t*>(&bytes[offset]) = static_cast<uint32_t>(bytes.size()) - 1;
+}
+
+tString WolfPro::getBasicDataFolder() const
+{
+	tString basicDataFolder = m_dataFolder + TEXT("/");
+	if (m_dataInBaseFolder)
+		basicDataFolder += GetWolfDataFolder() + TEXT("/");
+
+	basicDataFolder += WolfFolders::BASIC_DATA_FOLDER;
+
+	return basicDataFolder;
 }

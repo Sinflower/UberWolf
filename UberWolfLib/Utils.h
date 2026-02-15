@@ -161,6 +161,6 @@ inline void backupFile(const std::filesystem::path& filePath, const std::filesys
 	if (!std::filesystem::exists(backupFilePath))
 	{
 		std::filesystem::copy_file(filePath, backupFilePath, std::filesystem::copy_options::overwrite_existing);
-		std::wcout << L"Backup created: " << backupFilePath << std::endl;
+		//std::wcout << L"Backup created: " << backupFilePath << std::endl;
 	}
 }

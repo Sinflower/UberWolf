@@ -86,6 +86,7 @@ private:
 	std::vector<uint8_t> removeProtectionFromProject(const tString& filePath, const uint32_t& seed) const;
 	std::vector<uint8_t> removeProtectionFromDat(const tString& filePath, const BasicDataFiles& bdf, uint32_t& projectSeed) const;
 	void gameDatUpdateSize(std::vector<uint8_t>& bytes, const uint32_t& oldSize) const;
+	tString getBasicDataFolder() const;
 
 private:
 	tString m_dataFolder;

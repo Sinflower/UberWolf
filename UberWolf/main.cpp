@@ -68,7 +68,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ [[maybe_unused]] HINSTA
 		ContentDialog contentDialog(hInstance, mainWindow.GetHandle());
 		contentDialog.SetupLog();
 
-		SelfUpdater::CheckForUpdates(SelfUpdater::UpdateType::Window, SelfUpdater::UpdateMode::NonBlocking);
+		//SelfUpdater::CheckForUpdates(SelfUpdater::UpdateType::Window, SelfUpdater::UpdateMode::NonBlocking);
 
 		HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_UBERWOLF));
 

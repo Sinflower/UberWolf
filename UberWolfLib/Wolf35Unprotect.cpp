@@ -29,6 +29,8 @@
 #include <iostream>
 #include <map>
 
+#include "Localizer.h"
+#include "UberLog.h"
 #include "Utils.h"
 #include "WolfRPG/CommonEvents.h"
 #include "WolfRPG/Database.h"
@@ -191,12 +193,14 @@ void unprotectProFiles(const std::wstring &folder)
 
 	for (const std::string &file : PROTECTED_FILES)
 	{
+		INFO_LOG << vFormat(LOCALIZE("remove_prot"), std::filesystem::path(file).wstring()) << std::flush;
 		const std::filesystem::path filePath = std::filesystem::path(folder) / file;
 		const WolfFileType datType           = getWolfFileType(filePath);
 
 		if (!std::filesystem::exists(filePath))
 		{
-			std::cerr << "File not found: " << filePath << std::endl;
+			INFO_LOG << LOCALIZE("failed_msg") << std::endl;
+			ERROR_LOG << "File not found: " << filePath << std::endl;
 			continue;
 		}
 
@@ -207,7 +211,10 @@ void unprotectProFiles(const std::wstring &folder)
 		const uint32_t oldSize      = static_cast<uint32_t>(buffer.size());
 
 		if (!decryptProV3Dat(buffer, datType))
+		{
+			INFO_LOG << LOCALIZE("failed_msg") << std::endl;
 			continue;
+		}
 
 		if (datType == WolfFileType::GameDat)
 			gameDatUpdateSize(buffer, oldSize);
@@ -220,7 +227,8 @@ void unprotectProFiles(const std::wstring &folder)
 			CommonEvents comEv(filePath.wstring());
 			if (!comEv.IsValid())
 			{
-				std::cerr << "Failed to load CommonEvent.dat" << std::endl;
+				INFO_LOG << LOCALIZE("failed_msg") << std::endl;
+				ERROR_LOG << "Failed to load CommonEvent.dat" << std::endl;
 				continue;
 			}
 
@@ -246,7 +254,8 @@ void unprotectProFiles(const std::wstring &folder)
 
 			if (!db.IsValid())
 			{
-				std::cerr << "Failed to load Database.dat" << std::endl;
+				INFO_LOG << LOCALIZE("failed_msg") << std::endl;
+				ERROR_LOG << "Failed to load Database.dat" << std::endl;
 				continue;
 			}
 
@@ -255,6 +264,8 @@ void unprotectProFiles(const std::wstring &folder)
 			// Dump the fixed Database back into the folder
 			db.Dump(folder);
 		}
+
+		INFO_LOG << LOCALIZE("done_msg") << std::endl;
 	}
 }
 
