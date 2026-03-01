@@ -93,7 +93,13 @@ inline bool tryDecryptP2(const DecryptBlob &decryptBlob, DecryptParams &params, 
 		return false;
 	}
 
-	return tryDecryptP3(decryptBlob, params, decryptResult);
+	if (tryDecryptP3(decryptBlob, params, decryptResult))
+	{
+		decryptResult.success = true;
+		return true;
+	}
+
+	return false;
 }
 
 inline bool tryDecryptP1(const WolfXData &encData, const WolfXKeyData &decryptKey, const WolfXDecryptCollection &wolfXMagic, DecryptResult &decryptResult)
@@ -185,7 +191,7 @@ inline bool crackWolfX(const WolfXFile &file, const WolfXDecryptCollection &decr
 
 	if (!decryptResult.success)
 	{
-		std::cerr << "Failed to decrypt the file" << std::endl;
+		//std::cerr << "Failed to decrypt the file" << std::endl;
 		return false;
 	}
 

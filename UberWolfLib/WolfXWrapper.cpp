@@ -140,6 +140,6 @@ void WolfXWrapper::collectWolfXDecryptionInfo()
 			  << countEntires(m_wolfxDecryptCollection.intValues) << " int values" << std::endl;
 
 	for (const auto &info : m_wolfxDecryptCollection.decryptKeys)
-		INFO_LOG << "Folder: \"" << info.folder << "\", Key: \"" << info.key << "\"" << std::endl;
+		INFO_LOG << "Folder: \"" << info.folder.c_str() << "\", Key: \"" << info.key.c_str() << "\"" << std::endl;
 #endif
 }
