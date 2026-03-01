@@ -434,11 +434,11 @@ public:
 	{
 		coder.Write(DAT_TYPE_SEPARATOR);
 		coder.WriteInt(m_unknown1);
+		coder.WriteInt(m_fieldsSize);
 
 		if (m_unknown1 == STRING_INDICATOR)
 			coder.WriteString(m_unknown2);
 
-		coder.WriteInt(m_fieldsSize);
 		for (uint32_t i = 0; i < m_fieldsSize; i++)
 			m_fields[i].DumpDat(coder);
 
