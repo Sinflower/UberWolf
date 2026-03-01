@@ -86,6 +86,8 @@ public:
 	UWLExitCode FindProtectionKey(std::string& key);
 	UWLExitCode FindProtectionKey(std::wstring& key);
 
+	UWLExitCode DecryptWolfXFiles();
+
 	void ResetWolfDec();
 
 	static std::size_t RegisterLogCallback(const LogCallback& callback);

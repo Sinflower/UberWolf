@@ -191,16 +191,7 @@ UWLExitCode UberWolfLib::UnpackData()
 	}
 
 	UWLExitCode rc = UnpackDataVec(paths);
-	if (rc != UWLExitCode::SUCCESS) return rc;
-
-	// Unpack the WolfX files if needed
-	if (m_config.decWolfX)
-	{
-		if (!m_wolfPro.DecryptWolfXFiles())
-			return UWLExitCode::UNKNOWN_ERROR;
-	}
-
-	return UWLExitCode::SUCCESS;
+	return rc;
 }
 
 UWLExitCode UberWolfLib::UnpackDataVec(const tStrings& paths)
@@ -280,6 +271,23 @@ UWLExitCode UberWolfLib::FindProtectionKey(std::wstring& key)
 	if (uec != UWLExitCode::SUCCESS) return uec;
 
 	key = StringToWString(sKey);
+	return UWLExitCode::SUCCESS;
+}
+
+UWLExitCode UberWolfLib::DecryptWolfXFiles()
+{
+	if (!m_config.decWolfX)
+		return UWLExitCode::SUCCESS;
+
+	if (!m_valid)
+		return UWLExitCode::NOT_INITIALIZED;
+
+	if (!m_wolfPro.IsWolfPro())
+		return UWLExitCode::NOT_WOLF_PRO;
+
+	if (!m_wolfPro.DecryptWolfXFiles())
+		return UWLExitCode::UNKNOWN_ERROR;
+
 	return UWLExitCode::SUCCESS;
 }
 

@@ -108,6 +108,8 @@ int main(int argc, char* argv[])
 
 			if (uwl.FindProtectionKey(key) == UWLExitCode::SUCCESS)
 				std::cout << "Protection key: " << key << std::endl;
+
+			uwl.DecryptWolfXFiles();
 		}
 		else
 		{

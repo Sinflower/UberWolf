@@ -283,6 +283,14 @@ private:
 			}
 		}
 
+		result = uwl.DecryptWolfXFiles();
+		if (result != UWLExitCode::SUCCESS)
+		{
+			MessageBox(hWnd(), LOCW("error_msg_5"), LOCW("error"), MB_OK | MB_ICONERROR);
+			setButtonStates(TRUE);
+			return;
+		}
+
 		// Set the text of the protection key edit control to be the key
 		SetDlgItemText(hWnd(), IDC_PROTECTION_KEY, protKey.c_str());
 

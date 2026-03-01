@@ -21,6 +21,7 @@
 	"error_msg_2": "Could not find data folder or data.wolf file.",
 	"error_msg_3": "Could not unpack all data files.",
 	"error_msg_4": "Could not find protection key.",
+	"error_msg_5": "Could not decrypt the WolfX files.",
 	"dec_key_search_msg": "Searching for decryption key ...",
 	"unpacked_msg": "{} is already unpacked, skipping",
 	"packing_msg": "Packing: {} ... ",

@@ -61,8 +61,8 @@ IDI_UBERWOLFCLI         ICON                    "UberWolfCli.ico"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,5,1,72
- PRODUCTVERSION 0,5,1,72
+ FILEVERSION 0,5,1,75
+ PRODUCTVERSION 0,5,1,75
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -79,12 +79,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Sin Corp."
             VALUE "FileDescription", "UberWolf Console Application"
-            VALUE "FileVersion", "0.5.1.72"
+            VALUE "FileVersion", "0.5.1.75"
             VALUE "InternalName", "UberWolfCli.exe"
             VALUE "LegalCopyright", "Copyright (C) 2025 Sinflower"
             VALUE "OriginalFilename", "UberWolfCli.exe"
             VALUE "ProductName", "UberWolfCli"
-            VALUE "ProductVersion", "0.5.1.72"
+            VALUE "ProductVersion", "0.5.1.75"
         END
     END
     BLOCK "VarFileInfo"
