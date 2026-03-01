@@ -17,6 +17,7 @@
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -50,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,6,1,79
- PRODUCTVERSION 0,6,1,79
+ FILEVERSION 0,6,2,80
+ PRODUCTVERSION 0,6,2,80
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -68,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Sin Corp."
             VALUE "FileDescription", "UberWolf Library"
-            VALUE "FileVersion", "0.6.1.79"
+            VALUE "FileVersion", "0.6.2.80"
             VALUE "InternalName", "UberWolfLib.lib"
             VALUE "LegalCopyright", "Copyright (C) 2025 Sinflower"
             VALUE "OriginalFilename", "UberWolfLib.lib"
             VALUE "ProductName", "UberWolfLib"
-            VALUE "ProductVersion", "0.6.1.79"
+            VALUE "ProductVersion", "0.6.2.80"
         END
     END
     BLOCK "VarFileInfo"
