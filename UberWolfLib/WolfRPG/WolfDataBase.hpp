@@ -28,10 +28,10 @@
 
 #include <format>
 #include <fstream>
-#include <nlohmann\json.hpp>
+#include <nlohmann/json.hpp>
 
 #include "FileCoder.hpp"
-#include "Types.h"
+#include "Types.hpp"
 
 class WolfDataBase
 {

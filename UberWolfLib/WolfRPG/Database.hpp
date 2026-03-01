@@ -185,7 +185,8 @@ using Fields = std::vector<Field>;
 class Data
 {
 public:
-	Data() = default;
+	// Don't use = default here to prevent potential issues with a vector of Data
+	Data() {}
 
 	explicit Data(FileCoder& coder)
 	{
@@ -412,6 +413,9 @@ public:
 		m_unknown1   = coder.ReadInt();
 		m_fieldsSize = coder.ReadInt();
 
+		if (m_unknown1 == STRING_INDICATOR)
+			m_unknown2 = coder.ReadString();
+
 		for (uint32_t i = 0; i < m_fieldsSize; i++)
 			m_fields[i].ReadDat(coder);
 
@@ -430,6 +434,10 @@ public:
 	{
 		coder.Write(DAT_TYPE_SEPARATOR);
 		coder.WriteInt(m_unknown1);
+
+		if (m_unknown1 == STRING_INDICATOR)
+			coder.WriteString(m_unknown2);
+
 		coder.WriteInt(m_fieldsSize);
 		for (uint32_t i = 0; i < m_fieldsSize; i++)
 			m_fields[i].DumpDat(coder);
@@ -506,8 +514,10 @@ private:
 	Datas m_data                 = {};
 	uint32_t m_unknown1          = 0;
 	uint32_t m_fieldTypeListSize = 0;
+	tString m_unknown2           = TEXT("");
 
 	inline static const Bytes DAT_TYPE_SEPARATOR{ 0xFE, 0xFF, 0xFF, 0xFF };
+	static constexpr uint32_t STRING_INDICATOR = 0x0001D4C0;
 };
 
 using Types = std::vector<Type>;

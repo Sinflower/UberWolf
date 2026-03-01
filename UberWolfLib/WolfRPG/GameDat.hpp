@@ -33,7 +33,7 @@
 #include "WolfRPGUtils.hpp"
 
 #include <iostream>
-#include <nlohmann\json.hpp>
+#include <nlohmann/json.hpp>
 
 class GameDat : public WolfDataBase
 {
@@ -45,9 +45,8 @@ public:
 			Load(fileName);
 	}
 
-	explicit GameDat(const Bytes& buffer, const bool& ignoreFilesizeDiff = false) :
-		WolfDataBase(L"Game.dat", MAGIC_NUMBER, WolfFileType::GameDat, SEED_INDICES),
-		m_ignoreFilesizeDiff(ignoreFilesizeDiff)
+	explicit GameDat(const Bytes& buffer) :
+		WolfDataBase(L"Game.dat", MAGIC_NUMBER, WolfFileType::GameDat, SEED_INDICES)
 	{
 		Load(buffer);
 	}
@@ -119,8 +118,11 @@ protected:
 
 		m_fileSize = coder.ReadInt();
 
-		if (!m_ignoreFilesizeDiff && (m_fileSize != m_oldSize))
-			throw WolfRPGException(ERROR_TAG + std::format("Game.dat has different size than expected - expected: {} - got: {}", m_fileSize, m_oldSize));
+		m_unknownSize     = coder.ReadInt();
+		m_unknownWordSize = coder.ReadInt();
+		m_unknownWordData = coder.Read(m_unknownWordSize * 2);
+		m_intOffset1      = coder.ReadInt();
+		m_intOffset2      = coder.ReadInt();
 
 		m_unknown2 = coder.Read();
 
@@ -156,7 +158,21 @@ protected:
 		if (m_stringCount > 13)
 			coder.WriteString(m_unknownString14);
 
-		coder.WriteInt(calcNewSize());
+		// Based on the size of common game.dat files it can be expected that an uint32_t is sufficient to store the filesize
+		uint32_t newSize = calcNewSize();
+		// Similarly, the filesize diff should also fit into an int32_t without having to worry about the signed bit being used for the filesize itself
+		int32_t sizeDiff = static_cast<int32_t>(newSize) - static_cast<int32_t>(m_oldSize);
+
+		coder.WriteInt(newSize);
+
+		coder.WriteInt(m_unknownSize);
+		coder.WriteInt(m_unknownWordSize);
+		coder.Write(m_unknownWordData);
+
+		// Update the internal offsets to match the changes in filesize
+		coder.WriteInt(m_intOffset1 + sizeDiff);
+		coder.WriteInt(m_intOffset2 + sizeDiff);
+
 		coder.Write(m_unknown2);
 	}
 
@@ -189,7 +205,7 @@ protected:
 	}
 
 private:
-	std::size_t calcNewSize() const
+	uint32_t calcNewSize() const
 	{
 		std::size_t size = 0;
 		size += MAGIC_NUMBER.Size();
@@ -220,9 +236,15 @@ private:
 
 		size += sizeof(m_fileSize);
 
+		size += 4;                        // unknown size value
+		size += 4;                        // size of unknown word data
+		size += m_unknownWordData.size(); // unknown word data
+		size += 4;                        // internal offset 1
+		size += 4;                        // internal offset 2
+
 		size += m_unknown2.size();
 
-		return size;
+		return static_cast<uint32_t>(size);
 	}
 
 private:
@@ -241,11 +263,14 @@ private:
 	tString m_titleMsg         = TEXT("");
 	tString m_unknownString14  = TEXT("");
 	uint32_t m_fileSize        = 0;
+	uint32_t m_unknownSize     = 0;
+	uint32_t m_unknownWordSize = 0;
+	Bytes m_unknownWordData    = {};
+	uint32_t m_intOffset1      = 0;
+	uint32_t m_intOffset2      = 0;
 	Bytes m_unknown2           = {};
 
 	uint32_t m_oldSize = 0;
-
-	bool m_ignoreFilesizeDiff = false;
 
 	inline static const uInts SEED_INDICES{ 0, 8, 6 };
 	inline static const MagicNumber MAGIC_NUMBER{ { 0x57, 0x00, 0x00, 0x4f, 0x4c, 0x00, 0x46, 0x4d, 0x00 }, 8 };

@@ -80,7 +80,7 @@ arg[0] >= 3000000 && arg[0] < 4000000
 
 #include <algorithm>
 #include <memory>
-#include <nlohmann\json.hpp>
+#include <nlohmann/json.hpp>
 
 namespace Command
 {
@@ -449,7 +449,7 @@ protected:
 	uint8_t m_indent;
 	Bytes m_v35Unknown;
 
-	static const uint8_t TERMINATOR = 0x0;
+	static constexpr uint8_t TERMINATOR = 0x0;
 };
 
 namespace CommandSpecialClasses

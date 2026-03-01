@@ -34,7 +34,7 @@
 #include <array>
 #include <format>
 #include <fstream>
-#include <nlohmann\json.hpp>
+#include <nlohmann/json.hpp>
 
 class CommonEvent
 {
