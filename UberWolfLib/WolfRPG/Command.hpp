@@ -1,5 +1,5 @@
 ﻿/*
- *  File: Command.h
+ *  File: Command.hpp
  *  Copyright (c) 2024 Sinflower
  *
  *  MIT License
@@ -74,9 +74,9 @@ arg[0] >= 3000000 && arg[0] < 4000000
 
 #pragma once
 
-#include "FileCoder.h"
-#include "RouteCommand.h"
-#include "WolfRPGUtils.h"
+#include "FileCoder.hpp"
+#include "RouteCommand.hpp"
+#include "WolfRPGUtils.hpp"
 
 #include <algorithm>
 #include <memory>

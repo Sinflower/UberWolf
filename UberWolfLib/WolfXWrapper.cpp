@@ -26,7 +26,7 @@
 
 #include "WolfXWrapper.h"
 
-#include "WolfRPG/WolfRPG.h"
+#include "WolfRPG/WolfRPG.hpp"
 #include "UberLog.h"
 
 #include <filesystem>

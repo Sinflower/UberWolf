@@ -1,5 +1,5 @@
 /*
- *  File: Database.h
+ *  File: Database.hpp
  *  Copyright (c) 2024 Sinflower
  *
  *  MIT License
@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include "FileCoder.h"
+#include "FileCoder.hpp"
 
 #include <format>
 #include <fstream>

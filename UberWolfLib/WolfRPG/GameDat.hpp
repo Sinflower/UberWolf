@@ -1,5 +1,5 @@
 /*
- *  File: GameDat.h
+ *  File: GameDat.hpp
  *  Copyright (c) 2024 Sinflower
  *
  *  MIT License
@@ -28,9 +28,9 @@
 
 // TODO: When integrating the decryption the filesize diff override might not be required anymore
 
-#include "FileCoder.h"
-#include "WolfDataBase.h"
-#include "WolfRPGUtils.h"
+#include "FileCoder.hpp"
+#include "WolfDataBase.hpp"
+#include "WolfRPGUtils.hpp"
 
 #include <iostream>
 #include <nlohmann\json.hpp>

@@ -33,7 +33,7 @@
 #include <vector>
 
 // This depends on WolfRPG for the WolfFileType enum
-#include "WolfRPG/Types.h"
+#include "WolfRPG/Types.hpp"
 
 namespace wolf::v3_5::unprotect
 {

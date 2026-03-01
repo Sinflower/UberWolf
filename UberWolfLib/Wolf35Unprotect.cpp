@@ -32,9 +32,9 @@
 #include "Localizer.h"
 #include "UberLog.h"
 #include "Utils.h"
-#include "WolfRPG/CommonEvents.h"
-#include "WolfRPG/Database.h"
-#include "WolfRPG/WolfRPGUtils.h"
+#include "WolfRPG/CommonEvents.hpp"
+#include "WolfRPG/Database.hpp"
+#include "WolfRPG/WolfRPGUtils.hpp"
 #include "WolfSha512.hpp"
 
 #include <DXLib/WolfNew.h>

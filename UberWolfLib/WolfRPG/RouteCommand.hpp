@@ -1,5 +1,5 @@
 /*
- *  File: Types.h
+ *  File: RouteCommand.hpp
  *  Copyright (c) 2024 Sinflower
  *
  *  MIT License
@@ -26,45 +26,41 @@
 
 #pragma once
 
-#include <string>
-#include <vector>
-#include <windows.h>
+#include "FileCoder.hpp"
+#include "WolfRPGUtils.hpp"
 
-// Check MSVC
-#if _WIN32 || _WIN64
-#if _WIN64
-#define BIT_64
-#else
-#define BIT_32
-#endif
-#endif
-
-// Check GCC
-#if __GNUC__
-#if __x86_64__ || __ppc64__
-#define BIT_64
-#else
-#define BIT_32
-#endif
-#endif
-
-using Bytes    = std::vector<uint8_t>;
-using uInts    = std::vector<uint32_t>;
-using tString  = std::wstring;
-using tStrings = std::vector<tString>;
-
-#define DISABLE_COPY_MOVE(T)             \
-	T(T const &)               = delete; \
-	void operator=(T const &t) = delete; \
-	T(T &&)                    = delete;
-
-enum class WolfFileType
+class RouteCommand
 {
-	GameDat,
-	CommonEvent,
-	DataBase,
-	Project,
-	Map,
-	TileSetData,
-	None
+public:
+	RouteCommand() = default;
+
+	bool Init(FileCoder& coder)
+	{
+		m_id              = coder.ReadByte();
+		uint32_t argCount = coder.ReadByte();
+
+		for (uint32_t i = 0; i < argCount; i++)
+			m_args.push_back(coder.ReadInt());
+
+		VERIFY_MAGIC(coder, TERMINATOR);
+
+		return true;
+	}
+
+	void Dump(FileCoder& coder) const
+	{
+		coder.WriteByte(m_id);
+		coder.WriteByte((uint8_t)m_args.size());
+		for (uint32_t arg : m_args)
+			coder.WriteInt(arg);
+		coder.Write(TERMINATOR);
+	}
+
+private:
+	uint8_t m_id = 0;
+	uInts m_args = {};
+
+	inline static const Bytes TERMINATOR{ 0x01, 0x00 };
 };
+
+using RouteCommands = std::vector<RouteCommand>;

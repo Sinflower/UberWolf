@@ -1,5 +1,5 @@
 /*
- *  File: WolfDataBase.h
+ *  File: WolfDataBase.hpp
  *  Copyright (c) 2024 Sinflower
  *
  *  MIT License
@@ -30,7 +30,7 @@
 #include <fstream>
 #include <nlohmann\json.hpp>
 
-#include "FileCoder.h"
+#include "FileCoder.hpp"
 #include "Types.h"
 
 class WolfDataBase

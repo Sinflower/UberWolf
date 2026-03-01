@@ -1,5 +1,5 @@
 /*
- *  File: WolfRPGException.h
+ *  File: WolfRPGException.hpp
  *  Copyright (c) 2024 Sinflower
  *
  *  MIT License
@@ -29,7 +29,7 @@
 #include <exception>
 #include <string>
 
-#include "WolfRPGUtils.h"
+#include "WolfRPGUtils.hpp"
 
 class WolfRPGException : public std::exception
 {

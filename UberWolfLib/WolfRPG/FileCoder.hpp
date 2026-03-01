@@ -1,5 +1,5 @@
 ﻿/*
- *  File: FileCoder.h
+ *  File: FileCoder.hpp
  *  Copyright (c) 2024 Sinflower
  *
  *  MIT License
@@ -26,10 +26,10 @@
 
 #pragma once
 
-#include "FileAccess.h"
-#include "Types.h"
-#include "WolfRPGException.h"
-#include "WolfRPGUtils.h"
+#include "FileAccess.hpp"
+#include "Types.hpp"
+#include "WolfRPGException.hpp"
+#include "WolfRPGUtils.hpp"
 
 #include "../Wolf35Unprotect.hpp"
 

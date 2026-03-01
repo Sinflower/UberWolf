@@ -1,5 +1,5 @@
 /*
- *  File: CommonEvents.h
+ *  File: CommonEvents.hpp
  *  Copyright (c) 2024 Sinflower
  *
  *  MIT License
@@ -26,10 +26,10 @@
 
 #pragma once
 
-#include "Command.h"
-#include "FileCoder.h"
-#include "WolfDataBase.h"
-#include "WolfRPGUtils.h"
+#include "Command.hpp"
+#include "FileCoder.hpp"
+#include "WolfDataBase.hpp"
+#include "WolfRPGUtils.hpp"
 
 #include <array>
 #include <format>

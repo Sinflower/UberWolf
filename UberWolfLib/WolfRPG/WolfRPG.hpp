@@ -1,5 +1,5 @@
 /*
- *  File: WolfRPG.h
+ *  File: WolfRPG.hpp
  *  Copyright (c) 2024 Sinflower
  *
  *  MIT License
@@ -26,11 +26,11 @@
 
 #pragma once
 
-#include "CommonEvents.h"
-#include "Database.h"
-#include "GameDat.h"
-#include "Map.h"
-#include "Types.h"
+#include "CommonEvents.hpp"
+#include "Database.hpp"
+#include "GameDat.hpp"
+#include "Map.hpp"
+#include "Types.hpp"
 
 #include <filesystem>
 

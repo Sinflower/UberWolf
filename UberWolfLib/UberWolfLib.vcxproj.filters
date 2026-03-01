@@ -185,43 +185,43 @@
     <ClInclude Include="WolfX\detail\ValidateDetail.hpp">
       <Filter>Header Files\WolfX\detail</Filter>
     </ClInclude>
-    <ClInclude Include="WolfRPG\Command.h">
+    <ClInclude Include="WolfRPG\Command.hpp">
       <Filter>Header Files\WolfRPG</Filter>
     </ClInclude>
-    <ClInclude Include="WolfRPG\CommonEvents.h">
+    <ClInclude Include="WolfRPG\CommonEvents.hpp">
       <Filter>Header Files\WolfRPG</Filter>
     </ClInclude>
-    <ClInclude Include="WolfRPG\Database.h">
+    <ClInclude Include="WolfRPG\Database.hpp">
       <Filter>Header Files\WolfRPG</Filter>
     </ClInclude>
-    <ClInclude Include="WolfRPG\FileAccess.h">
+    <ClInclude Include="WolfRPG\FileAccess.hpp">
       <Filter>Header Files\WolfRPG</Filter>
     </ClInclude>
-    <ClInclude Include="WolfRPG\FileCoder.h">
+    <ClInclude Include="WolfRPG\FileCoder.hpp">
       <Filter>Header Files\WolfRPG</Filter>
     </ClInclude>
-    <ClInclude Include="WolfRPG\GameDat.h">
+    <ClInclude Include="WolfRPG\GameDat.hpp">
       <Filter>Header Files\WolfRPG</Filter>
     </ClInclude>
-    <ClInclude Include="WolfRPG\Map.h">
+    <ClInclude Include="WolfRPG\Map.hpp">
       <Filter>Header Files\WolfRPG</Filter>
     </ClInclude>
-    <ClInclude Include="WolfRPG\RouteCommand.h">
+    <ClInclude Include="WolfRPG\RouteCommand.hpp">
       <Filter>Header Files\WolfRPG</Filter>
     </ClInclude>
-    <ClInclude Include="WolfRPG\Types.h">
+    <ClInclude Include="WolfRPG\Types.hpp">
       <Filter>Header Files\WolfRPG</Filter>
     </ClInclude>
-    <ClInclude Include="WolfRPG\WolfDataBase.h">
+    <ClInclude Include="WolfRPG\WolfDataBase.hpp">
       <Filter>Header Files\WolfRPG</Filter>
     </ClInclude>
-    <ClInclude Include="WolfRPG\WolfRPG.h">
+    <ClInclude Include="WolfRPG\WolfRPG.hpp">
       <Filter>Header Files\WolfRPG</Filter>
     </ClInclude>
-    <ClInclude Include="WolfRPG\WolfRPGException.h">
+    <ClInclude Include="WolfRPG\WolfRPGException.hpp">
       <Filter>Header Files\WolfRPG</Filter>
     </ClInclude>
-    <ClInclude Include="WolfRPG\WolfRPGUtils.h">
+    <ClInclude Include="WolfRPG\WolfRPGUtils.hpp">
       <Filter>Header Files\WolfRPG</Filter>
     </ClInclude>
     <ClInclude Include="Wolf35Unprotect.hpp">
