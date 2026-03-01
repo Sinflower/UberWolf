@@ -224,18 +224,28 @@ void unprotectProFiles(const std::wstring &folder)
 
 		if (datType == WolfFileType::CommonEvent)
 		{
-			CommonEvents comEv(filePath.wstring());
-			if (!comEv.IsValid())
+			try
+			{
+				CommonEvents comEv(filePath.wstring());
+
+				if (!comEv.IsValid())
+				{
+					INFO_LOG << LOCALIZE("failed_msg") << std::endl;
+					ERROR_LOG << "Failed to load CommonEvent.dat" << std::endl;
+					continue;
+				}
+
+				comEv.FixPro35EventDescriptions();
+
+				// Dump the fixed CommonEvent back into the folder
+				comEv.Dump(folder);
+			}
+			catch (const std::exception &e)
 			{
 				INFO_LOG << LOCALIZE("failed_msg") << std::endl;
-				ERROR_LOG << "Failed to load CommonEvent.dat" << std::endl;
+				ERROR_LOG << "Error processing CommonEvent.dat: " << e.what() << std::endl;
 				continue;
 			}
-
-			comEv.FixPro35EventDescriptions();
-
-			// Dump the fixed CommonEvent back into the folder
-			comEv.Dump(folder);
 		}
 
 		// There is no real way to tell if a project file has already been decrypted, therefore we use the decryption state of the corresponding dat file as an indicator (continue above)
@@ -250,19 +260,28 @@ void unprotectProFiles(const std::wstring &folder)
 			unprotectProject(buffer);
 			buffer2File(projPath, buffer);
 
-			Database db(projPath.wstring(), filePath.wstring());
+			try
+			{
+				Database db(projPath.wstring(), filePath.wstring());
 
-			if (!db.IsValid())
+				if (!db.IsValid())
+				{
+					INFO_LOG << LOCALIZE("failed_msg") << std::endl;
+					ERROR_LOG << "Failed to load Database.dat" << std::endl;
+					continue;
+				}
+
+				db.FixPro35TypeDescriptions();
+
+				// Dump the fixed Database back into the folder
+				db.Dump(folder);
+			}
+			catch (const std::exception &e)
 			{
 				INFO_LOG << LOCALIZE("failed_msg") << std::endl;
-				ERROR_LOG << "Failed to load Database.dat" << std::endl;
+				ERROR_LOG << "Error processing Database.dat: " << e.what() << std::endl;
 				continue;
 			}
-
-			db.FixPro35TypeDescriptions();
-
-			// Dump the fixed Database back into the folder
-			db.Dump(folder);
 		}
 
 		INFO_LOG << LOCALIZE("done_msg") << std::endl;
