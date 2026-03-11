@@ -221,7 +221,6 @@
     <ClCompile Include="Localizer.cpp" />
     <ClCompile Include="UberLog.cpp" />
     <ClCompile Include="UberWolfLib.cpp" />
-    <ClCompile Include="WolfCrypt\Wolf35Unprotect.cpp" />
     <ClCompile Include="WolfDec.cpp" />
     <ClCompile Include="WolfPro.cpp" />
     <ClCompile Include="WolfUtils.cpp" />
@@ -244,7 +243,7 @@
     <ClInclude Include="Types.h" />
     <ClInclude Include="UberWolfLib.h" />
     <ClInclude Include="Utils.h" />
-    <ClInclude Include="WolfCrypt\Wolf35Unprotect.hpp" />
+    <ClInclude Include="WolfCrypt\WolfDataDecrypt.hpp" />
     <ClInclude Include="WolfCrypt\WolfAes.hpp" />
     <ClInclude Include="WolfCrypt\WolfChaCha20.hpp" />
     <ClInclude Include="WolfCrypt\WolfCrypt.hpp" />
@@ -265,6 +264,7 @@
     <ClInclude Include="WolfRPG\WolfRPG.hpp" />
     <ClInclude Include="WolfRPG\WolfRPGException.hpp" />
     <ClInclude Include="WolfRPG\WolfRPGUtils.hpp" />
+    <ClInclude Include="WolfUnprotect.hpp" />
     <ClInclude Include="WolfUtils.h" />
     <ClInclude Include="WolfXWrapper.h" />
     <ClInclude Include="WolfX\Benchmark.hpp" />

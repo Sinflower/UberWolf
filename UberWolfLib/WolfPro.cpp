@@ -37,11 +37,11 @@
 #include "Localizer.h"
 #include "UberLog.h"
 #include "Utils.h"
+#include "WolfUnprotect.hpp"
 #include "WolfUtils.h"
 #include "WolfXWrapper.h"
 
 #include "WolfCrypt/WolfCrypt.hpp"
-#include "WolfCrypt/Wolf35Unprotect.hpp"
 
 namespace fs = std::filesystem;
 
@@ -220,7 +220,7 @@ bool WolfPro::RemoveProtection()
 	{
 		std::filesystem::path basicDataPath = getBasicDataFolder();
 
-		wolf::v3_5::unprotect::unprotectProFiles(basicDataPath);
+		wolf::unprotect::v3_5::unprotectProFiles(basicDataPath);
 		return true;
 	}
 

@@ -1,6 +1,6 @@
-/*
- *  File: Wolf35Unprotect.cpp
- *  Copyright (c) 2025 Sinflower
+﻿/*
+ *  File: WolfUnprotect.hpp
+ *  Copyright (c) 2026 Sinflower
  *
  *  MIT License
  *
@@ -24,47 +24,22 @@
  *
  */
 
-#include "Wolf35Unprotect.hpp"
+#pragma once
 
 #include <iostream>
 #include <map>
 
-#include "../Localizer.h"
-#include "../UberLog.h"
-#include "../Utils.h"
+#include "Localizer.h"
+#include "UberLog.h"
+#include "Utils.h"
 
-#include "../WolfRPG/CommonEvents.hpp"
-#include "../WolfRPG/Database.hpp"
-//#include "../WolfRPG/WolfRPGUtils.hpp"
+#include "WolfRPG/CommonEvents.hpp"
+#include "WolfRPG/Database.hpp"
 
-#include "WolfCrypt.hpp"
-#include "WolfSha512.hpp"
+#include "WolfCrypt/WolfDataDecrypt.hpp"
 
-namespace wolf::v3_5::unprotect
+namespace wolf::unprotect::v3_5
 {
-
-struct ProMagic
-{
-	std::string staticSalt;
-	std::vector<uint8_t> magicBytes;
-};
-
-const std::map<WolfFileType, ProMagic> PRO_MAGIC = {
-	{ WolfFileType::GameDat, { "basicD1", { 0x00, 0x57, 0x00, 0x00, 0x4F, 0x4C, 0x00, 0x46, 0x4D, 0x55 } } },
-	{ WolfFileType::CommonEvent, { "Commo2", { 0x00, 0x57, 0x00, 0x00, 0x4F, 0x4C, 0x55, 0x46, 0x43, 0x00 } } },
-	{ WolfFileType::DataBase, { "DBase4", { 0x00, 0x57, 0x00, 0x00, 0x4F, 0x4C, 0x55, 0x46, 0x4D, 0x00 } } },
-	{ WolfFileType::TileSetData, { "TilesetA", { 0x00, 0x57, 0x00, 0x00, 0x4F, 0x4C, 0x55, 0x46, 0x4D, 0x00 } } },
-	{ WolfFileType::None, { "", {} } }
-};
-
-const std::vector<std::string> PROTECTED_FILES = {
-	"Game.dat",
-	"CommonEvent.dat",
-	"DataBase.dat",
-	"SysDatabase.dat",
-	"CDatabase.dat",
-	"TileSetData.dat"
-};
 
 WolfFileType getWolfFileType(const std::filesystem::path &filePath)
 {
@@ -83,83 +58,14 @@ WolfFileType getWolfFileType(const std::filesystem::path &filePath)
 	return WolfFileType::None;
 }
 
-void decryptProV3P1(std::vector<uint8_t> &data, const std::array<uint8_t, 3> seedIdx)
-{
-	const uint32_t seed = (0xB << 24) | (data[seedIdx[0]] << 16) | (data[seedIdx[1]] << 8) | data[seedIdx[2]];
-	int32_t rn          = xorshift32(seed);
-
-	for (uint32_t i = 0xA; i < data.size(); i++)
-	{
-		int32_t v1 = (((rn << 0xF) ^ rn) >> 0x15) ^ (rn << 0xF) ^ rn;
-		rn         = (v1 << 0x9) ^ v1;
-		data[i] ^= rn % 0xF9;
-	}
-}
-
-bool decryptProV3Dat(std::vector<uint8_t> &buffer, const WolfFileType &datType)
-{
-	constexpr uint32_t KEY_START_OFFSET = 12;
-	constexpr uint32_t IV_START_OFFSET  = 73;
-	constexpr uint32_t AES_DATA_OFFSET  = 20;
-	constexpr uint32_t PRO_SPECIAL_SIZE = 143; // 15 byte header + 128 byte hash
-
-	if (buffer.empty() || buffer.size() < PRO_SPECIAL_SIZE)
-	{
-		std::cerr << "Buffer is empty or too small" << std::endl;
-		return false;
-	}
-
-	if (buffer[1] != 0x50 || buffer[5] < 0x57)
-	{
-		std::cout << "File is not protected or not a ProV3 file, skipping decryption" << std::endl;
-		return false;
-	}
-
-	std::array<uint8_t, 3> seedIdx = { 0, 3, 9 }; // Default idx for everything except Game.dat
-
-	if (datType == WolfFileType::GameDat)
-		seedIdx = { 0, 8, 6 };
-
-	decryptProV3P1(buffer, seedIdx);
-
-	srand(buffer[12]);
-	std::size_t aesSize = buffer.size() - AES_DATA_OFFSET;
-	// ¯\_(ツ)_/¯ that's what to code says (probably) and it works ¯\_(ツ)_/¯
-	if (aesSize >= rand() % 126 + 200)
-	{
-		std::size_t newSize = rand() % 126 + 200;
-
-		if (aesSize > newSize)
-			aesSize = newSize;
-	}
-
-	uint64_t nBuffer = 0;
-
-	const ProMagic &proMagic = PRO_MAGIC.at(datType);
-
-	sha512::s512DynSalt dynSalt = sha512::calcDynSalt(buffer);
-	sha512::s512Pwd saltedPwd   = sha512::saltPassword("", dynSalt, proMagic.staticSalt);
-	sha512::s512Input sInput    = sha512::preprocess(saltedPwd, nBuffer);
-	sha512::s512Hash hashData   = sha512::process(sInput, nBuffer);
-	std::string hashString      = sha512::digest(hashData);
-
-	wolf::aes::AesKey aesKey;
-	wolf::aes::AesIV aesIv;
-	wolf::aes::AesRoundKey roundKey;
-
-	std::copy(hashString.begin() + KEY_START_OFFSET, hashString.begin() + KEY_START_OFFSET + wolf::aes::KEY_SIZE, aesKey.begin());
-	std::copy(hashString.begin() + IV_START_OFFSET, hashString.begin() + IV_START_OFFSET + wolf::aes::IV_SIZE, aesIv.begin());
-
-	wolf::aes::keyExpansion(roundKey.data(), aesKey.data());
-	std::copy(aesIv.begin(), aesIv.end(), roundKey.begin() + wolf::aes::KEY_EXP_SIZE);
-
-	wolf::aes::aesCtrXCrypt(buffer.data() + AES_DATA_OFFSET, roundKey.data(), aesSize);
-
-	buffer.erase(buffer.begin(), buffer.begin() + PRO_SPECIAL_SIZE);
-	buffer.insert(buffer.begin(), proMagic.magicBytes.begin(), proMagic.magicBytes.end());
-
-	return true;
-}
+const std::vector<std::string> PROTECTED_FILES = {
+	"Game.dat",
+	"CommonEvent.dat",
+	"DataBase.dat",
+	"SysDatabase.dat",
+	"CDatabase.dat",
+	"TileSetData.dat"
+};
 
 void gameDatUpdateSize(std::vector<uint8_t> &bytes, const uint32_t &oldSize)
 {
@@ -211,7 +117,7 @@ void unprotectProFiles(const std::wstring &folder)
 		std::vector<uint8_t> buffer = file2Buffer(filePath);
 		const uint32_t oldSize      = static_cast<uint32_t>(buffer.size());
 
-		if (!decryptProV3Dat(buffer, datType))
+		if (!wolf::data_decrypt::v3_5::decryptProV3Dat(buffer, datType))
 		{
 			INFO_LOG << LOCALIZE("failed_msg") << std::endl;
 			continue;
@@ -236,6 +142,7 @@ void unprotectProFiles(const std::wstring &folder)
 					continue;
 				}
 
+				// Remove an additional layer of protection
 				comEv.FixPro35EventDescriptions();
 
 				// Dump the fixed CommonEvent back into the folder
@@ -272,6 +179,7 @@ void unprotectProFiles(const std::wstring &folder)
 					continue;
 				}
 
+				// Remove an additional layer of protection
 				db.FixPro35TypeDescriptions();
 
 				// Dump the fixed Database back into the folder

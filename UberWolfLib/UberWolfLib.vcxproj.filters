@@ -37,9 +37,6 @@
     <Filter Include="Header Files\WolfCrypt">
       <UniqueIdentifier>{6af29ac4-88f4-4419-b1ea-dfd8ffe8a50b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\WolfCrypt">
-      <UniqueIdentifier>{c99bab16-dc40-47aa-82e9-a8db49d71322}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="UberWolfLib.cpp">
@@ -86,9 +83,6 @@
     </ClCompile>
     <ClCompile Include="WolfXWrapper.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WolfCrypt\Wolf35Unprotect.cpp">
-      <Filter>Source Files\WolfCrypt</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -233,7 +227,7 @@
     <ClInclude Include="WolfXWrapper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WolfCrypt\Wolf35Unprotect.hpp">
+    <ClInclude Include="WolfCrypt\WolfDataDecrypt.hpp">
       <Filter>Header Files\WolfCrypt</Filter>
     </ClInclude>
     <ClInclude Include="WolfCrypt\WolfCrypt.hpp">
@@ -250,6 +244,9 @@
     </ClInclude>
     <ClInclude Include="WolfCrypt\WolfCryptUtils.hpp">
       <Filter>Header Files\WolfCrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfUnprotect.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
