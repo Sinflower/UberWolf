@@ -221,7 +221,7 @@
     <ClCompile Include="Localizer.cpp" />
     <ClCompile Include="UberLog.cpp" />
     <ClCompile Include="UberWolfLib.cpp" />
-    <ClCompile Include="Wolf35Unprotect.cpp" />
+    <ClCompile Include="WolfCrypt\Wolf35Unprotect.cpp" />
     <ClCompile Include="WolfDec.cpp" />
     <ClCompile Include="WolfPro.cpp" />
     <ClCompile Include="WolfUtils.cpp" />
@@ -235,7 +235,6 @@
     <ClInclude Include="..\3rdParty\DXLib\DXArchiveVer6.h" />
     <ClInclude Include="..\3rdParty\DXLib\FileLib.h" />
     <ClInclude Include="..\3rdParty\DXLib\Huffman.h" />
-    <ClInclude Include="..\3rdParty\DXLib\WolfNew.h" />
     <ClInclude Include="..\3rdParty\lz4\lz4.h" />
     <ClInclude Include="..\3rdParty\nlohmann\json.hpp" />
     <ClInclude Include="Defines.h" />
@@ -245,7 +244,12 @@
     <ClInclude Include="Types.h" />
     <ClInclude Include="UberWolfLib.h" />
     <ClInclude Include="Utils.h" />
-    <ClInclude Include="Wolf35Unprotect.hpp" />
+    <ClInclude Include="WolfCrypt\Wolf35Unprotect.hpp" />
+    <ClInclude Include="WolfCrypt\WolfAes.hpp" />
+    <ClInclude Include="WolfCrypt\WolfChaCha20.hpp" />
+    <ClInclude Include="WolfCrypt\WolfCrypt.hpp" />
+    <ClInclude Include="WolfCrypt\WolfCryptUtils.hpp" />
+    <ClInclude Include="WolfCrypt\WolfSha512.hpp" />
     <ClInclude Include="WolfDec.h" />
     <ClInclude Include="WolfPro.h" />
     <ClInclude Include="WolfRPG\Command.hpp" />
@@ -261,7 +265,6 @@
     <ClInclude Include="WolfRPG\WolfRPG.hpp" />
     <ClInclude Include="WolfRPG\WolfRPGException.hpp" />
     <ClInclude Include="WolfRPG\WolfRPGUtils.hpp" />
-    <ClInclude Include="WolfSha512.hpp" />
     <ClInclude Include="WolfUtils.h" />
     <ClInclude Include="WolfXWrapper.h" />
     <ClInclude Include="WolfX\Benchmark.hpp" />

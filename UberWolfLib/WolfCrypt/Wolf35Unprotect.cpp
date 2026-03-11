@@ -29,15 +29,16 @@
 #include <iostream>
 #include <map>
 
-#include "Localizer.h"
-#include "UberLog.h"
-#include "Utils.h"
-#include "WolfRPG/CommonEvents.hpp"
-#include "WolfRPG/Database.hpp"
-#include "WolfRPG/WolfRPGUtils.hpp"
-#include "WolfSha512.hpp"
+#include "../Localizer.h"
+#include "../UberLog.h"
+#include "../Utils.h"
 
-#include <DXLib/WolfNew.h>
+#include "../WolfRPG/CommonEvents.hpp"
+#include "../WolfRPG/Database.hpp"
+//#include "../WolfRPG/WolfRPGUtils.hpp"
+
+#include "WolfCrypt.hpp"
+#include "WolfSha512.hpp"
 
 namespace wolf::v3_5::unprotect
 {
@@ -142,17 +143,17 @@ bool decryptProV3Dat(std::vector<uint8_t> &buffer, const WolfFileType &datType)
 	sha512::s512Hash hashData   = sha512::process(sInput, nBuffer);
 	std::string hashString      = sha512::digest(hashData);
 
-	AesKey aesKey;
-	AesIV aesIv;
-	AesRoundKey roundKey;
+	wolf::aes::AesKey aesKey;
+	wolf::aes::AesIV aesIv;
+	wolf::aes::AesRoundKey roundKey;
 
-	std::copy(hashString.begin() + KEY_START_OFFSET, hashString.begin() + KEY_START_OFFSET + AES_KEY_SIZE, aesKey.begin());
-	std::copy(hashString.begin() + IV_START_OFFSET, hashString.begin() + IV_START_OFFSET + AES_IV_SIZE, aesIv.begin());
+	std::copy(hashString.begin() + KEY_START_OFFSET, hashString.begin() + KEY_START_OFFSET + wolf::aes::KEY_SIZE, aesKey.begin());
+	std::copy(hashString.begin() + IV_START_OFFSET, hashString.begin() + IV_START_OFFSET + wolf::aes::IV_SIZE, aesIv.begin());
 
-	keyExpansion(roundKey.data(), aesKey.data());
-	std::copy(aesIv.begin(), aesIv.end(), roundKey.begin() + AES_KEY_EXP_SIZE);
+	wolf::aes::keyExpansion(roundKey.data(), aesKey.data());
+	std::copy(aesIv.begin(), aesIv.end(), roundKey.begin() + wolf::aes::KEY_EXP_SIZE);
 
-	aesCtrXCrypt(buffer.data() + AES_DATA_OFFSET, roundKey.data(), aesSize);
+	wolf::aes::aesCtrXCrypt(buffer.data() + AES_DATA_OFFSET, roundKey.data(), aesSize);
 
 	buffer.erase(buffer.begin(), buffer.begin() + PRO_SPECIAL_SIZE);
 	buffer.insert(buffer.begin(), proMagic.magicBytes.begin(), proMagic.magicBytes.end());

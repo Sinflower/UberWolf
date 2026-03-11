@@ -34,15 +34,14 @@
 #include <fstream>
 #include <iostream>
 
-#include <DXLib\WolfNew.h>
-
 #include "Localizer.h"
 #include "UberLog.h"
 #include "Utils.h"
 #include "WolfUtils.h"
-
-#include "Wolf35Unprotect.hpp"
 #include "WolfXWrapper.h"
+
+#include "WolfCrypt/WolfCrypt.hpp"
+#include "WolfCrypt/Wolf35Unprotect.hpp"
 
 namespace fs = std::filesystem;
 

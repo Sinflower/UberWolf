@@ -39,32 +39,69 @@
 // Based on: https://github.com/pr0f3ss/SHA
 namespace wolf::sha512
 {
-// SHA-512 macros with s512w_ (SHA-512 Wolf) prefix
-#define s512w_Ch(x, y, z)  ((x & y) ^ (~x & z))
-#define s512w_Maj(x, y, z) ((x & y) ^ (x & z) ^ (y & z))
-#define s512w_RotR(x, n)   ((x >> n) | (x << ((sizeof(x) << 3) - n)))
-#define s512w_Sig0(x)      ((s512w_RotR(x, 28)) ^ (s512w_RotR(x, 34)) ^ (s512w_RotR(x, 39)))
-#define s512w_Sig1(x)      ((s512w_RotR(x, 14)) ^ (s512w_RotR(x, 18)) ^ (s512w_RotR(x, 41)))
-#define s512w_sig0(x)      (s512w_RotR(x, 1) ^ s512w_RotR(x, 8) ^ (x >> 7))
-#define s512w_sig1(x)      (s512w_RotR(x, 19) ^ s512w_RotR(x, 61) ^ (x >> 6))
+// SHA-512 operations
+namespace operations
+{
+// Operation: Choice
+// Description: Choose bits from y or z depending on x
+[[nodiscard]] constexpr inline uint64_t Ch(uint64_t x, uint64_t y, uint64_t z) noexcept
+{
+	return (x & y) ^ (~x & z);
+}
+
+// Operation: Majority
+// Description: Return the bitwise majority of the three inputs
+[[nodiscard]] constexpr inline uint64_t Maj(uint64_t x, uint64_t y, uint64_t z) noexcept
+{
+	return (x & y) ^ (x & z) ^ (y & z);
+}
+
+// Operation: Big Sigma0
+// Description: Apply the big sigma 0 transformation
+[[nodiscard]] constexpr inline uint64_t Sig0(uint64_t x) noexcept
+{
+	return std::rotr(x, 28) ^ std::rotr(x, 34) ^ std::rotr(x, 39);
+}
+
+// Operation: Big Sigma1
+// Description: Apply the big sigma 1 transformation
+[[nodiscard]] constexpr inline uint64_t Sig1(uint64_t x) noexcept
+{
+	return std::rotr(x, 14) ^ std::rotr(x, 18) ^ std::rotr(x, 41);
+}
+
+// Operation: Small Sigma0
+// Description: Apply the small sigma 0 transformation
+[[nodiscard]] constexpr inline uint64_t sig0(uint64_t x) noexcept
+{
+	return std::rotr(x, 1) ^ std::rotr(x, 8) ^ (x >> 7);
+}
+
+// Operation: Small Sigma1
+// Description: Apply the small sigma 1 transformation
+[[nodiscard]] constexpr inline uint64_t sig1(uint64_t x) noexcept
+{
+	return std::rotr(x, 19) ^ std::rotr(x, 61) ^ (x >> 6);
+}
+} // namespace operations
 
 // SHA-512 constants
-static const uint32_t SEQUENCE_LEN         = 16;
-static const uint32_t WORKING_VAR_LEN      = 8;
-static const uint32_t MESSAGE_SCHEDULE_LEN = 80;
-static const uint32_t MESSAGE_BLOCK_SIZE   = 1024;
-static const uint32_t CHAR_LEN_BITS        = 8;
-static const uint32_t OUTPUT_LEN           = 8;
-static const uint32_t WORD_LEN             = 8;
+inline constexpr uint32_t SEQUENCE_LEN         = 16;
+inline constexpr uint32_t WORKING_VAR_LEN      = 8;
+inline constexpr uint32_t MESSAGE_SCHEDULE_LEN = 80;
+inline constexpr uint32_t MESSAGE_BLOCK_SIZE   = 1024;
+inline constexpr uint32_t CHAR_LEN_BITS        = 8;
+inline constexpr uint32_t OUTPUT_LEN           = 8;
+inline constexpr uint32_t WORD_LEN             = 8;
 
 // NOTE: Custom Wolf specific primes
-static const uint64_t hPrime[8] = {
+inline constexpr uint64_t hPrime[8] = {
 	0x123456789ABCDEF0ULL, 0xFEDCBA9876543210ULL, 0x0F1E2D3C4B5A6978ULL, 0x89ABCDEF01234567ULL,
 	0x13579BDF02468ACEULL, 0xF0E1D2C3B4A59687ULL, 0x5A6B7C8D9E0F1A2BULL, 0x1A2B3C4D5E6F7890ULL
 };
 
 // Original SHA-512 k values
-static const uint64_t k[80] = {
+inline constexpr uint64_t k[80] = {
 	0x428a2f98d728ae22ULL, 0x7137449123ef65cdULL, 0xb5c0fbcfec4d3b2fULL, 0xe9b5dba58189dbbcULL, 0x3956c25bf348b538ULL,
 	0x59f111f1b605d019ULL, 0x923f82a4af194f9bULL, 0xab1c5ed5da6d8118ULL, 0xd807aa98a3030242ULL, 0x12835b0145706fbeULL,
 	0x243185be4ee4b28cULL, 0x550c7dc3d5ffb4e2ULL, 0x72be5d74f27b896fULL, 0x80deb1fe3b1696b1ULL, 0x9bdc06a725c71235ULL,
@@ -149,15 +186,15 @@ inline s512Hash process(const s512Input input, const uint64_t &nBuffer)
 		std::memcpy(w, pInput, SEQUENCE_LEN * sizeof(uint64_t));
 
 		for (uint32_t j = 16; j < MESSAGE_SCHEDULE_LEN; j++)
-			w[j] = w[j - 16] + s512w_sig0(w[j - 15]) + w[j - 7] + s512w_sig1(w[j - 2]);
+			w[j] = w[j - 16] + operations::sig0(w[j - 15]) + w[j - 7] + operations::sig1(w[j - 2]);
 
 		std::memcpy(s, h, WORKING_VAR_LEN * sizeof(uint64_t));
 
 		for (uint32_t j = 0; j < MESSAGE_SCHEDULE_LEN; j++)
 		{
 			// NOTE: The xor with (s[4] >> 3) is a custom change made to the original code
-			uint64_t temp1 = s[7] + s512w_Sig1(s[4]) + ((s[4] >> 3) ^ s512w_Ch(s[4], s[5], s[6])) + k[j] + w[j];
-			uint64_t temp2 = s512w_Sig0(s[0]) + s512w_Maj(s[0], s[1], s[2]);
+			uint64_t temp1 = s[7] + operations::Sig1(s[4]) + ((s[4] >> 3) ^ operations::Ch(s[4], s[5], s[6])) + k[j] + w[j];
+			uint64_t temp2 = operations::Sig0(s[0]) + operations::Maj(s[0], s[1], s[2]);
 
 			s[7] = s[6];
 			s[6] = s[5];
@@ -197,9 +234,7 @@ inline s512DynSalt calcDynSalt(const std::vector<uint8_t>& data)
 
 	// Make sure that the values are not 0 as that would result in the being treated as null terminator
 	for (auto& c : res)
-	{
-		if (c == 0) c = 1;
-	}
+		c = (c != 0) ? c : 1;
 
 	return res;
 }

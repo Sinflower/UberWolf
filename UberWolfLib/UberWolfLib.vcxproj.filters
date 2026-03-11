@@ -34,6 +34,12 @@
     <Filter Include="3rdParty\lz4">
       <UniqueIdentifier>{d9024af3-9c22-4b85-b9ea-098969a92b6c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\WolfCrypt">
+      <UniqueIdentifier>{6af29ac4-88f4-4419-b1ea-dfd8ffe8a50b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\WolfCrypt">
+      <UniqueIdentifier>{c99bab16-dc40-47aa-82e9-a8db49d71322}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="UberWolfLib.cpp">
@@ -81,8 +87,8 @@
     <ClCompile Include="WolfXWrapper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Wolf35Unprotect.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="WolfCrypt\Wolf35Unprotect.cpp">
+      <Filter>Source Files\WolfCrypt</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -139,9 +145,6 @@
     </ClInclude>
     <ClInclude Include="Localizer.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\3rdParty\DXLib\WolfNew.h">
-      <Filter>3rdParty\DXLib</Filter>
     </ClInclude>
     <ClInclude Include="WolfX\Benchmark.hpp">
       <Filter>Header Files\WolfX</Filter>
@@ -224,17 +227,29 @@
     <ClInclude Include="WolfRPG\WolfRPGUtils.hpp">
       <Filter>Header Files\WolfRPG</Filter>
     </ClInclude>
-    <ClInclude Include="Wolf35Unprotect.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WolfSha512.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\3rdParty\lz4\lz4.h">
       <Filter>3rdParty\lz4</Filter>
     </ClInclude>
     <ClInclude Include="WolfXWrapper.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfCrypt\Wolf35Unprotect.hpp">
+      <Filter>Header Files\WolfCrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfCrypt\WolfCrypt.hpp">
+      <Filter>Header Files\WolfCrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfCrypt\WolfSha512.hpp">
+      <Filter>Header Files\WolfCrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfCrypt\WolfAes.hpp">
+      <Filter>Header Files\WolfCrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfCrypt\WolfChaCha20.hpp">
+      <Filter>Header Files\WolfCrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfCrypt\WolfCryptUtils.hpp">
+      <Filter>Header Files\WolfCrypt</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

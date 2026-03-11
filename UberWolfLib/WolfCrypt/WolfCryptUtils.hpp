@@ -1,6 +1,6 @@
-﻿/*
- *  File: Wolf35Unprotect.hpp
- *  Copyright (c) 2025 Sinflower
+/*
+ *  File: WolfCryptUtils.hpp
+ *  Copyright (c) 2026 Sinflower
  *
  *  MIT License
  *
@@ -26,22 +26,9 @@
 
 #pragma once
 
-#include <array>
 #include <cstdint>
-#include <filesystem>
-#include <string>
-#include <vector>
 
-// This depends on WolfRPG for the WolfFileType enum
-#include "WolfRPG/Types.hpp"
-
-namespace wolf::v3_5::unprotect
+inline bool isV35(const uint16_t &cryptVersion)
 {
-WolfFileType getWolfFileType(const std::filesystem::path &filePath);
-void decryptProV3P1(std::vector<uint8_t> &data, const std::array<uint8_t, 3> seedIdx);
-bool decryptProV3Dat(std::vector<uint8_t> &buffer, const WolfFileType &datType);
-void gameDatUpdateSize(std::vector<uint8_t> &bytes, const uint32_t &oldSize);
-void unprotectProject(std::vector<uint8_t> &projData);
-void unprotectProFiles(const std::wstring &folder);
-
-} // namespace wolf::v3_5::unprotect
+	return (cryptVersion >= 0x15E && cryptVersion < 0x3E8) || cryptVersion >= 0x3FC;
+}
