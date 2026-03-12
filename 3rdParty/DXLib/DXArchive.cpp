@@ -572,7 +572,7 @@ void DXArchive::KeyConv(void *Data, s64 Size, s64 Position, unsigned char *Key)
 {
 	if (g_newCrypt)
 	{
-		wolfCrypt(g_specialKey, reinterpret_cast<uint8_t *>(Data), Position, Position + Size, false, g_cryptVersion);
+		wolf::crypt::wolfCrypt(g_specialKey, reinterpret_cast<uint8_t *>(Data), Position, Position + Size, false, g_cryptVersion);
 		return;
 	}
 
@@ -584,8 +584,8 @@ void DXArchive::KeyConv(void *Data, s64 Size, s64 Position, unsigned char *Key)
 		std::memset(state, 0, sizeof(state));
 		std::memset(keystream32, 0, sizeof(keystream32));
 
-		wolf::chacha20::initBlock(state, g_cc20Key, g_cc20Nonce);
-		wolf::chacha20::execute(state, keystream32, static_cast<uint32_t>(Position), reinterpret_cast<uint8_t *>(Data), Size);
+		wolf::crypt::chacha20::initBlock(state, g_cc20Key, g_cc20Nonce);
+		wolf::crypt::chacha20::execute(state, keystream32, static_cast<uint32_t>(Position), reinterpret_cast<uint8_t *>(Data), Size);
 		return;
 	}
 
@@ -2170,7 +2170,7 @@ int DXArchive::EncodeArchive(const TCHAR *OutputFileName, const std::vector<std:
 		std::array<uint8_t, 64> key;
 
 		std::memcpy(data.data(), (uint8_t *)KeyString_ + KeyStringBytes + 1, 4);
-		wolf::chacha20::keySetup(data, key);
+		wolf::crypt::chacha20::keySetup(data, key);
 
 		std::memcpy(g_cc20Key, key.data(), 32);
 		std::memcpy(g_cc20Nonce, key.data() + 34, 12);
@@ -2187,7 +2187,7 @@ int DXArchive::EncodeArchive(const TCHAR *OutputFileName, const std::vector<std:
 		if (cryptVersion >= 1010)
 			pK2 = (uint8_t *)KeyString_ + KeyStringBytes + 1;
 
-		initWolfCrypt(cryptVersion, Head.Reserve, g_specialKey, pK2);
+		wolf::crypt::initWolfCrypt(cryptVersion, Head.Reserve, g_specialKey, pK2);
 	}
 
 	// アーカイブのヘッダを出力する
@@ -2640,7 +2640,7 @@ int DXArchive::EncodeArchive(const TCHAR *OutputFileName, const std::vector<std:
 
 	if (g_newCrypt)
 	{
-		uint8_t roundKey[wolf::aes::ROUND_KEY_SIZE] = { 0 };
+		uint8_t roundKey[wolf::crypt::aes::ROUND_KEY_SIZE] = { 0 };
 
 		const uint8_t *pPwd = Head.Reserve;
 
@@ -2652,7 +2652,7 @@ int DXArchive::EncodeArchive(const TCHAR *OutputFileName, const std::vector<std:
 
 		size_t ret = fread(pFileData, 1, size, DestFp);
 
-		wolf::aes::initAES128(roundKey, pPwd, pK2, cryptVersion);
+		wolf::crypt::aes::initAES128(roundKey, pPwd, pK2, cryptVersion);
 
 		if ((size - 64) < 0x400)
 			return 0;
@@ -2669,23 +2669,23 @@ int DXArchive::EncodeArchive(const TCHAR *OutputFileName, const std::vector<std:
 				seed = pPwd[2] * pPwd[4] + pPwd[12]; // xorShift32 seed
 
 			if (!seed) seed = 1;
-			xorshift32(seed);
+			wolf::crypt::xorshift32(seed);
 
-			if (size >= static_cast<int32_t>(xorshift32() % 500 + 800))
-				xorshift32();
+			if (size >= static_cast<int32_t>(wolf::crypt::xorshift32() % 500 + 800))
+				wolf::crypt::xorshift32();
 
 			bodySize = size - 64; // 64 is the header size -- maybe replace with a constant
 
-			if (bodySize >= (xorshift32() % 500 + 800))
-				bodySize = (xorshift32() % 500) + 800;
+			if (bodySize >= (wolf::crypt::xorshift32() % 500 + 800))
+				bodySize = (wolf::crypt::xorshift32() % 500) + 800;
 		}
 
-		wolf::aes::aesCtrXCrypt(pFileData + 64, roundKey, bodySize);
-		wolf::aes::aesCtrXCrypt(pFileData + Head.FileNameTableStartAddress, roundKey, size - static_cast<int32_t>(Head.FileNameTableStartAddress));
+		wolf::crypt::aes::aesCtrXCrypt(pFileData + 64, roundKey, bodySize);
+		wolf::crypt::aes::aesCtrXCrypt(pFileData + Head.FileNameTableStartAddress, roundKey, size - static_cast<int32_t>(Head.FileNameTableStartAddress));
 
-		initWolfCrypt(cryptVersion, pPwd, g_specialKey, nullptr, pFileData, 64, size - 64, true, KeyString_);
+		wolf::crypt::initWolfCrypt(cryptVersion, pPwd, g_specialKey, nullptr, pFileData, 64, size - 64, true, KeyString_);
 
-		cryptAddresses(pFileData, pPwd, cryptVersion);
+		wolf::crypt::cryptAddresses(pFileData, pPwd, cryptVersion);
 
 		fseek(DestFp, 0, SEEK_SET);
 		fwrite64(pFileData, size, DestFp);
@@ -2779,7 +2779,7 @@ int DXArchive::DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const 
 			std::array<uint8_t, 64> key;
 
 			std::memcpy(data.data(), (uint8_t *)KeyString_ + KeyStringBytes + 1, 4);
-			wolf::chacha20::keySetup(data, key);
+			wolf::crypt::chacha20::keySetup(data, key);
 
 			std::memcpy(g_cc20Key, key.data(), 32);
 			std::memcpy(g_cc20Nonce, key.data() + 34, 12);
@@ -2790,7 +2790,7 @@ int DXArchive::DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const 
 			const uint8_t *pPwd = Head.Reserve;
 
 			memset(g_specialKey, 0, 768);
-			cryptAddresses((uint8_t *)&Head, pPwd, cryptVersion);
+			wolf::crypt::cryptAddresses((uint8_t *)&Head, pPwd, cryptVersion);
 
 			fseek(ArcP, 0, SEEK_END);
 			int32_t size = ftell(ArcP);
@@ -2803,15 +2803,15 @@ int DXArchive::DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const 
 			// Replace the beginning of the file data with the decrypted header
 			std::memcpy(pFileData, &Head, sizeof(DARC_HEAD));
 
-			uint8_t roundKey[wolf::aes::ROUND_KEY_SIZE] = { 0 };
-			initWolfCrypt(cryptVersion, pPwd, g_specialKey, nullptr, pFileData, 64, size - 64, true, KeyString_);
+			uint8_t roundKey[wolf::crypt::aes::ROUND_KEY_SIZE] = { 0 };
+			wolf::crypt::initWolfCrypt(cryptVersion, pPwd, g_specialKey, nullptr, pFileData, 64, size - 64, true, KeyString_);
 
 			uint8_t *pK2 = nullptr;
 
 			if (cryptVersion >= 1010)
 				pK2 = (uint8_t *)KeyString_ + KeyStringBytes + 1;
 
-			wolf::aes::initAES128(roundKey, pPwd, pK2, cryptVersion);
+			wolf::crypt::aes::initAES128(roundKey, pPwd, pK2, cryptVersion);
 
 			if ((size - 64) < 0x400)
 				return 0;
@@ -2828,19 +2828,19 @@ int DXArchive::DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const 
 					seed = pPwd[2] * pPwd[4] + pPwd[12]; // xorShift32 seed
 
 				if (!seed) seed = 1;
-				xorshift32(seed);
+				wolf::crypt::xorshift32(seed);
 
-				if (size >= static_cast<int32_t>(xorshift32() % 500 + 800))
-					xorshift32();
+				if (size >= static_cast<int32_t>(wolf::crypt::xorshift32() % 500 + 800))
+					wolf::crypt::xorshift32();
 
 				bodySize = size - 64; // 64 is the header size -- maybe replace with a constant
 
-				if (bodySize >= (xorshift32() % 500 + 800))
-					bodySize = (xorshift32() % 500) + 800;
+				if (bodySize >= (wolf::crypt::xorshift32() % 500 + 800))
+					bodySize = (wolf::crypt::xorshift32() % 500) + 800;
 			}
 
-			wolf::aes::aesCtrXCrypt(pFileData + 64, roundKey, bodySize); // For v3.31 this has to be 0x400
-			wolf::aes::aesCtrXCrypt(pFileData + Head.FileNameTableStartAddress, roundKey, size - static_cast<int32_t>(Head.FileNameTableStartAddress));
+			wolf::crypt::aes::aesCtrXCrypt(pFileData + 64, roundKey, bodySize); // For v3.31 this has to be 0x400
+			wolf::crypt::aes::aesCtrXCrypt(pFileData + Head.FileNameTableStartAddress, roundKey, size - static_cast<int32_t>(Head.FileNameTableStartAddress));
 
 			// Write to file
 			FILE *fp = fopen("decrypt_temp", "wb");
@@ -2855,7 +2855,7 @@ int DXArchive::DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const 
 			ArcP = fopen("decrypt_temp", "rb");
 			fseek(ArcP, sizeof(DARC_HEAD), SEEK_SET);
 
-			initWolfCrypt(cryptVersion, pPwd, g_specialKey, pK2);
+			wolf::crypt::initWolfCrypt(cryptVersion, pPwd, g_specialKey, pK2);
 		}
 
 		// 鍵処理が行われていないかを取得する

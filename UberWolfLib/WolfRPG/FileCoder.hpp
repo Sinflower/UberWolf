@@ -504,7 +504,7 @@ private:
 	{
 		m_reader.Seek(0);
 		Bytes data = Read();
-		if (!wolf::data_decrypt::v3_5::decryptProV3Dat(data, m_fileType))
+		if (!wolf::crypt::data_decrypt::v3_5::decryptProV3Dat(data, m_fileType))
 			throw WolfRPGException(ERROR_TAG + "Failed to decrypt ProV3 data.");
 
 		m_reader.InitData(data);
