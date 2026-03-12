@@ -248,6 +248,7 @@
     <ClInclude Include="WolfCrypt\WolfChaCha20.hpp" />
     <ClInclude Include="WolfCrypt\WolfCrypt.hpp" />
     <ClInclude Include="WolfCrypt\WolfCryptUtils.hpp" />
+    <ClInclude Include="WolfCrypt\WolfRng.hpp" />
     <ClInclude Include="WolfCrypt\WolfSha512.hpp" />
     <ClInclude Include="WolfDec.h" />
     <ClInclude Include="WolfPro.h" />

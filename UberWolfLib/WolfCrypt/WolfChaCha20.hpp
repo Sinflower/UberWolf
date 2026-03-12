@@ -29,7 +29,7 @@
 #include <array>
 #include <cstdint>
 
-namespace wolf::chacha20
+namespace wolf::crypt::chacha20
 {
 // TODO: Move ChaCha20 into a class
 ////////////////////////////
@@ -163,4 +163,4 @@ inline void keySetup(const std::array<uint8_t, 4> &data, std::array<uint8_t, 64>
 	}
 }
 
-} // namespace wolf::chacha20
+} // namespace wolf::crypt::chacha20

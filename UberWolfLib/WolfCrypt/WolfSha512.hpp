@@ -216,7 +216,7 @@ inline s512Hash process(const s512Input input, const uint64_t &nBuffer)
 	return result;
 }
 
-inline s512DynSalt calcDynSalt(const std::vector<uint8_t>& data)
+inline s512DynSalt calcDynSalt(const std::vector<uint8_t> &data)
 {
 	if (data.size() <= 0x10)
 		throw std::runtime_error("Invalid data size");
@@ -233,7 +233,7 @@ inline s512DynSalt calcDynSalt(const std::vector<uint8_t>& data)
 	s512DynSalt res = { r0, r1, r2, r3 };
 
 	// Make sure that the values are not 0 as that would result in the being treated as null terminator
-	for (auto& c : res)
+	for (auto &c : res)
 		c = (c != 0) ? c : 1;
 
 	return res;

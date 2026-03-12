@@ -248,6 +248,9 @@
     <ClInclude Include="WolfUnprotect.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="WolfCrypt\WolfRng.hpp">
+      <Filter>Header Files\WolfCrypt</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="UberWolfLib.rc">

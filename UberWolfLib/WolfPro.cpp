@@ -329,7 +329,7 @@ Key WolfPro::findDxArcKeyV1(std::vector<uint8_t>& byteData, const uint32_t& file
 
 Key WolfPro::findDxArcKeyV2(std::vector<uint8_t>& byteData) const
 {
-	Key key = calcKey(byteData);
+	Key key = wolf::crypt::calcKey(byteData);
 	return key;
 }
 
@@ -402,7 +402,7 @@ Key WolfPro::findProtectionKeyV1(std::vector<uint8_t>& byteData) const
 
 Key WolfPro::findProtectionKeyV2(std::vector<uint8_t>& byteData) const
 {
-	Key key = calcKeyProt(byteData);
+	Key key = wolf::crypt::calcKeyProt(byteData);
 
 	if (key.empty())
 		ERROR_LOG << LOCALIZE("calc_prot_key_error_msg") << std::endl;

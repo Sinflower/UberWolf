@@ -452,7 +452,7 @@ private:
 
 	void cryptDatV2(Bytes& data)
 	{
-		CryptData cd = decryptV2File(data);
+		wolf::crypt::CryptData cd = wolf::crypt::decryptV2File(data);
 		data.assign(cd.gameDatBytes.begin(), cd.gameDatBytes.end());
 	}
 

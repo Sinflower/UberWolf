@@ -29,10 +29,10 @@
 #include <array>
 #include <cstdint>
 #include <filesystem>
+#include <iostream>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-#include <iostream>
 
 #include "WolfCrypt.hpp"
 #include "WolfSha512.hpp"
@@ -40,7 +40,7 @@
 // This depends on WolfRPG for the WolfFileType enum
 #include "../WolfRPG/Types.hpp"
 
-namespace wolf::data_decrypt::v3_5
+namespace wolf::crypt::data_decrypt::v3_5
 {
 struct ProMagic
 {
@@ -134,4 +134,4 @@ inline bool decryptProV3Dat(std::vector<uint8_t> &buffer, const WolfFileType &da
 	return true;
 }
 
-} // namespace wolf::data_decrypt::v3_5
+} // namespace wolf::crypt::data_decrypt::v3_5
