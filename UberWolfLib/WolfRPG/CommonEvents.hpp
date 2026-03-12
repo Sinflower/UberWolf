@@ -354,13 +354,13 @@ public:
 			ev.Patch(j);
 		}
 	}
-	
+
 	void FixPro35EventDescriptions()
 	{
 		for (CommonEvent& ev : m_events)
 			ev.FixPro35Description();
 	}
-	
+
 	const CommonEvent::CommonEvents& GetEvents() const
 	{
 		return m_events;

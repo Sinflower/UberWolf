@@ -111,12 +111,12 @@ inline DecryptFunction g_decryptFunc = nullptr;
 // Initializes the correct function at runtime
 inline void initXorBufferBlobFunc(const simd::CpuFeatures &features)
 {
-	//if (features.avx2)
+	// if (features.avx2)
 	//	g_decryptFunc = xorBufferBlobAVX2;
-	//else if (features.sse2)
+	// else if (features.sse2)
 	//	g_decryptFunc = xorBufferBlobSSE2;
-	//else
-		g_decryptFunc = xorBufferBlobPlain;
+	// else
+	g_decryptFunc = xorBufferBlobPlain;
 }
 
 inline void initXorBufferBlobFunc()

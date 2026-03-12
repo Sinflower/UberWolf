@@ -314,9 +314,9 @@ void UberWolfLib::RegisterLocQueryFunc(const LocalizerQuery& queryFunc)
 tString UberWolfLib::GetVersion()
 {
 #ifdef _UNICODE
-		return selfUpdater::version::GetVersionInfo().ToWString();
+	return selfUpdater::version::GetVersionInfo().ToWString();
 #else
-		return selfUpdater::version::GetVersionInfo().ToString();
+	return selfUpdater::version::GetVersionInfo().ToString();
 #endif
 }
 
@@ -515,4 +515,3 @@ bool UberWolfLib::findGameFromArchive(const tString& archivePath)
 
 	return false;
 }
-

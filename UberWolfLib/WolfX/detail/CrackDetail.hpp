@@ -191,7 +191,7 @@ inline bool crackWolfX(const WolfXFile &file, const WolfXDecryptCollection &decr
 
 	if (!decryptResult.success)
 	{
-		//std::cerr << "Failed to decrypt the file" << std::endl;
+		// std::cerr << "Failed to decrypt the file" << std::endl;
 		return false;
 	}
 
