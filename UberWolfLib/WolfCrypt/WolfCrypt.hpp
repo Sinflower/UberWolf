@@ -51,7 +51,7 @@ inline void wolfCrypt(const uint8_t *pKey, uint8_t *pData, const int64_t &start,
 	uint32_t v2Cnt = start / 256 % 256;
 	int32_t v3Cnt  = start / 0x10000 % 256;
 
-	if (isV35(cryptVersion))
+	if (utils::isV35(cryptVersion))
 	{
 		uint8_t moddedKey[512];
 		for (uint32_t i = 0; i < 512; i++)
@@ -143,7 +143,7 @@ inline void initWolfCrypt(const uint16_t &cryptVersion, const uint8_t *pPW, uint
 
 	fac[s3 % 3] = rand() % 256;
 
-	if (!other && isV35(cryptVersion))
+	if (!other && utils::isV35(cryptVersion))
 		fac[1] = rand() % 0xFB; // This might need to be a += not sure
 
 	for (uint32_t i = 0; i < 256; i++)
@@ -178,7 +178,7 @@ inline void initWolfCrypt(const uint16_t &cryptVersion, const uint8_t *pPW, uint
 		else
 			calcSalt(pKeyString, salt);
 
-		if (isV35(cryptVersion))
+		if (utils::isV35(cryptVersion))
 		{
 			s3 += 0x22;
 			modFactor = 16;
@@ -269,7 +269,7 @@ inline void cryptAddresses(uint8_t *pData, const uint8_t *pKey, const uint32_t c
 {
 	uint16_t *pDataB16 = reinterpret_cast<uint16_t *>(pData);
 
-	if (isV35(cryptVersion))
+	if (utils::isV35(cryptVersion))
 	{
 		uint32_t seed = 0xC + (pKey[9] & 0xFF) * (pKey[10] & 0xFF) + (pKey[3] & 0xFF);
 
@@ -470,15 +470,6 @@ inline std::vector<uint8_t> calcKey(const std::vector<uint8_t> &gameDataBytes)
 	return key;
 }
 
-inline uint32_t genMTSeed(const std::array<uint8_t, 3> &seeds)
-{
-	uint32_t x = (seeds[0] << 16) | (seeds[1] << 8) | seeds[2];
-	uint32_t y = (x << 13) ^ x;
-	uint32_t z = (y >> 17) ^ y;
-
-	return z ^ (z << 5);
-}
-
 inline void decrpytProV2P1(std::vector<uint8_t> &data, const uint32_t &seed)
 {
 	const uint32_t NUM_RNDS = 128;
@@ -501,7 +492,7 @@ inline void initCryptProt(CryptData &cd, const std::array<uint32_t, 3> &seedIndi
 
 	cd.dataSize = std::min<uint32_t>(fileSize - 20, 326);
 
-	decrpytProV2P1(cd.gameDatBytes, genMTSeed({ cd.gameDatBytes[seedIndices[0]], cd.gameDatBytes[seedIndices[1]], cd.gameDatBytes[seedIndices[2]] }));
+	decrpytProV2P1(cd.gameDatBytes, utils::genMTSeed({ cd.gameDatBytes[seedIndices[0]], cd.gameDatBytes[seedIndices[1]], cd.gameDatBytes[seedIndices[2]] }));
 
 	std::copy(cd.gameDatBytes.begin() + 0xB, cd.gameDatBytes.begin() + 0xF, cd.keyBytes.begin());
 

@@ -118,7 +118,7 @@ inline void initAES128(uint8_t *pRoundKey, const uint8_t *pPwd, uint8_t *pProKey
 	uint8_t key[KEY_SIZE] = { 0 };
 	uint8_t iv[IV_SIZE]   = { 0 };
 
-	if (isV35(cryptVersion))
+	if (utils::isV35(cryptVersion))
 	{
 		for (uint32_t i = 0; i < PW_SIZE; i++)
 		{

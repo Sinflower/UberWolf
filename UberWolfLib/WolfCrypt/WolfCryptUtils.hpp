@@ -26,9 +26,23 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
+
+namespace wolf::crypt::utils
+{
 
 inline bool isV35(const uint16_t &cryptVersion)
 {
 	return (cryptVersion >= 0x15E && cryptVersion < 0x3E8) || cryptVersion >= 0x3FC;
 }
+
+inline uint32_t genMTSeed(const std::array<uint8_t, 3> &seeds)
+{
+	uint32_t x = (seeds[0] << 16) | (seeds[1] << 8) | seeds[2];
+	uint32_t y = (x << 13) ^ x;
+	uint32_t z = (y >> 17) ^ y;
+
+	return z ^ (z << 5);
+}
+} // namespace wolf::crypt::utils

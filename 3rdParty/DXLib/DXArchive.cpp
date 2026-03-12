@@ -2659,7 +2659,7 @@ int DXArchive::EncodeArchive(const TCHAR *OutputFileName, const std::vector<std:
 
 		uint32_t bodySize = 0x400;
 
-		if (isV35(cryptVersion))
+		if (wolf::crypt::utils::isV35(cryptVersion))
 		{
 			uint32_t seed = 0;
 
@@ -2818,7 +2818,7 @@ int DXArchive::DecodeArchive(TCHAR *ArchiveName, const TCHAR *OutputPath, const 
 
 			uint32_t bodySize = 0x400;
 
-			if (isV35(cryptVersion))
+			if (wolf::crypt::utils::isV35(cryptVersion))
 			{
 				uint32_t seed = 0;
 
