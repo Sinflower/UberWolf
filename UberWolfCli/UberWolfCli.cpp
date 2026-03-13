@@ -38,7 +38,7 @@
 
 namespace fs = std::filesystem;
 
-static const std::string UWCLI_NAME    = "UberWolfCli";
+static const std::string UWCLI_NAME = "UberWolfCli";
 
 std::string buildPackInfo()
 {
@@ -95,84 +95,116 @@ int main(int argc, char* argv[])
 
 	uwl.Configure(override, unprotect, decWolfX);
 
-	// Check if the first argument is an executable
-	if (fs::exists(files.front()) && fs::is_regular_file(files.front()) && fs::path(files.front()).extension() == ".exe")
+	try
 	{
-		uwl.InitGame(files.front());
-
-		if (packVersion.empty())
+		UWLExitCode result;
+		// Check if the first argument is an executable
+		if (fs::exists(files.front()) && fs::is_regular_file(files.front()) && fs::path(files.front()).extension() == ".exe")
 		{
-			uwl.UnpackData();
+			if (!uwl.InitGame(files.front()))
+			{
+				std::cerr << "Failed to initialize game with the provided executable." << std::endl;
+				return -1;
+			}
 
-			std::string key;
+			if (packVersion.empty())
+			{
+				result = uwl.UnpackData();
+				if (result != UWLExitCode::SUCCESS)
+				{
+					std::cerr << "UnpackData failed with exit code: " << static_cast<int>(result) << std::endl;
+					return -1;
+				}
 
-			if (uwl.FindProtectionKey(key) == UWLExitCode::SUCCESS)
-				std::cout << "Protection key: " << key << std::endl;
+				std::string key;
 
-			uwl.DecryptWolfXFiles();
+				if (uwl.FindProtectionKey(key) == UWLExitCode::SUCCESS)
+					std::cout << "Protection key: " << key << std::endl;
+
+				result = uwl.DecryptWolfXFiles();
+				if (result != UWLExitCode::SUCCESS)
+				{
+					std::cerr << "DecryptWolfXFiles failed with exit code: " << static_cast<int>(result) << std::endl;
+					return -1;
+				}
+			}
+			else
+			{
+				int32_t encIdx = -1;
+
+				try
+				{
+					encIdx = std::stoi(packVersion);
+				}
+				catch (const std::exception& e)
+				{
+					std::cerr << "Invalid package version index - " << packVersion << std::endl;
+					std::cerr << "Error: " << e.what() << std::endl;
+					return -1;
+				}
+
+				if (encIdx < 0 || static_cast<std::size_t>(encIdx) >= UberWolfLib::GetEncryptions().size())
+				{
+					std::cout << "Invalid package version index" << std::endl;
+					return -1;
+				}
+
+				result = uwl.PackData(encIdx);
+				if (result != UWLExitCode::SUCCESS)
+				{
+					std::cerr << "PackData failed with exit code: " << static_cast<int>(result) << std::endl;
+					return -1;
+				}
+			}
+
+			return 0;
+		}
+
+		if (!packVersion.empty())
+		{
+			std::cerr << "[ERROR] Currently, packing can only be used with an executable" << std::endl;
+			return -1;
+		}
+
+		tStrings paths;
+
+		// Check if the first argument is a folder
+		if (fs::exists(files.front()) && fs::is_directory(files.front()))
+		{
+			for (const auto& entry : fs::directory_iterator(files.front()))
+			{
+				if (entry.is_regular_file())
+					paths.push_back({ FS_PATH_TO_TSTRING(entry.path()) });
+			}
 		}
 		else
 		{
-			int32_t encIdx = -1;
-
-			try
+			for (size_t i = 0; i < files.size(); i++)
 			{
-				encIdx = std::stoi(packVersion);
+				if (fs::exists(files[i]) && fs::is_regular_file(files[i]))
+					paths.push_back({ files[i] });
 			}
-			catch (const std::exception& e)
-			{
-				std::cerr << "Invalid package version index - " << packVersion << std::endl;
-				std::cerr << "Error: " << e.what() << std::endl;
-				return -1;
-			}
-
-			if (encIdx < 0 || static_cast<std::size_t>(encIdx) >= UberWolfLib::GetEncryptions().size())
-			{
-				std::cout << "Invalid package version index" << std::endl;
-				return -1;
-			}
-
-			UWLExitCode result = uwl.PackData(encIdx);
-			if (result != UWLExitCode::SUCCESS)
-				std::cout << "PackData failed with exit code: " << static_cast<int>(result) << std::endl;
 		}
 
-		return 0;
-	}
+		if (paths.empty())
+		{
+			std::cout << "No valid files found." << std::endl;
+			return -1;
+		}
 
-	if (!packVersion.empty())
+		result = uwl.UnpackDataVec(paths);
+
+		if (result != UWLExitCode::SUCCESS)
+		{
+			std::cerr << "UnpackDataVec failed with exit code: " << static_cast<int>(result) << std::endl;
+			return -1;
+		}
+	}
+	catch (const std::exception& e)
 	{
-		std::cerr << "[ERROR] Currently, packing can only be used with an executable" << std::endl;
+		std::cerr << "An error occurred: " << e.what() << std::endl;
 		return -1;
 	}
-
-	tStrings paths;
-
-	// Check if the first argument is a folder
-	if (fs::exists(files.front()) && fs::is_directory(files.front()))
-	{
-		for (const auto& entry : fs::directory_iterator(files.front()))
-		{
-			if (entry.is_regular_file())
-				paths.push_back({ FS_PATH_TO_TSTRING(entry.path()) });
-		}
-	}
-	else
-	{
-		for (size_t i = 0; i < files.size(); i++)
-		{
-			if (fs::exists(files[i]) && fs::is_regular_file(files[i]))
-				paths.push_back({ files[i] });
-		}
-	}
-
-	if (paths.empty())
-	{
-		std::cout << "No valid files found." << std::endl;
-		return -1;
-	}
-
-	uwl.UnpackDataVec(paths);
 
 	return 0;
 }
