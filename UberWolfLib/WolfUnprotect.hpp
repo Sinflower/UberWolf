@@ -117,7 +117,7 @@ void unprotectProFiles(const std::wstring &folder)
 		std::vector<uint8_t> buffer = file2Buffer(filePath);
 		const uint32_t oldSize      = static_cast<uint32_t>(buffer.size());
 
-		if (!wolf::crypt::data_decrypt::v3_5::decryptProV3Dat(buffer, datType))
+		if (!wolf::crypt::datadecrypt::v3_5::decryptData(buffer, datType))
 		{
 			INFO_LOG << LOCALIZE("failed_msg") << std::endl;
 			continue;

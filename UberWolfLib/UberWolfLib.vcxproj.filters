@@ -251,6 +251,15 @@
     <ClInclude Include="WolfCrypt\WolfRng.hpp">
       <Filter>Header Files\WolfCrypt</Filter>
     </ClInclude>
+    <ClInclude Include="WolfCrypt\WolfProtKey.hpp">
+      <Filter>Header Files\WolfCrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfCrypt\WolfCryptTypes.hpp">
+      <Filter>Header Files\WolfCrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfCrypt\WolfDxArcKey.hpp">
+      <Filter>Header Files\WolfCrypt</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="UberWolfLib.rc">

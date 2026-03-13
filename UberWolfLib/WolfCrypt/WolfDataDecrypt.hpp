@@ -40,8 +40,85 @@
 // This depends on WolfRPG for the WolfFileType enum
 #include "../WolfRPG/Types.hpp"
 
-namespace wolf::crypt::data_decrypt::v3_5
+namespace wolf::crypt::datadecrypt
 {
+namespace v3_1
+{
+
+}
+
+namespace v3_3
+{
+
+inline void rngDecrypt(std::vector<uint8_t> &data, const uint32_t &seed)
+{
+	const uint32_t NUM_RNDS = 128;
+
+	std::mt19937 gen;
+	gen.seed(seed);
+
+	std::array<uint32_t, NUM_RNDS> rnds;
+
+	for (uint32_t &rnd : rnds)
+		rnd = gen();
+
+	for (uint32_t i = 0xA; i < data.size(); i++)
+		data[i] ^= rnds[i % NUM_RNDS];
+}
+
+inline void initCrypt(CryptData &cd, const std::array<uint32_t, 3> &seedIndices)
+{
+	uint32_t fileSize = static_cast<uint32_t>(cd.gameDatBytes.size());
+
+	cd.dataSize = std::min<uint32_t>(fileSize - 20, 326);
+
+	rngDecrypt(cd.gameDatBytes, utils::genMTSeed({ cd.gameDatBytes[seedIndices[0]], cd.gameDatBytes[seedIndices[1]], cd.gameDatBytes[seedIndices[2]] }));
+
+	std::copy(cd.gameDatBytes.begin() + 0xB, cd.gameDatBytes.begin() + 0xF, cd.keyBytes.begin());
+
+	cd.seedBytes[0] = cd.gameDatBytes[7] + 3 * cd.keyBytes[0];
+	cd.seedBytes[1] = cd.keyBytes[1] ^ cd.keyBytes[2];
+	cd.seedBytes[2] = cd.keyBytes[3] ^ cd.gameDatBytes[7];
+	cd.seedBytes[3] = cd.keyBytes[2] + cd.gameDatBytes[7] - cd.keyBytes[0];
+
+	const uint32_t seed = cd.keyBytes[1] ^ cd.keyBytes[2];
+
+	cd.seed1 = seed;
+	cd.seed2 = seed;
+}
+
+inline CryptData decryptData(const std::vector<uint8_t> &bytes, const std::array<uint32_t, 3> &seedIndices)
+{
+	constexpr uint32_t AES_DATA_OFFSET = 20;
+
+	CryptData cd;
+	rng::RngData rd;
+
+	cd.gameDatBytes = bytes;
+	initCrypt(cd, seedIndices);
+
+	rng::runRngChain(rd, cd.seed1, cd.seed2);
+
+	aes::AesKey aesKey;
+	aes::AesIV aesIv;
+
+	aesKeyGen(cd, rd, aesKey, aesIv);
+
+	aes::AesRoundKey roundKey;
+
+	aes::keyExpansion(roundKey.data(), aesKey.data());
+	std::copy(aesIv.begin(), aesIv.end(), roundKey.begin() + aes::KEY_EXP_SIZE);
+
+	aes::aesCtrXCrypt(cd.gameDatBytes.data() + AES_DATA_OFFSET, roundKey.data(), cd.dataSize);
+
+	return cd;
+}
+
+} // namespace v3_3
+
+namespace v3_5
+{
+
 struct ProMagic
 {
 	std::string staticSalt;
@@ -69,7 +146,7 @@ inline void decryptProV3P1(std::vector<uint8_t> &data, const std::array<uint8_t,
 	}
 }
 
-inline bool decryptProV3Dat(std::vector<uint8_t> &buffer, const WolfFileType &datType)
+inline bool decryptData(std::vector<uint8_t> &buffer, const WolfFileType &datType)
 {
 	constexpr uint32_t KEY_START_OFFSET = 12;
 	constexpr uint32_t IV_START_OFFSET  = 73;
@@ -133,5 +210,6 @@ inline bool decryptProV3Dat(std::vector<uint8_t> &buffer, const WolfFileType &da
 
 	return true;
 }
+} // namespace v3_5
 
-} // namespace wolf::crypt::data_decrypt::v3_5
+} // namespace wolf::crypt::datadecrypt

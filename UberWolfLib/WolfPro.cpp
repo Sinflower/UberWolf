@@ -41,7 +41,8 @@
 #include "WolfUtils.h"
 #include "WolfXWrapper.h"
 
-#include "WolfCrypt/WolfCrypt.hpp"
+#include "WolfCrypt/WolfDxArcKey.hpp"
+#include "WolfCrypt/WolfProtKey.hpp"
 
 namespace fs = std::filesystem;
 
@@ -329,7 +330,7 @@ Key WolfPro::findDxArcKeyV1(std::vector<uint8_t>& byteData, const uint32_t& file
 
 Key WolfPro::findDxArcKeyV2(std::vector<uint8_t>& byteData) const
 {
-	Key key = wolf::crypt::calcKey(byteData);
+	Key key = wolf::crypt::dxarckey::v2::calcKey(byteData);
 	return key;
 }
 
@@ -402,7 +403,7 @@ Key WolfPro::findProtectionKeyV1(std::vector<uint8_t>& byteData) const
 
 Key WolfPro::findProtectionKeyV2(std::vector<uint8_t>& byteData) const
 {
-	Key key = wolf::crypt::calcKeyProt(byteData);
+	Key key = wolf::crypt::protkey::v2::calcProtKey(byteData);
 
 	if (key.empty())
 		ERROR_LOG << LOCALIZE("calc_prot_key_error_msg") << std::endl;

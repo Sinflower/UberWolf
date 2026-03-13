@@ -243,11 +243,14 @@
     <ClInclude Include="Types.h" />
     <ClInclude Include="UberWolfLib.h" />
     <ClInclude Include="Utils.h" />
+    <ClInclude Include="WolfCrypt\WolfCryptTypes.hpp" />
     <ClInclude Include="WolfCrypt\WolfDataDecrypt.hpp" />
     <ClInclude Include="WolfCrypt\WolfAes.hpp" />
     <ClInclude Include="WolfCrypt\WolfChaCha20.hpp" />
     <ClInclude Include="WolfCrypt\WolfCrypt.hpp" />
     <ClInclude Include="WolfCrypt\WolfCryptUtils.hpp" />
+    <ClInclude Include="WolfCrypt\WolfDxArcKey.hpp" />
+    <ClInclude Include="WolfCrypt\WolfProtKey.hpp" />
     <ClInclude Include="WolfCrypt\WolfRng.hpp" />
     <ClInclude Include="WolfCrypt\WolfSha512.hpp" />
     <ClInclude Include="WolfDec.h" />

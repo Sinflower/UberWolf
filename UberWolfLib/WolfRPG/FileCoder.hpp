@@ -452,7 +452,11 @@ private:
 
 	void cryptDatV2(Bytes& data)
 	{
-		wolf::crypt::CryptData cd = wolf::crypt::decryptV2File(data);
+		std::array<uint32_t, 3> seedIndices = { 0, 3, 9 }; // Default seed indices for everything except GameDat
+		if (m_seedIndices.size() >= 3)
+			seedIndices = { m_seedIndices[0], m_seedIndices[1], m_seedIndices[2] };
+
+		wolf::crypt::CryptData cd = wolf::crypt::datadecrypt::v3_3::decryptData(data, seedIndices);
 		data.assign(cd.gameDatBytes.begin(), cd.gameDatBytes.end());
 	}
 
@@ -504,7 +508,7 @@ private:
 	{
 		m_reader.Seek(0);
 		Bytes data = Read();
-		if (!wolf::crypt::data_decrypt::v3_5::decryptProV3Dat(data, m_fileType))
+		if (!wolf::crypt::datadecrypt::v3_5::decryptData(data, m_fileType))
 			throw WolfRPGException(ERROR_TAG + "Failed to decrypt ProV3 data.");
 
 		m_reader.InitData(data);

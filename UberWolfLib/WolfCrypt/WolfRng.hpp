@@ -247,4 +247,17 @@ inline void aLotOfRngStuff(RngData &rd, uint32_t a2, uint32_t a3, const uint32_t
 	cryptData[idx] += a3;
 }
 
+inline void runRngChain(rng::RngData &rd, const uint32_t &seed1, const uint32_t &seed2)
+{
+	rd.seed1   = seed1;
+	rd.seed2   = seed2;
+	rd.counter = 0;
+
+	srand(seed1);
+
+	for (uint32_t i = 0; i < rd.data.size(); i++)
+		rng::rngChain(rd, rd.data[i]);
+}
+
+
 } // namespace wolf::crypt::rng
