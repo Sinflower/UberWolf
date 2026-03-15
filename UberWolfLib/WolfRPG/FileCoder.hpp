@@ -574,20 +574,10 @@ private:
 	}
 #endif
 
-	void decryptV3_1()
+	void decryptV2_0(const uint8_t& indicator)
 	{
-		uint8_t indicator = ReadByte();
-
-		if (m_fileType == WolfFileType::DataBase)
-		{
-			if (m_reader.At(1) != 0x50 || m_reader.At(5) != 0x54 || m_reader.At(7) != 0x4B)
-				return;
-		}
-		else
-		{
-			if (indicator == 0x0)
-				return;
-		}
+		if (indicator == 0x0)
+			return;
 
 		Bytes header(CRYPT_HEADER_SIZE);
 		header[0] = indicator;
@@ -605,6 +595,19 @@ private:
 		cryptDatV1(data, seeds);
 
 		m_reader.InitData(data);
+	}
+
+	void decryptV3_1()
+	{
+		uint8_t indicator = ReadByte();
+
+		if (m_fileType == WolfFileType::DataBase)
+		{
+			if (m_reader.At(1) != 0x50 || m_reader.At(5) != 0x54 || m_reader.At(7) != 0x4B)
+				return;
+		}
+
+		decryptV2_0(indicator);
 
 		// Skip 5 bytes to get to the key size
 		m_reader.Skip(5);
@@ -624,6 +627,7 @@ private:
 
 		m_reader.Skip(keySize - 1);
 	}
+
 
 	void decryptV3_3()
 	{
@@ -682,13 +686,6 @@ private:
 			else
 				decryptV3_5();
 		}
-		else
-		{
-			// This is a bit of residue from earlier versions where the first byte was read to check for encryption.
-			// Because all classes expect this byte to be read it is currently just skipped.
-			// TOOD: Refactor the code to remove the need for this -- AFAIK encryption is only ever used starting with v3.1
-			Seek(1);
-		}
 
 		if (m_fileType == WolfFileType::Map)
 		{
@@ -698,6 +695,13 @@ private:
 			m_reader.Seek(25);
 			Unpack();
 			return;
+		}
+		else
+		{
+			uint8_t indicator = ReadByte();
+
+			if (indicator != 0x0 && m_fileType != WolfFileType::DataBase)
+				decryptV2_0(indicator);
 		}
 
 		if (m_fileType == WolfFileType::DataBase)
