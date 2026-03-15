@@ -91,17 +91,17 @@ void unprotectProject(std::vector<uint8_t> &projData)
 		byte ^= static_cast<uint8_t>(rand());
 }
 
-void unprotectProFiles(const std::wstring &folder)
+void unprotectProFiles(const std::filesystem::path &basicDataPath)
 {
 	// Create a backup folder and copy the original file
-	const std::filesystem::path backupFolder = std::filesystem::path(folder) / L"backup";
+	const std::filesystem::path backupFolder = basicDataPath / L"backup";
 	if (!std::filesystem::exists(backupFolder))
 		std::filesystem::create_directory(backupFolder);
 
 	for (const std::string &file : PROTECTED_FILES)
 	{
 		INFO_LOG << vFormat(LOCALIZE("remove_prot"), std::filesystem::path(file).wstring()) << std::flush;
-		const std::filesystem::path filePath = std::filesystem::path(folder) / file;
+		const std::filesystem::path filePath = basicDataPath / file;
 		const WolfFileType datType           = getWolfFileType(filePath);
 
 		if (!std::filesystem::exists(filePath))
@@ -133,7 +133,7 @@ void unprotectProFiles(const std::wstring &folder)
 		{
 			try
 			{
-				CommonEvents comEv(filePath.wstring());
+				CommonEvents comEv(filePath);
 
 				if (!comEv.IsValid())
 				{
@@ -146,7 +146,7 @@ void unprotectProFiles(const std::wstring &folder)
 				comEv.FixPro35EventDescriptions();
 
 				// Dump the fixed CommonEvent back into the folder
-				comEv.Dump(folder);
+				comEv.Dump(basicDataPath, basicDataPath);
 			}
 			catch (const std::exception &e)
 			{
@@ -170,7 +170,7 @@ void unprotectProFiles(const std::wstring &folder)
 
 			try
 			{
-				Database db(projPath.wstring(), filePath.wstring());
+				Database db(projPath, filePath);
 
 				if (!db.IsValid())
 				{
@@ -183,7 +183,7 @@ void unprotectProFiles(const std::wstring &folder)
 				db.FixPro35TypeDescriptions();
 
 				// Dump the fixed Database back into the folder
-				db.Dump(folder);
+				db.Dump(basicDataPath);
 			}
 			catch (const std::exception &e)
 			{

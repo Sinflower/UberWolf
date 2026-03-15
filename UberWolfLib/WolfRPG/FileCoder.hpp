@@ -40,6 +40,10 @@
 #include <lz4/lz4.h>
 #include <string>
 
+#ifndef _WIN32
+#include <iconv.h>
+#endif
+
 // TODO:
 // - Create Wrapper class for reader / writer to have mode independent access object
 // - Remove static headers
@@ -113,7 +117,7 @@ public:
 	// Disable Copy/Move constructor
 	DISABLE_COPY_MOVE(FileCoder)
 
-	FileCoder(const tString& fileName, const Mode& mode, const WolfFileType& fileType, const uInts& seedIndices = uInts(), const Bytes& cryptHeader = Bytes()) :
+	FileCoder(const std::filesystem::path& filePath, const Mode& mode, const WolfFileType& fileType, const uInts& seedIndices = uInts(), const Bytes& cryptHeader = Bytes()) :
 		m_cryptHeader(cryptHeader),
 		m_mode(mode),
 		m_seedIndices(seedIndices),
@@ -121,15 +125,15 @@ public:
 	{
 		if (mode == Mode::READ)
 		{
-			m_reader.Open(fileName);
+			m_reader.Open(filePath);
 			load();
 		}
 		else if (mode == Mode::WRITE)
 		{
 			if (s_createBackup)
-				CreateBackup(fileName);
+				CreateBackup(filePath);
 
-			m_writer.Open(fileName);
+			m_writer.Open(filePath);
 
 			if (!m_seedIndices.empty() && !cryptHeader.empty())
 			{
@@ -210,7 +214,7 @@ public:
 	{
 	}
 
-	const DWORD& GetSize() const
+	const uint32_t& GetSize() const
 	{
 		return m_reader.GetSize();
 	}
@@ -229,7 +233,7 @@ public:
 	{
 		if (m_mode == Mode::READ)
 		{
-			DWORD o = m_reader.GetOffset() + pos;
+			uint32_t o = m_reader.GetOffset() + pos;
 			m_reader.Seek(o);
 		}
 	}
@@ -242,7 +246,7 @@ public:
 		return false;
 	}
 
-	Bytes Read(const size_t& size = -1)
+	Bytes Read(const std::size_t& size = -1)
 	{
 		Bytes data;
 
@@ -250,7 +254,7 @@ public:
 			data.resize(size);
 		else
 		{
-			DWORD remainingSize = m_reader.GetSize() - m_reader.GetOffset();
+			uint32_t remainingSize = m_reader.GetSize() - m_reader.GetOffset();
 			data.resize(remainingSize);
 		}
 
@@ -346,7 +350,7 @@ public:
 		s_isUTF8 = isUTF8;
 	}
 
-	void Skip(const DWORD& size)
+	void Skip(const uint32_t& size)
 	{
 		m_reader.Skip(size);
 	}
@@ -367,6 +371,11 @@ public:
 	void WriteByte(const uint8_t& data)
 	{
 		m_writer.Write(data);
+	}
+
+	void DumpReader(const std::filesystem::path& dumpFilePath)
+	{
+		m_reader.DumpToFile(dumpFilePath);
 	}
 
 #ifdef BIT_64
@@ -468,12 +477,13 @@ private:
 			byte ^= static_cast<uint8_t>(rand());
 	}
 
+#ifdef _WIN32
 	static tString sjis2utf8(const Bytes& sjis)
 	{
-		const LPCCH pSJIS = reinterpret_cast<const LPCCH>(sjis.data());
+		const char* pSJIS = reinterpret_cast<const char*>(sjis.data());
 		int sjisSize      = MultiByteToWideChar(932, 0, pSJIS, -1, NULL, 0);
 
-		WCHAR* pUTF8 = new WCHAR[sjisSize + 1]();
+		wchar_t* pUTF8 = new wchar_t[sjisSize + 1]();
 		MultiByteToWideChar(932, 0, pSJIS, -1, pUTF8, sjisSize);
 		tString utf8(pUTF8);
 		delete[] pUTF8;
@@ -485,10 +495,134 @@ private:
 		// Empty strings are length 1 with terminating 0
 		if (utf8.empty()) return Bytes(1, 0);
 
-		int utf8Size = WideCharToMultiByte(932, 0, &utf8[0], (int)utf8.size(), NULL, 0, NULL, NULL);
+		int utf8Size = WideCharToMultiByte(932, 0, &utf8[0], static_cast<int32_t>(utf8.size()), NULL, 0, NULL, NULL);
 		Bytes sjis(utf8Size + 1, 0);
-		WideCharToMultiByte(932, 0, &utf8[0], (int)utf8.size(), reinterpret_cast<const LPSTR>(sjis.data()), utf8Size, NULL, NULL);
+		WideCharToMultiByte(932, 0, &utf8[0], static_cast<int32_t>(utf8.size()), reinterpret_cast<char*>(sjis.data()), utf8Size, NULL, NULL);
 		return sjis;
+	}
+#else
+	static tString sjis2utf8(const Bytes& sjis)
+	{
+		iconv_t cd = iconv_open("UTF-8", "SHIFT-JIS");
+		if (cd == (iconv_t)-1)
+			throw WolfRPGException("iconv_open failed");
+
+		// Allocate output buffer (UTF-8 can be up to 4 bytes per character)
+		std::size_t inBytesLeft  = sjis.size();
+		std::size_t outBytesLeft = inBytesLeft * 4;
+		std::vector<char> output(outBytesLeft);
+
+		char* pInBuf  = const_cast<char*>(reinterpret_cast<const char*>(sjis.data()));
+		char* pOutBuf = output.data();
+
+		size_t result = iconv(cd, &pInBuf, &inBytesLeft, &pOutBuf, &outBytesLeft);
+		if (result == (std::size_t)-1)
+		{
+			iconv_close(cd);
+			throw WolfRPGException("iconv conversion failed");
+		}
+
+		std::string converted(output.data(), output.size() - outBytesLeft);
+		std::wstring r = ToUTF16(converted);
+
+		iconv_close(cd);
+		return r;
+	}
+
+	static Bytes utf82sjis(const tString& utf8)
+	{
+		iconv_t cd = iconv_open("SHIFT-JIS", "UTF-8");
+		if (cd == (iconv_t)-1)
+			throw WolfRPGException("iconv_open failed");
+
+		std::string u = ToUTF8(utf8);
+
+		std::size_t inBytesLeft  = u.size();
+		std::size_t outBytesLeft = inBytesLeft * 2; // SJIS max ~2 bytes per char
+		std::vector<char> output(outBytesLeft);
+
+		char* pInBuf  = const_cast<char*>(u.data());
+		char* pOutBuf = output.data();
+
+		while (inBytesLeft > 0)
+		{
+			std::size_t result = iconv(cd, &pInBuf, &inBytesLeft, &pOutBuf, &outBytesLeft);
+
+			if (result == (std::size_t)-1)
+			{
+				if (errno == E2BIG)
+				{
+					// Enlarge buffer and retry
+					std::size_t used = output.size() - outBytesLeft;
+					output.resize(output.size() * 2);
+					pOutBuf      = output.data() + used;
+					outBytesLeft = output.size() - used;
+				}
+				else
+				{
+					iconv_close(cd);
+					throw WolfRPGException("iconv conversion failed");
+				}
+			}
+		}
+
+		Bytes converted;
+		converted.assign(output.data(), output.data() + (output.size() - outBytesLeft));
+
+		iconv_close(cd);
+		return converted;
+	}
+#endif
+
+	void decryptV3_1()
+	{
+		uint8_t indicator = ReadByte();
+
+		if (m_fileType == WolfFileType::DataBase)
+		{
+			if (m_reader.At(1) != 0x50 || m_reader.At(5) != 0x54 || m_reader.At(7) != 0x4B)
+				return;
+		}
+		else
+		{
+			if (indicator == 0x0)
+				return;
+		}
+
+		Bytes header(CRYPT_HEADER_SIZE);
+		header[0] = indicator;
+
+		for (int i = 1; i < CRYPT_HEADER_SIZE; i++)
+			header[i] = ReadByte();
+
+		Bytes seeds;
+		for (size_t i = 0; i < m_seedIndices.size(); i++)
+			seeds.push_back(header[m_seedIndices[i]]);
+
+		m_cryptHeader = header;
+
+		Bytes data = Read();
+		cryptDatV1(data, seeds);
+
+		m_reader.InitData(data);
+
+		// Skip 5 bytes to get to the key size
+		m_reader.Skip(5);
+		uint32_t keySize = m_reader.ReadUInt32();
+
+		if (m_fileType == WolfFileType::GameDat)
+		{
+			// Skip over the key it since it's not needed here
+			m_reader.Skip(keySize);
+			return;
+		}
+
+		int8_t projKey = m_reader.ReadInt8();
+
+		if (s_projKey == -1)
+			s_projKey = projKey;
+
+		m_reader.Skip(keySize - 1);
 	}
 
 	void decryptV3_3()
@@ -534,13 +668,26 @@ private:
 
 		if (m_reader.At(1) == 0x50)
 		{
-			if (m_reader.At(5) < 0x57)
+			uint8_t cryptVersion = m_reader.At(5);
+			if (cryptVersion < 0x55)
+			{
+				decryptV3_1();
+				return;
+			}
+			else if (cryptVersion < 0x57)
 			{
 				decryptV3_3();
 				return;
 			}
 			else
 				decryptV3_5();
+		}
+		else
+		{
+			// This is a bit of residue from earlier versions where the first byte was read to check for encryption.
+			// Because all classes expect this byte to be read it is currently just skipped.
+			// TOOD: Refactor the code to remove the need for this -- AFAIK encryption is only ever used starting with v3.1
+			Seek(1);
 		}
 
 		if (m_fileType == WolfFileType::Map)
@@ -550,57 +697,18 @@ private:
 			// The first 25 bytes are the header -- TODO: remove magic numbers (here and elsewhere)
 			m_reader.Seek(25);
 			Unpack();
+			return;
 		}
-		else
+
+		if (m_fileType == WolfFileType::DataBase)
 		{
-			uint8_t indicator = ReadByte();
-
-			if (m_fileType == WolfFileType::DataBase)
+			if (m_reader.At(10) == 0xC4)
 			{
-				if (m_reader.At(10) == 0xC4)
-				{
-					m_reader.Seek(11);
-					Unpack();
-					m_reader.Seek(1);
-					return;
-				}
-
-				if (m_reader.At(1) != 0x50 || m_reader.At(5) != 0x54 || m_reader.At(7) != 0x4B)
-					return;
+				m_reader.Seek(11);
+				Unpack();
+				m_reader.Seek(1);
+				return;
 			}
-			else
-			{
-				if (indicator == 0x0)
-					return;
-			}
-
-			Bytes header(CRYPT_HEADER_SIZE);
-			header[0] = indicator;
-
-			for (int i = 1; i < CRYPT_HEADER_SIZE; i++)
-				header[i] = ReadByte();
-
-			Bytes seeds;
-			for (size_t i = 0; i < m_seedIndices.size(); i++)
-				seeds.push_back(header[m_seedIndices[i]]);
-
-			m_cryptHeader = header;
-
-			Bytes data = Read();
-			cryptDatV1(data, seeds);
-
-			m_reader.InitData(data);
-
-			if (m_fileType == WolfFileType::GameDat) return;
-
-			m_reader.Skip(5);
-			uint32_t keySize = m_reader.ReadUInt32();
-			int8_t projKey   = m_reader.ReadInt8();
-
-			if (s_projKey == -1)
-				s_projKey = projKey;
-
-			m_reader.Skip(keySize - 1);
 		}
 	}
 

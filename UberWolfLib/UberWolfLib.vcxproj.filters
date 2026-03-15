@@ -260,6 +260,9 @@
     <ClInclude Include="WolfCrypt\WolfDxArcKey.hpp">
       <Filter>Header Files\WolfCrypt</Filter>
     </ClInclude>
+    <ClInclude Include="WolfRPG\StringConv.hpp">
+      <Filter>Header Files\WolfRPG</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="UberWolfLib.rc">

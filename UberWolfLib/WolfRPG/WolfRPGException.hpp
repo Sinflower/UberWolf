@@ -29,7 +29,7 @@
 #include <exception>
 #include <string>
 
-#include "WolfRPGUtils.hpp"
+#include "StringConv.hpp"
 
 class WolfRPGException : public std::exception
 {

@@ -263,6 +263,7 @@
     <ClInclude Include="WolfRPG\GameDat.hpp" />
     <ClInclude Include="WolfRPG\Map.hpp" />
     <ClInclude Include="WolfRPG\RouteCommand.hpp" />
+    <ClInclude Include="WolfRPG\StringConv.hpp" />
     <ClInclude Include="WolfRPG\Types.hpp" />
     <ClInclude Include="WolfRPG\WolfDataBase.hpp" />
     <ClInclude Include="WolfRPG\WolfRPG.hpp" />

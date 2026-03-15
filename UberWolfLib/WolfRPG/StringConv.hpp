@@ -1,6 +1,6 @@
 /*
- *  File: Types.hpp
- *  Copyright (c) 2024 Sinflower
+ *  File: StringConv.hpp
+ *  Copyright (c) 2026 Sinflower
  *
  *  MIT License
  *
@@ -26,57 +26,17 @@
 
 #pragma once
 
-#include <filesystem>
-#include <string>
-#include <vector>
+#include <codecvt>
+#include <locale>
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
-// Check MSVC
-#if _WIN32 || _WIN64
-#if _WIN64
-#define BIT_64
-#else
-#define BIT_32
-#endif
-#endif
-
-// Check GCC
-#if __GNUC__
-#if __x86_64__ || __ppc64__
-#define BIT_64
-#else
-#define BIT_32
-#endif
-#endif
-
-// Define the TEXT macro and the TCHAR alias if not on Windows
-#ifndef _WIN32
-#define __TEXT(quote) L##quote
-#define TEXT(quote)   __TEXT(quote)
-using TCHAR = wchar_t;
-#endif
-
-using Bytes    = std::vector<uint8_t>;
-using uInts    = std::vector<uint32_t>;
-using tString  = std::wstring;
-using tStrings = std::vector<tString>;
-using Paths    = std::vector<std::filesystem::path>;
-
-#define DISABLE_COPY_MOVE(T)             \
-	T(T const &)               = delete; \
-	void operator=(T const &t) = delete; \
-	T(T &&)                    = delete;
-
-enum class WolfFileType
+inline std::wstring ToUTF16(const std::string& utf8String)
 {
-	GameDat,
-	CommonEvent,
-	DataBase,
-	Project,
-	Map,
-	TileSetData,
-	None
-};
+	static std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+	return conv.from_bytes(utf8String);
+}
+
+inline std::string ToUTF8(const std::wstring& utf16String)
+{
+	static std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+	return conv.to_bytes(utf16String);
+}

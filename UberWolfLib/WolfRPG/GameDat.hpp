@@ -38,15 +38,15 @@
 class GameDat : public WolfDataBase
 {
 public:
-	explicit GameDat(const tString& fileName = L"") :
-		WolfDataBase(fileName, MAGIC_NUMBER, WolfFileType::GameDat, SEED_INDICES)
+	explicit GameDat(const std::filesystem::path& filePath = "", const bool& saveUncompressed = false) :
+		WolfDataBase(filePath, MAGIC_NUMBER, WolfFileType::GameDat, saveUncompressed, SEED_INDICES)
 	{
-		if (!fileName.empty())
-			Load(fileName);
+		if (!filePath.empty())
+			Load(filePath);
 	}
 
 	explicit GameDat(const Bytes& buffer) :
-		WolfDataBase(L"Game.dat", MAGIC_NUMBER, WolfFileType::GameDat, SEED_INDICES)
+		WolfDataBase(L"Game.dat", MAGIC_NUMBER, WolfFileType::GameDat, false, SEED_INDICES)
 	{
 		Load(buffer);
 	}
@@ -189,6 +189,11 @@ protected:
 			j["TitleMsg"]   = ToUTF8(m_titleMsg);
 		}
 
+		j["MainFont"] = ToUTF8(m_font);
+		j["SubFonts"] = nlohmann::ordered_json::array();
+		for (const tString& font : m_subFonts)
+			j["SubFonts"].push_back(ToUTF8(font));
+
 		return j;
 	}
 
@@ -202,6 +207,11 @@ protected:
 			m_startUpMsg = ToUTF16(j["StartUpMsg"]);
 			m_titleMsg   = ToUTF16(j["TitleMsg"]);
 		}
+
+		m_font = ToUTF16(j["MainFont"]);
+		m_subFonts.clear();
+		for (const auto& subFont : j["SubFonts"])
+			m_subFonts.push_back(ToUTF16(subFont));
 	}
 
 private:

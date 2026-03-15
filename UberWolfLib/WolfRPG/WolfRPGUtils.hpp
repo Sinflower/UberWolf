@@ -27,13 +27,12 @@
 #pragma once
 
 #include "Types.hpp"
+#include "WolfRPGException.hpp"
 
-#include <codecvt>
 #include <filesystem>
 #include <format>
 #include <iomanip>
 #include <iostream>
-#include <locale>
 #include <regex>
 #include <source_location>
 #include <sstream>
@@ -105,41 +104,32 @@ inline std::wstring Dec2HexW(T i)
 	return stream.str();
 }
 
-inline const tString GetFileName(const tString& file)
+inline const std::filesystem::path GetFileName(const std::filesystem::path& file)
 {
-	return std::filesystem::path(file).filename();
+	return file.filename();
 }
 
-inline const tString GetFileNameNoExt(const tString& file)
+inline const std::filesystem::path GetFileNameNoExt(const std::filesystem::path& file)
 {
-	return std::filesystem::path(file).stem().wstring();
+	return file.stem();
 }
 
-inline std::wstring ToUTF16(const std::string& utf8String)
-{
-	static std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-	return conv.from_bytes(utf8String);
-}
-
-inline std::string ToUTF8(const std::wstring& utf16String)
-{
-	static std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-	return conv.to_bytes(utf16String);
-}
-
-inline void CreateBackup(const tString& file)
+inline void CreateBackup(const std::filesystem::path& filePath)
 {
 	// If the skip backup flag is set, do not create a backup
 	if (wolfRPGUtils::g_skipBackup) return;
 
 	// If the file does not exist, do not create a backup
-	if (!std::filesystem::exists(file)) return;
+	if (!std::filesystem::exists(filePath)) return;
+
+	std::filesystem::path bakPath = filePath;
+	bakPath += ".bak";
 
 	// If the backup file already exists, do not create a new backup
-	if (std::filesystem::exists(file + L".bak")) return;
+	if (std::filesystem::exists(bakPath)) return;
 
 	// Create a backup of the file
-	std::filesystem::copy_file(file, file + L".bak");
+	std::filesystem::copy_file(filePath, bakPath);
 }
 
 inline tString StrReplaceAll(tString str, const tString& from, const tString& to)
@@ -184,4 +174,16 @@ inline bool FilenameAnyOf(const std::filesystem::path& path, const std::vector<s
 	return false;
 }
 
-inline tString g_activeFile = L"";
+inline void CheckAndCreateDir(const std::filesystem::path& path)
+{
+	if (!std::filesystem::exists(path))
+	{
+		if (!std::filesystem::create_directories(path))
+		{
+			if (!std::filesystem::exists(path))
+				throw WolfRPGException(ERROR_TAGW + L"Failed to create directory: " + path.wstring());
+		}
+	}
+}
+
+inline std::filesystem::path g_activeFile = L"";

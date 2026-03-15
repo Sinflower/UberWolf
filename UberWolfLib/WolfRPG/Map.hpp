@@ -400,11 +400,11 @@ using Events = std::vector<Event>;
 class Map : public WolfDataBase
 {
 public:
-	explicit Map(const tString& fileName = L"") :
-		WolfDataBase(fileName, MAGIC_NUMBER, WolfFileType::Map)
+	explicit Map(const std::filesystem::path& filePath = "", const bool& saveUncompressed = false) :
+		WolfDataBase(filePath, MAGIC_NUMBER, WolfFileType::Map, saveUncompressed)
 	{
-		if (!fileName.empty())
-			Load(fileName);
+		if (!filePath.empty())
+			Load(filePath);
 	}
 
 	const Events& GetEvents() const
@@ -464,7 +464,7 @@ protected:
 			throw WolfRPGException(ERROR_TAG + "Unexpected event indicator: " + Dec2Hex(indicator) + " expected 0x66");
 
 		if (!coder.IsEof())
-			throw WolfRPGException(ERROR_TAGW + L"Map [" + m_fileName + L"] has more data than expected");
+			throw WolfRPGException(ERROR_TAGW + L"Map [" + m_filePath.filename().wstring() + L"] has more data than expected");
 
 		return true;
 	}

@@ -434,6 +434,7 @@ public:
 	{
 		coder.Write(DAT_TYPE_SEPARATOR);
 		coder.WriteInt(m_unknown1);
+
 		coder.WriteInt(m_fieldsSize);
 
 		if (m_unknown1 == STRING_INDICATOR)
@@ -526,31 +527,33 @@ using Types = std::vector<Type>;
 class Database
 {
 public:
-	Database(const tString& projectFileName, const tString& datFileName) :
-		m_projectFileName(projectFileName),
-		m_datFileName(datFileName)
+	Database(const std::filesystem::path& projectFilePath, const std::filesystem::path& datFilePath) :
+		m_projectFilePath(projectFilePath),
+		m_datFilePath(datFilePath)
 	{
 		m_valid = init();
 	}
 
-	void Dump(const tString& outputDir) const
+	void Dump(const std::filesystem::path& outputPath) const
 	{
 		{
-			const tString fileName = ::GetFileName(m_projectFileName);
+			const std::filesystem::path fileName = ::GetFileName(m_projectFilePath);
+
 			g_activeFile           = fileName;
 
-			tString outputFN = outputDir + L"/" + fileName;
-			FileCoder coder(outputFN, FileCoder::Mode::WRITE, WolfFileType::Project);
+			std::filesystem::path outputFilePath = outputPath / fileName;
+			FileCoder coder(outputFilePath, FileCoder::Mode::WRITE, WolfFileType::Project);
 			coder.WriteInt(m_types.size());
 			for (const Type& type : m_types)
 				type.DumpProject(coder);
 		}
 
-		const tString fileName = ::GetFileName(m_datFileName);
+		const std::filesystem::path fileName = ::GetFileName(m_datFilePath);
+
 		g_activeFile           = fileName;
 
-		tString outputFN = outputDir + L"/" + fileName;
-		FileCoder coder(outputFN, FileCoder::Mode::WRITE, WolfFileType::DataBase, DAT_SEED_INDICES);
+		std::filesystem::path outputFilePath = outputPath / fileName;
+		FileCoder coder(outputFilePath, FileCoder::Mode::WRITE, WolfFileType::DataBase, DAT_SEED_INDICES);
 		FileCoder bufCoder(FileCoder::Mode::WRITE, WolfFileType::DataBase);
 		FileCoder* pCoder = &coder;
 
@@ -573,9 +576,10 @@ public:
 		}
 	}
 
-	void ToJson(const tString& outputFolder) const
+	void ToJson(const std::filesystem::path& outputPath) const
 	{
-		const tString fileName = ::GetFileNameNoExt(m_datFileName);
+		const std::filesystem::path fileName = ::GetFileNameNoExt(m_datFilePath);
+
 		g_activeFile           = fileName;
 
 		nlohmann::ordered_json j;
@@ -584,25 +588,29 @@ public:
 		for (const Type& type : m_types)
 			j["types"].push_back(type.ToJson());
 
-		const tString outputFile = outputFolder + L"/" + fileName + L".json";
+		std::filesystem::path outputFilePath = outputPath / fileName;
+		outputFilePath += ".json";
 
-		std::ofstream out(outputFile);
+		std::ofstream out(outputFilePath);
 		out << j.dump(4);
 
 		out.close();
 	}
 
-	void Patch(const tString& patchFolder)
+	void Patch(const std::filesystem::path& patchFolderPath)
 	{
-		const tString fileName = ::GetFileNameNoExt(m_datFileName);
+		const std::filesystem::path fileName = ::GetFileNameNoExt(m_datFilePath);
+
 		g_activeFile           = fileName;
 
-		const tString patchFile = patchFolder + L"/" + fileName + L".json";
-		if (!std::filesystem::exists(patchFile))
-			throw WolfRPGException(ERROR_TAGW + L"Patch file not found: " + patchFile);
+		std::filesystem::path patchFilePath = patchFolderPath / fileName;
+		patchFilePath += ".json";
+
+		if (!std::filesystem::exists(patchFilePath))
+			throw WolfRPGException(ERROR_TAGW + L"Patch file not found: " + patchFilePath.wstring());
 
 		nlohmann::ordered_json j;
-		std::ifstream in(patchFile);
+		std::ifstream in(patchFilePath);
 		in >> j;
 		in.close();
 
@@ -634,8 +642,8 @@ public:
 private:
 	bool init()
 	{
-		g_activeFile = ::GetFileName(m_datFileName);
-		FileCoder coder(m_datFileName, FileCoder::Mode::READ, WolfFileType::DataBase, DAT_SEED_INDICES);
+		g_activeFile = ::GetFileName(m_datFilePath);
+		FileCoder coder(m_datFilePath, FileCoder::Mode::READ, WolfFileType::DataBase, DAT_SEED_INDICES);
 		if (coder.IsEncrypted())
 			m_cryptHeader = coder.GetCryptHeader();
 		else
@@ -645,21 +653,21 @@ private:
 
 		// Process the project file
 		{
-			g_activeFile = ::GetFileName(m_projectFileName);
-			FileCoder coder(m_projectFileName, FileCoder::Mode::READ, WolfFileType::Project);
+			g_activeFile = ::GetFileName(m_projectFilePath);
+			FileCoder coder(m_projectFilePath, FileCoder::Mode::READ, WolfFileType::Project);
 			uint32_t typeCnt = coder.ReadInt();
 			for (uint32_t i = 0; i < typeCnt; i++)
 				m_types.push_back(Type(coder));
 
 			if (!coder.IsEof())
-				throw WolfRPGException(ERROR_TAGW + L"Database [" + m_projectFileName + L"] has more data than expected");
+				throw WolfRPGException(ERROR_TAGW + L"Database [" + m_projectFilePath.wstring() + L"] has more data than expected");
 		}
 
-		g_activeFile     = ::GetFileName(m_datFileName);
+		g_activeFile     = ::GetFileName(m_datFilePath);
 		uint32_t typeCnt = coder.ReadInt();
 		if (typeCnt != m_types.size())
 		{
-			throw WolfRPGException(ERROR_TAGW + L"Database [" + m_datFileName + L"] project and dat type count mismatch expected: " + std::to_wstring(m_types.size()) + L"  - got: " + std::to_wstring(typeCnt));
+			throw WolfRPGException(ERROR_TAGW + L"Database [" + m_datFilePath.wstring() + L"] project and dat type count mismatch expected: " + std::to_wstring(m_types.size()) + L"  - got: " + std::to_wstring(typeCnt));
 			return false;
 		}
 
@@ -675,10 +683,10 @@ private:
 		}
 
 		if (coder.ReadByte() != m_version)
-			throw WolfRPGException(ERROR_TAGW + L"No " + Dec2HexW(m_version) + L" terminator at the end of \"" + m_datFileName + L"\"");
+			throw WolfRPGException(ERROR_TAGW + L"No " + Dec2HexW(m_version) + L" terminator at the end of \"" + m_datFilePath.wstring() + L"\"");
 
 		if (!coder.IsEof())
-			throw WolfRPGException(ERROR_TAGW + L"Database [" + m_datFileName + L"] has more data than expected");
+			throw WolfRPGException(ERROR_TAGW + L"Database [" + m_datFilePath.wstring() + L"] has more data than expected");
 
 		return true;
 	}
@@ -687,10 +695,10 @@ private:
 	Types m_types       = {};
 	Bytes m_cryptHeader = {};
 
-	BYTE m_version = 0;
+	uint8_t m_version = 0;
 	bool m_valid   = false;
-	tString m_projectFileName;
-	tString m_datFileName;
+	std::filesystem::path m_projectFilePath;
+	std::filesystem::path m_datFilePath;
 
 	inline static const uInts DAT_SEED_INDICES{ 0, 3, 9 };
 	inline static const MagicNumber DAT_MAGIC_NUMBER{ { 0x57, 0x00, 0x00, 0x4F, 0x4C, 0x00, 0x46, 0x4D, 0x00 }, 5 };
