@@ -109,10 +109,10 @@ public:
 
 		m_size = static_cast<uint32_t>(m_dataVec.size());
 		m_init = true;
-		}
+	}
 
 	void Open(const std::filesystem::path& filePath, const uint32_t& startOffset = 0)
-		{
+	{
 		open(filePath, startOffset);
 	}
 
@@ -391,7 +391,7 @@ private:
 	}
 
 private:
-	bool m_init       = false;
+	bool m_init = false;
 
 #ifdef _WIN32
 	HANDLE m_pFile    = nullptr;
@@ -566,9 +566,9 @@ private:
 	}
 
 private:
-	bool m_bufferMode          = true;
-	uint64_t m_size            = 0;
-	std::fstream m_file        = {};
+	bool m_bufferMode   = true;
+	uint64_t m_size     = 0;
+	std::fstream m_file = {};
 
 	std::vector<uint8_t> m_buffer = {};
 };

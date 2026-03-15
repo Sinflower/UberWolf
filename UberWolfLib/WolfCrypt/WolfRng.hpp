@@ -259,5 +259,4 @@ inline void runRngChain(rng::RngData &rd, const uint32_t &seed1, const uint32_t 
 		rng::rngChain(rd, rd.data[i]);
 }
 
-
 } // namespace wolf::crypt::rng

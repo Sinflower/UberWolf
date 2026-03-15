@@ -539,7 +539,7 @@ public:
 		{
 			const std::filesystem::path fileName = ::GetFileName(m_projectFilePath);
 
-			g_activeFile           = fileName;
+			g_activeFile = fileName;
 
 			std::filesystem::path outputFilePath = outputPath / fileName;
 			FileCoder coder(outputFilePath, FileCoder::Mode::WRITE, WolfFileType::Project);
@@ -550,7 +550,7 @@ public:
 
 		const std::filesystem::path fileName = ::GetFileName(m_datFilePath);
 
-		g_activeFile           = fileName;
+		g_activeFile = fileName;
 
 		std::filesystem::path outputFilePath = outputPath / fileName;
 		FileCoder coder(outputFilePath, FileCoder::Mode::WRITE, WolfFileType::DataBase, DAT_SEED_INDICES);
@@ -580,7 +580,7 @@ public:
 	{
 		const std::filesystem::path fileName = ::GetFileNameNoExt(m_datFilePath);
 
-		g_activeFile           = fileName;
+		g_activeFile = fileName;
 
 		nlohmann::ordered_json j;
 		j["types"] = nlohmann::json::array();
@@ -601,7 +601,7 @@ public:
 	{
 		const std::filesystem::path fileName = ::GetFileNameNoExt(m_datFilePath);
 
-		g_activeFile           = fileName;
+		g_activeFile = fileName;
 
 		std::filesystem::path patchFilePath = patchFolderPath / fileName;
 		patchFilePath += ".json";
@@ -696,7 +696,7 @@ private:
 	Bytes m_cryptHeader = {};
 
 	uint8_t m_version = 0;
-	bool m_valid   = false;
+	bool m_valid      = false;
 	std::filesystem::path m_projectFilePath;
 	std::filesystem::path m_datFilePath;
 

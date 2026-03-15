@@ -100,7 +100,7 @@ public:
 
 		const std::filesystem::path fileName = ::GetFileName(m_filePath);
 
-		g_activeFile           = fileName;
+		g_activeFile = fileName;
 
 		// Get the relative path of the dataPath (absolute path to the data folder) and the parent path of the file, i.e., the difference between the two paths.
 		// This results in the subfolder structure which are required to produce the correct output path.
@@ -118,7 +118,7 @@ public:
 	{
 		const std::filesystem::path fileName = ::GetFileNameNoExt(m_filePath);
 
-		g_activeFile           = fileName;
+		g_activeFile = fileName;
 
 		std::filesystem::path outputFilePath = outputPath / fileName;
 		outputFilePath += ".json"; // Don't use replace_extension here in case the filename contains a dot
@@ -133,7 +133,7 @@ public:
 	{
 		const std::filesystem::path fileName = ::GetFileNameNoExt(m_filePath);
 
-		g_activeFile           = fileName;
+		g_activeFile = fileName;
 
 		std::filesystem::path patchFilePath = patchPath / fileName;
 		patchFilePath += ".json"; // Don't use replace_extension here in case the filename contains a dot

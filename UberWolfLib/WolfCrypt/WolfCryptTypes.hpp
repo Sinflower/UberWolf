@@ -46,4 +46,4 @@ struct CryptData
 	uint32_t seed2 = 0;
 };
 
-};
+}; // namespace wolf::crypt

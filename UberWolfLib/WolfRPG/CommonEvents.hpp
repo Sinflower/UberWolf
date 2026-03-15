@@ -326,7 +326,7 @@ public:
 			nlohmann::ordered_json j = ev.ToJson();
 
 			// Get the file name without the extension
-			const tString comEvName  = std::format(TEXT("{}_{}"), ev.GetID(), EscapePath(ev.GetName()));
+			const tString comEvName = std::format(TEXT("{}_{}"), ev.GetID(), EscapePath(ev.GetName()));
 
 			std::filesystem::path outputFilePath = outputPath / comEvName;
 			outputFilePath += ".json"; // Don't use replace_extension here in case the filename contains a dot

@@ -354,5 +354,4 @@ inline void aesKeyGen(CryptData &cd, rng::RngData &rd, aes::AesKey &aesKey, aes:
 	std::copy(ivBegin, ivBegin + aes::IV_SIZE, aesIv.begin());
 }
 
-
 } // namespace wolf::crypt

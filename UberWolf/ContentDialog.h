@@ -246,7 +246,7 @@ private:
 			return;
 
 		const std::filesystem::path basePath = exePath.parent_path();
-		const tString dataPath  = FS_PATH_TO_TSTRING(basePath) + TEXT("/") + GetWolfDataFolder();
+		const tString dataPath               = FS_PATH_TO_TSTRING(basePath) + TEXT("/") + GetWolfDataFolder();
 
 		// Check if the data folder or data.wolf file exist
 		if (!std::filesystem::exists(dataPath) && !ExistsWolfDataFile(basePath))
