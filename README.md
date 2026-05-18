@@ -58,3 +58,4 @@ UberWolfCli.exe "D:\Path to Game\Data\BasicData.wolf"
 - Japanese (MTL) - Brothers3398
 - Korean (MTL) - Brothers3398
 - Chinese - Raylern
+- Traditional Chinese - love80312
