@@ -284,7 +284,7 @@ private:
 		}
 
 		result = uwl.DecryptWolfXFiles();
-		if (result != UWLExitCode::SUCCESS)
+		if (result != UWLExitCode::SUCCESS && result != UWLExitCode::NOT_WOLF_PRO)
 		{
 			MessageBox(hWnd(), LOCW("error_msg_5"), LOCW("error"), MB_OK | MB_ICONERROR);
 			setButtonStates(TRUE);
