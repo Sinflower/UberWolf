@@ -17,6 +17,7 @@
 #define IDR_LOCAL_KO                    137
 #define IDR_LOCAL_CN                    138
 #define IDR_LOCAL_ZH_TW                 139
+#define IDR_LOCAL_RU                    140
 #define IDC_SELECT_GAME                 1000
 #define IDC_GAME_LOCATION               1001
 #define IDC_LABEL_DROP_FILE             1002
