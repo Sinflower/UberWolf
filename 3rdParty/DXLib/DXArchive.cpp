@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <windows.h>
+#include <array>
 
 // define -----------------------------
 
@@ -2004,19 +2005,13 @@ int DXArchive::Decode(void *Src, void *Dest)
 // バイナリデータを元に CRC32 のハッシュ値を計算する
 u32 DXArchive::HashCRC32(const void *SrcData, size_t SrcDataSize)
 {
-	static DWORD CRC32Table[256];
-	static int CRC32TableInit = 0;
-	DWORD CRC                 = 0xffffffff;
-	BYTE *SrcByte             = (BYTE *)SrcData;
-	DWORD i;
-
-	// テーブルが初期化されていなかったら初期化する
-	if (CRC32TableInit == 0)
+	static const auto CRC32Table = []
 	{
+		std::array<DWORD, 256> Table{};
 		DWORD Magic = 0xedb88320; // 0x4c11db7 をビットレベルで順番を逆にしたものが 0xedb88320
 		DWORD j;
 
-		for (i = 0; i < 256; i++)
+		for (DWORD i = 0; i < 256; i++)
 		{
 			DWORD Data = i;
 			for (j = 0; j < 8; j++)
@@ -2028,12 +2023,14 @@ u32 DXArchive::HashCRC32(const void *SrcData, size_t SrcDataSize)
 					Data ^= Magic;
 				}
 			}
-			CRC32Table[i] = Data;
+			Table[i] = Data;
 		}
 
-		// テーブルを初期化したフラグを立てる
-		CRC32TableInit = 1;
-	}
+		return Table;
+	}();
+	DWORD CRC     = 0xffffffff;
+	BYTE *SrcByte = (BYTE *)SrcData;
+	DWORD i;
 
 	for (i = 0; i < SrcDataSize; i++)
 	{
