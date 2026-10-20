@@ -385,7 +385,8 @@ private:
 		if (m_offset + sizeof(T) > m_size)
 			throw(FileWalkerException("read: End of file reached"));
 
-		T value = *(reinterpret_cast<T*>(m_pData + m_offset));
+		T value;
+		std::memcpy(&value, m_pData + m_offset, sizeof(T));
 		m_offset += sizeof(T);
 		return value;
 	}
