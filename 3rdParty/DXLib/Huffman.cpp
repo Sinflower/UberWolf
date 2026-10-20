@@ -558,7 +558,7 @@ u64 Huffman_Decode( void *Press, void *Dest )
         // 数値データを初期化する
         for( i = 0 ; i < 256 + 255 ; i ++ )
         {
-            Node[i].Weight = Weight[i] ;    // 出現数は保存しておいたデータからコピー
+            Node[i].Weight = i < 256 ? Weight[i] : 0 ;    // 出現数は保存しておいたデータからコピー
             Node[i].ChildNode[0] = -1 ;    // 数値データが終点なので -1 をセットする
             Node[i].ChildNode[1] = -1 ;    // 数値データが終点なので -1 をセットする
             Node[i].ParentNode = -1 ;      // まだどの要素とも結合されていないので -1 をセットする
