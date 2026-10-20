@@ -444,6 +444,8 @@ uint16_t WolfDec::getCryptVersion(const tString& filePath) const
 
 	DARC_HEAD header;
 	f.read(reinterpret_cast<char*>(&header), sizeof(DARC_HEAD));
+	if (f.gcount() != sizeof(DARC_HEAD))
+		return 0;
 	f.close();
 
 	if (header.Head != DXA_HEAD)
