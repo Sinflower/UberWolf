@@ -312,12 +312,14 @@ Key WolfPro::findDxArcKeyV1(std::vector<uint8_t>& byteData, const uint32_t& file
 	Key key;
 	if (fileSize < DxArcKey::MIN_FILESIZE) return key;
 
+	const uint8_t keyLen = byteData[DxArcKey::KEY_LEN_OFFSET];
+	if (keyLen == 0) return key;
+
 	srand(byteData[DxArcKey::SEED_OFFSET]);
 
 	for (std::size_t j = DxArcKey::XOR_START_OFFSET; j < byteData.size(); j++)
 		byteData[j] ^= static_cast<uint8_t>(rand() >> DxArcKey::SHIFT);
 
-	uint8_t keyLen  = byteData[DxArcKey::KEY_LEN_OFFSET];
 	uint32_t steps  = DxArcKey::STEP_DIVISOR / keyLen;
 	uint32_t offset = DxArcKey::KEY_START_OFFSET;
 
