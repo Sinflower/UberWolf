@@ -184,6 +184,9 @@ public:
 
 	void ReadBytes(void* pBuffer, const std::size_t& size)
 	{
+		if (size > std::numeric_limits<uint32_t>::max())
+			throw(FileWalkerException("ReadBytes: Size exceeds maximum uint32_t value"));
+
 		ReadBytes(pBuffer, static_cast<uint32_t>(size));
 	}
 
@@ -192,7 +195,7 @@ public:
 		if (!m_init)
 			throw(FileWalkerException("FileWalker not initialized"));
 
-		if (m_offset + size > m_size)
+		if (size > m_size || m_offset > m_size - size)
 			throw(FileWalkerException("ReadBytes: Attempted to read past end of file"));
 
 		std::memcpy(pBuffer, m_pData + m_offset, size);
@@ -226,7 +229,7 @@ public:
 		if (!m_init)
 			throw(FileWalkerException("FileWalker not initialized"));
 
-		if (m_offset + size > m_size)
+		if (size > m_size || m_offset > m_size - size)
 			throw(FileWalkerException("Skip: Attempted to skip past end of file"));
 
 		m_offset += size;
